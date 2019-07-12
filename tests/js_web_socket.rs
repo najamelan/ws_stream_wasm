@@ -13,7 +13,7 @@ use
 };
 
 
-const URL: &str = "ws://localhost:3212/";
+const URL: &str = "ws://127.0.0.1:3212/";
 
 
 

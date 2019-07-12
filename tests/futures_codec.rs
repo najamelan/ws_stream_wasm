@@ -11,17 +11,13 @@ use
 	log                   :: { *                                   } ,
 	rand_xoshiro          :: { *                                   } ,
 	rand                  :: { RngCore, SeedableRng                } ,
-	tokio                 :: { codec::{ BytesCodec, Decoder }      } ,
 	bytes                 :: { Bytes                               } ,
 	futures_01            :: { Future as Future01                  } ,
 	futures               :: { future::{ FutureExt, TryFutureExt } } ,
 	futures               :: { stream::StreamExt, sink::SinkExt    } ,
-	futures::compat       :: { Stream01CompatExt, Sink01CompatExt  } ,
-	tokio::prelude        :: { Stream                              } ,
+	futures_codec         :: { Framed, LinesCodec, BytesCodec      } ,
 	web_sys               :: { console::log_1 as dbg               } ,
 	serde                 :: { Serialize, Deserialize              } ,
-	tokio_serde_cbor      :: { Codec                               } ,
-
 };
 
 const URL: &str = "ws://127.0.0.1:3212";
@@ -95,41 +91,21 @@ async fn echo( name: &str, size: usize, data: Bytes )
 	console_log!( "   Enter echo: {}", name );
 
 	let ws  = connect().await;
-	let ws2 = connect().await;
 
-	let ( tx , rx  ) = BytesCodec::new().framed( ws   ).split();
-	let ( tx2, rx2 ) = BytesCodec::new().framed( &ws2 ).split(); // This is where we verify reference works
+	let mut framed = Framed::new( ws, BytesCodec {} );
 
-	let mut tx  = tx .sink_compat();
-	let mut tx2 = tx2.sink_compat();
-
-	let mut rx  = rx .compat();
-	let mut rx2 = rx2.compat();
-
-
-	tx .send( data.clone() ).await.expect_throw( "Failed to write to websocket" );
-	tx2.send( data.clone() ).await.expect_throw( "Failed to write to websocket" );
+	framed.send( data.clone() ).await.expect_throw( "Failed to write to websocket" );
 
 	let mut result: Vec<u8> = Vec::new();
 
 	while &result.len() < &size
 	{
-		let msg = rx.next().await.unwrap_throw();
-		let buf: &[u8] = msg.as_ref().unwrap_throw();
+		let msg = framed.next().await.expect_throw( "Some" ).expect_throw( "Receive bytes" );
+		let buf: &[u8] = msg.as_ref();
 		result.extend( buf );
 	}
 
-	let mut result2: Vec<u8> = Vec::new();
-
-	while &result2.len() < &size
-	{
-		let msg = rx2.next().await.unwrap_throw();
-		let buf: &[u8] = msg.as_ref().unwrap_throw();
-		result2.extend( buf );
-	}
-
 	assert_eq!( &data, &Bytes::from( result  ) );
-	assert_eq!( &data, &Bytes::from( result2 ) );
 }
 
 
@@ -137,7 +113,7 @@ async fn echo( name: &str, size: usize, data: Bytes )
 
 
 /////////////////////
-// With serde-cbor //
+// With LinesCodec //
 /////////////////////
 
 
@@ -151,32 +127,41 @@ struct Data
 }
 
 
-// Verify that a round trip to an echo server generates identical data. This test includes a big (1MB)
-// piece of data.
+// Verify that a round trip to an echo server generates identical data.
 //
 #[ wasm_bindgen_test( async ) ]
 //
-pub fn data_integrity_cbor() -> impl Future01<Item = (), Error = JsValue>
+pub fn lines_integrity() -> impl Future01<Item = (), Error = JsValue>
 {
 	let _ = console_log::init_with_level( Level::Trace );
 
-	console_log!( "starting test: data_integrity_cbor" );
+	console_log!( "starting test: lines_integrity" );
 
-	let dataset: Vec<Data> = vec!
-	[
-		Data{ hello: "Hello CBOR - basic".to_string(), data: vec![ 0, 33245, 3, 36 ], num: 3948594 },
-
-		// Test with something big
-		//
-		Data{ hello: "Hello CBOR - 4MB data".to_string(), data: vec![ 1; 1_024_000 ], num: 3948594 },
-	];
 
 	async move
 	{
-		for data in dataset
-		{
-			echo_cbor( data ).await;
-		}
+		let     ws     = connect().await;
+		let mut framed = Framed::new( ws, LinesCodec {} );
+
+		console_log!( "lines_integrity: start sending" );
+
+		framed.send( "A line\n"       .to_string() ).await.expect_throw( "Send a line"        );
+		framed.send( "A second line\n".to_string() ).await.expect_throw( "Send a second line" );
+		framed.send( "A third line\n" .to_string() ).await.expect_throw( "Send a third line"  );
+
+		console_log!( "lines_integrity: start receiving" );
+
+		let one   = framed.next().await.expect_throw( "Some" ).expect_throw( "Receive a line"        );
+		let two   = framed.next().await.expect_throw( "Some" ).expect_throw( "Receive a second line" );
+		let three = framed.next().await.expect_throw( "Some" ).expect_throw( "Receive a third line"  );
+
+		console_log!( "lines_integrity: start asserting" );
+
+		assert_eq!( "A line\n"       , &one   );
+		assert_eq!( "A second line\n", &two   );
+		assert_eq!( "A third line\n" , &three );
+
+		console_log!( "lines_integrity: done" );
 
 		let r: Result<(), wasm_bindgen::JsValue> = Ok(());
 
@@ -185,29 +170,6 @@ pub fn data_integrity_cbor() -> impl Future01<Item = (), Error = JsValue>
 	}.boxed_local().compat()
 }
 
-
-// Send data to an echo server and verify that what returns is exactly the same
-//
-async fn echo_cbor( data: Data )
-{
-	console_log!( "   Enter echo_cbor: {}", &data.hello );
-
-	let ws = connect().await;
-
-	let codec: Codec<Data, Data>  = Codec::new().packed( true );
-	let (tx, rx) = codec.framed( ws ).split();
-
-	let mut tx  = tx .sink_compat();
-	let mut rx  = rx .compat();
-
-
-	tx.send( data.clone() ).await.expect_throw( "Failed to write to websocket" );
-
-	let msg    = rx.next().await;
-	let result = &mut msg.unwrap_throw().unwrap_throw();
-
-	assert_eq!( &data, result );
-}
 
 
 

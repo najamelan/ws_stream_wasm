@@ -34,6 +34,8 @@ impl ChunkStream
 	//
 	pub fn is_empty( &self ) -> bool
 	{
+		trace!( "ChunkStream: queue empty?: {}", self.queue.is_empty() );
+
 		self.queue.is_empty()
 	}
 
@@ -44,7 +46,11 @@ impl ChunkStream
 	//
 	pub fn push( &mut self, msg: Uint8Array )
 	{
+		trace!( "ChunkStream: pushing bytes" );
+
 		self.queue.push_back( msg );
+
+		trace!( "ChunkStream: queue size: {}", self.queue.len() );
 	}
 
 	/// Try to read some bytes.
@@ -63,7 +69,6 @@ impl ChunkStream
 	//
 	pub fn read( &mut self, mut copied: u32, buf: &mut [u8] ) -> u32
 	{
-
 		let space   = buf.len() as u32                           ;
 		let data    = self.queue[0].length() - self.already_read ;
 		let to_copy = min( data, space )                         ;

@@ -111,11 +111,13 @@ impl WsStream
 			{
 				let raw = data.dyn_into::< ArrayBuffer >().unwrap_throw();
 
+				trace!( "WsStream: pushing bytes in chunkstream" );
 				i2.borrow_mut().push( Uint8Array::new( raw.as_ref() ) );
 			}
 
 			else if data.is_string()
 			{
+				trace!( "WsStream: pushing string in chunkstream" );
 				i2.borrow_mut().push( Uint8Array::new(&data) )
 			}
 
@@ -173,7 +175,11 @@ impl WsStream
 
 		else
 		{
-			Ok( inc.read( 0, buf ) as usize )
+			let res = inc.read( 0, buf ) as usize;
+
+			trace!( "WsStream: read {} bytes", &res );
+
+			Ok( res )
 		}
 	}
 
@@ -234,8 +240,9 @@ impl Drop for WsStream
 //        not at all keeping it DRY. At least here we refactor those into impl WsStream... I'm a bit
 //        confused by this impls for references.
 
-impl     io::Read for     WsStream { fn read( &mut self, buf: &mut [u8] ) -> Result< usize, io::Error > { self.io_read( buf ) } }
-impl<'a> io::Read for &'a WsStream { fn read( &mut self, buf: &mut [u8] ) -> Result< usize, io::Error > { self.io_read( buf ) } }
+impl     io::Read for           WsStream   { fn read( &mut self, buf: &mut [u8] ) -> Result< usize, io::Error > { self.io_read( buf ) } }
+impl<'a> io::Read for &'a       WsStream   { fn read( &mut self, buf: &mut [u8] ) -> Result< usize, io::Error > { self.io_read( buf ) } }
+impl     io::Read for Pin< &mut WsStream > { fn read( &mut self, buf: &mut [u8] ) -> Result< usize, io::Error > { self.io_read( buf ) } }
 
 
 impl     io::Write for     WsStream
@@ -250,10 +257,75 @@ impl<'a> io::Write for &'a WsStream
 	fn flush( &mut self             ) -> io::Result< ()    > { self.io_flush(     ) }
 }
 
+impl io::Write for Pin< &mut WsStream >
+{
+	fn write( &mut self, buf: &[u8] ) -> io::Result< usize > { self.io_write( buf ) }
+	fn flush( &mut self             ) -> io::Result< ()    > { self.io_flush(     ) }
+}
+
 
 impl     AsyncRead01 for           WsStream   {}
 impl<'a> AsyncRead01 for &'a       WsStream   {}
+impl     AsyncRead01 for Pin< &mut WsStream > {}
 
 
 impl     AsyncWrite01 for     WsStream { fn shutdown( &mut self ) -> AsyncTokioResult {  self.async_shutdown() } }
 impl<'a> AsyncWrite01 for &'a WsStream { fn shutdown( &mut self ) -> AsyncTokioResult {  self.async_shutdown() } }
+
+impl AsyncWrite01 for Pin< &mut WsStream >
+{
+	fn shutdown( &mut self ) -> AsyncTokioResult
+	{
+		self.async_shutdown()
+	}
+}
+
+
+
+impl AsyncRead  for WsStream
+{
+	fn poll_read( self: Pin<&mut Self>, cx: &mut Context, buf: &mut [u8] ) -> Poll<Result<usize, io::Error>>
+	{
+		Pin::new( &mut AsyncRead01CompatExt::compat( self ) ).poll_read( cx, buf )
+	}
+}
+
+
+
+impl AsyncWrite for WsStream
+{
+	// TODO: on WouldBlock, we should wake up the task when it becomes ready.
+	//
+	fn poll_write( self: Pin<&mut Self>, cx: &mut Context, buf: &[u8] ) -> Poll<Result<usize, io::Error>>
+	{
+		Pin::new( &mut AsyncWrite01CompatExt::compat( self ) ).poll_write( cx, buf )
+	}
+
+
+
+	fn poll_flush( self: Pin<&mut Self>, _cx: &mut Context ) -> Poll<Result<(), io::Error>>
+	{
+		match self.io_flush()
+		{
+			Ok (())  => { Poll::Ready( Ok(()) ) }
+
+			Err( e ) =>
+			{
+				match e.kind()
+				{
+					io::ErrorKind::WouldBlock => Poll::Pending,
+					_                         => { error!( "{}", &e ); Poll::Ready( Err(e) ) }
+				}
+			}
+		}
+	}
+
+
+	fn poll_close( self: Pin<&mut Self>, _cx: &mut Context ) -> Poll<Result<(), io::Error>>
+	{
+		// This is infallible normally
+		//
+		self.async_shutdown().expect( "shutdown sink for wsstream" );
+		Poll::Ready( Ok(()) )
+	}
+}

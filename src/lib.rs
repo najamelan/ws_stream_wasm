@@ -42,6 +42,7 @@ mod import
 		failure      :: { Backtrace, Fail, Context as FailContext                                                } ,
 		futures      :: { channel::{ mpsc::unbounded }, Poll                                                     } ,
 		futures      :: { prelude::{ Stream, Sink, AsyncWrite, AsyncRead }, stream::StreamExt                    } ,
+		futures      :: { compat ::{ AsyncWrite01CompatExt, AsyncRead01CompatExt }                               } ,
 		futures      :: { task::Context                                                                          } ,
 		tokio        :: { io::{ AsyncRead as AsyncRead01, AsyncWrite as AsyncWrite01 }, prelude::{ Async, task } } ,
 		std          :: { cmp::{ min }, io::{ self, ErrorKind::WouldBlock }, collections::VecDeque               } ,
