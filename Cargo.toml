@@ -1,13 +1,12 @@
 # Auto-generated from "Cargo.yml"
 [dependencies]
-console_error_panic_hook = "^0.1"
 console_log = "^0.1"
 failure = "^0.1"
 log = "^0.4"
 
 [dependencies.futures-preview]
 features = ["io-compat", "compat"]
-version = "=0.3.0-alpha.16"
+version = "=0.3.0-alpha.17"
 
 [dependencies.futures_01]
 package = "futures"
@@ -30,7 +29,7 @@ version = "^0.3"
 
 [dev-dependencies]
 bytes = "^0.4"
-failure = "^0.1"
+console_error_panic_hook = "^0.1"
 flexi_logger = "^0.11"
 pretty_assertions = "^0.6"
 rand = "^0.6"
@@ -41,7 +40,10 @@ wasm-bindgen-test = "^0.2"
 
 [dev-dependencies.async_runtime]
 package = "naja_async_runtime"
-version = "=0.1.6"
+version = "=0.1.7"
+
+[dev-dependencies.futures_codec]
+path = "../../futures-codec"
 
 [dev-dependencies.serde]
 features = ["derive"]
@@ -57,9 +59,9 @@ homepage = "https://github.com/najamelan/wasm_websocket_stream"
 keywords = ["wasm", "websocket", "tokio", "stream", "async"]
 license = "Unlicense"
 name = "ws_stream_wasm"
-readme = "README_DEV.md"
+readme = "README.md"
 repository = "https://github.com/najamelan/wasm_websocket_stream"
-version = "0.0.0"
+version = "0.1.0"
 
 [profile]
 [profile.release]

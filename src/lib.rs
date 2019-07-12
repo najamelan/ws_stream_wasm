@@ -41,7 +41,8 @@ mod import
 	{
 		failure      :: { Backtrace, Fail, Context as FailContext                                                } ,
 		futures      :: { channel::{ mpsc::unbounded }, Poll                                                     } ,
-		futures      :: { prelude::{ Stream, Sink }, stream::StreamExt                                           } ,
+		futures      :: { prelude::{ Stream, Sink, AsyncWrite, AsyncRead }, stream::StreamExt                    } ,
+		futures      :: { task::Context                                                                          } ,
 		tokio        :: { io::{ AsyncRead as AsyncRead01, AsyncWrite as AsyncWrite01 }, prelude::{ Async, task } } ,
 		std          :: { cmp::{ min }, io::{ self, ErrorKind::WouldBlock }, collections::VecDeque               } ,
 		std          :: { rc::Rc, cell::{ RefCell }, pin::Pin, convert::{ TryFrom, TryInto }, fmt                } ,

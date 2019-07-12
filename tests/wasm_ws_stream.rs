@@ -1,4 +1,3 @@
-#![ cfg( target_arch = "wasm32" ) ]
 #![ feature( async_await, trait_alias )]
 wasm_bindgen_test_configure!(run_in_browser);
 
@@ -6,22 +5,22 @@ wasm_bindgen_test_configure!(run_in_browser);
 
 use
 {
-	wasm_bindgen::prelude :: { *                                                        } ,
-	wasm_bindgen_test     :: { *                                                        } ,
-	ws_stream_wasm        :: { *                                                        } ,
-	log                   :: { *                                                        } ,
-	rand_xoshiro          :: { *                                                        } ,
-	tokio                 :: { codec::{ BytesCodec, Decoder }                           } ,
-	bytes                 :: { Bytes                                                    } ,
-	futures_01            :: { Future as Future01                                       } ,
-	futures               :: { prelude::{ FutureExt, TryFutureExt, StreamExt, SinkExt } } ,
-	futures::compat       :: { Stream01CompatExt, Sink01CompatExt                       } ,
-
-	rand                  :: { RngCore, SeedableRng                                     } ,
-	tokio::prelude        :: { Stream                                                   } ,
-	web_sys               :: { console::log_1 as dbg                                    } ,
-	serde                 :: { Serialize, Deserialize                                   } ,
-	tokio_serde_cbor      :: { Codec                                                    } ,
+	wasm_bindgen::prelude :: { *                                   } ,
+	wasm_bindgen_test     :: { *                                   } ,
+	ws_stream_wasm        :: { *                                   } ,
+	log                   :: { *                                   } ,
+	rand_xoshiro          :: { *                                   } ,
+	rand                  :: { RngCore, SeedableRng                } ,
+	tokio                 :: { codec::{ BytesCodec, Decoder }      } ,
+	bytes                 :: { Bytes                               } ,
+	futures_01            :: { Future as Future01                  } ,
+	futures               :: { future::{ FutureExt, TryFutureExt } } ,
+	futures               :: { stream::StreamExt, sink::SinkExt    } ,
+	futures::compat       :: { Stream01CompatExt, Sink01CompatExt  } ,
+	tokio::prelude        :: { Stream                              } ,
+	web_sys               :: { console::log_1 as dbg               } ,
+	serde                 :: { Serialize, Deserialize              } ,
+	tokio_serde_cbor      :: { Codec                               } ,
 
 };
 

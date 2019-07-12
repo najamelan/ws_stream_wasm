@@ -1,4 +1,4 @@
-# wasm_websocket_stream
+# ws_stream_wasm
 
 A convenience layer for using WebSockets from WebAssembly.
 

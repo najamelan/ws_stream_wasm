@@ -260,10 +260,10 @@ impl Stream for JsWebSocket
 
 impl Sink<JsMsgEvtData> for JsWebSocket
 {
-	type SinkError = JsValue;
+	type Error = JsValue;
 
 
-	fn poll_ready( self: Pin<&mut Self>, _: &mut std::task::Context ) -> Poll<Result<(), Self::SinkError>>
+	fn poll_ready( self: Pin<&mut Self>, _: &mut std::task::Context ) -> Poll<Result<(), Self::Error>>
 	{
 		trace!( "Sink: Websocket ready to poll" );
 
@@ -271,7 +271,7 @@ impl Sink<JsMsgEvtData> for JsWebSocket
 	}
 
 
-	fn start_send( self: Pin<&mut Self>, item: JsMsgEvtData ) -> Result<(), Self::SinkError>
+	fn start_send( self: Pin<&mut Self>, item: JsMsgEvtData ) -> Result<(), Self::Error>
 	{
 		trace!( "Sink: start_send" );
 
@@ -284,7 +284,7 @@ impl Sink<JsMsgEvtData> for JsWebSocket
 
 
 
-	fn poll_flush( self: Pin<&mut Self>, _: &mut std::task::Context ) -> Poll<Result<(), Self::SinkError>>
+	fn poll_flush( self: Pin<&mut Self>, _: &mut std::task::Context ) -> Poll<Result<(), Self::Error>>
 	{
 		trace!( "Sink: poll_flush" );
 
@@ -293,7 +293,7 @@ impl Sink<JsMsgEvtData> for JsWebSocket
 
 
 
-	fn poll_close( self: Pin<&mut Self>, _: &mut std::task::Context ) -> Poll<Result<(), Self::SinkError>>
+	fn poll_close( self: Pin<&mut Self>, _: &mut std::task::Context ) -> Poll<Result<(), Self::Error>>
 	{
 		trace!( "Sink: poll_close" );
 

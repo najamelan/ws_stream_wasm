@@ -4,7 +4,6 @@ use
 };
 
 
-type AsyncIoResult    = Result< Async<usize>, io::Error        >;
 type AsyncTokioResult = Result< Async<()>   , tokio::io::Error >;
 
 
@@ -180,9 +179,6 @@ impl WsStream
 
 
 
-
-
-
 	// -------io:Write impl
 	//
 	fn io_write( &self, buf: &[u8] ) -> io::Result< usize >
@@ -204,31 +200,6 @@ impl WsStream
 	{
 		Ok(())
 	}
-
-
-
-	// -------AsyncRead impl
-	//
-	fn async_pread( &self, buf: &mut [u8] ) -> AsyncIoResult
-		{
-			trace!( "WsStream: poll_read called" );
-
-			match self.io_read( buf )
-			{
-				Ok (     t )                           => Ok ( Async::Ready(t) ),
-				Err( ref e ) if e.kind() == WouldBlock =>
-				{
-					trace!( "WsStream: registering interested task" );
-
-					*self.task.borrow_mut() = Some( task::current() );
-					Ok ( Async::NotReady )
-				},
-
-				// Order is important here, don't move this above the other error match
-				//
-				Err( e ) => Err( e ),
-			}
-		}
 
 
 	// -------AsyncWrite impl
@@ -280,8 +251,8 @@ impl<'a> io::Write for &'a WsStream
 }
 
 
-impl     AsyncRead01 for     WsStream { fn poll_read( &mut self, buf: &mut [u8] ) -> AsyncIoResult { self.async_pread( buf ) } }
-impl<'a> AsyncRead01 for &'a WsStream { fn poll_read( &mut self, buf: &mut [u8] ) -> AsyncIoResult { self.async_pread( buf ) } }
+impl     AsyncRead01 for           WsStream   {}
+impl<'a> AsyncRead01 for &'a       WsStream   {}
 
 
 impl     AsyncWrite01 for     WsStream { fn shutdown( &mut self ) -> AsyncTokioResult {  self.async_shutdown() } }

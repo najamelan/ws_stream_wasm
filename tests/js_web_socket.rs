@@ -1,4 +1,3 @@
-#![ cfg( target_arch = "wasm32" ) ]
 #![ feature( async_await, trait_alias )]
 wasm_bindgen_test_configure!(run_in_browser);
 
