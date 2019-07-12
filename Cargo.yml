@@ -1,7 +1,7 @@
 package:
 
   name          : ws_stream_wasm
-  version       : 0.1.0 # remember to update html_root_url in lib.rs
+  version       : 0.0.0 # remember to update html_root_url in lib.rs
   edition       : '2018'
   authors       : [ Naja Melan <najamelan@autistici.org> ]
   description   : Provide AsyncRead/AsyncWrite over WebSockets (both tokio and 0.3) in WASM
@@ -9,7 +9,7 @@ package:
   documentation : https://docs.rs/ws_stream_wasm
   homepage      : https://github.com/najamelan/wasm_websocket_stream
   repository    : https://github.com/najamelan/wasm_websocket_stream
-  readme        : README.md
+  readme        : README_DEV.md
   keywords      : [ wasm, websocket, tokio, stream, async ]
   categories    : [ api-bindings, wasm, web-programming, "web-programming::websocket" ]
 

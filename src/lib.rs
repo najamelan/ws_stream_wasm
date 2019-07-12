@@ -37,19 +37,17 @@ pub use
 
 mod import
 {
-	pub use
+	pub(crate) use
 	{
-		failure      :: { Backtrace, Fail, Context as FailContext              } ,
-		futures      :: { channel::{ oneshot, mpsc::unbounded }, Poll                                     } ,
-		futures      :: { compat ::{ Compat01As03Sink, Stream01CompatExt, Sink01CompatExt, Future01CompatExt, AsyncWrite01CompatExt, AsyncRead01CompatExt } } ,
-		futures      :: { prelude::{ Stream, Sink, AsyncRead, AsyncWrite }, task::Waker, stream::StreamExt           } ,
-		tokio        :: { io::{ AsyncRead as AsyncRead01, AsyncWrite as AsyncWrite01 }, prelude::{ Async, task }           } ,
-		std          :: { cmp::{ self, min }, io::{ self, Read, ErrorKind::WouldBlock }, collections::VecDeque, future::Future  } ,
-		std          :: { sync::{ Mutex, Arc }, rc::Rc, cell::{ RefCell, RefMut }, pin::Pin, convert::{ TryFrom, TryInto }, fmt } ,
-		log          :: { debug, info, warn, trace, error                                                 } ,
-		// async_runtime:: { rt },
-		js_sys       :: { ArrayBuffer, Uint8Array                           } ,
-		wasm_bindgen :: { closure::Closure, JsCast, JsValue, UnwrapThrowExt } ,
-		web_sys      :: { *, console::debug_1 as dbg, BinaryType, Blob      } ,
+		failure      :: { Backtrace, Fail, Context as FailContext                                                } ,
+		futures      :: { channel::{ mpsc::unbounded }, Poll                                                     } ,
+		futures      :: { prelude::{ Stream, Sink }, stream::StreamExt                                           } ,
+		tokio        :: { io::{ AsyncRead as AsyncRead01, AsyncWrite as AsyncWrite01 }, prelude::{ Async, task } } ,
+		std          :: { cmp::{ min }, io::{ self, ErrorKind::WouldBlock }, collections::VecDeque               } ,
+		std          :: { rc::Rc, cell::{ RefCell }, pin::Pin, convert::{ TryFrom, TryInto }, fmt                } ,
+		log          :: { trace, error                                                                           } ,
+		js_sys       :: { ArrayBuffer, Uint8Array                                                                } ,
+		wasm_bindgen :: { closure::Closure, JsCast, JsValue, UnwrapThrowExt                                      } ,
+		web_sys      :: { *, console::debug_1 as dbg, BinaryType, Blob                                           } ,
 	};
 }
