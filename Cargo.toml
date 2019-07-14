@@ -5,8 +5,9 @@ failure = "^0.1"
 log = "^0.4"
 
 [dependencies.futures-preview]
-features = ["io-compat", "compat"]
-version = "=0.3.0-alpha.17"
+default-features = false
+features = ["std", "io-compat", "compat"]
+path = "../../futures-rs/futures"
 
 [dependencies.futures_01]
 package = "futures"

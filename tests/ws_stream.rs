@@ -5,38 +5,37 @@ wasm_bindgen_test_configure!(run_in_browser);
 
 use
 {
-	wasm_bindgen::prelude :: { *                                   } ,
-	wasm_bindgen_test     :: { *                                   } ,
-	ws_stream_wasm        :: { *                                   } ,
-	log                   :: { *                                   } ,
-	rand_xoshiro          :: { *                                   } ,
-	rand                  :: { RngCore, SeedableRng                } ,
-	tokio                 :: { codec::{ BytesCodec, Decoder }      } ,
-	bytes                 :: { Bytes                               } ,
-	futures_01            :: { Future as Future01                  } ,
-	futures               :: { future::{ FutureExt, TryFutureExt } } ,
-	futures               :: { stream::StreamExt, sink::SinkExt    } ,
-	futures::compat       :: { Stream01CompatExt, Sink01CompatExt  } ,
-	tokio::prelude        :: { Stream                              } ,
-	web_sys               :: { console::log_1 as dbg               } ,
-	serde                 :: { Serialize, Deserialize              } ,
-	tokio_serde_cbor      :: { Codec                               } ,
-
+	wasm_bindgen::prelude :: { *                                                   } ,
+	wasm_bindgen_test     :: { *                                                   } ,
+	ws_stream_wasm        :: { *                                                   } ,
+	log                   :: { *                                                   } ,
+	rand_xoshiro          :: { *                                                   } ,
+	rand                  :: { RngCore, SeedableRng                                } ,
+	tokio                 :: { codec::{ BytesCodec, Decoder }                      } ,
+	bytes                 :: { Bytes                                               } ,
+	futures_01            :: { Future as Future01                                  } ,
+	futures               :: { future::{ FutureExt, TryFutureExt }                 } ,
+	futures               :: { stream::{ StreamExt, IntoAsyncRead }, sink::SinkExt } ,
+	futures               :: { TryStreamExt, AsyncReadExt, compat::Compat          } ,
+	futures::compat       :: { Stream01CompatExt, Sink01CompatExt                  } ,
+	tokio::prelude        :: { Stream                                              } ,
+	serde                 :: { Serialize, Deserialize                              } ,
+	tokio_serde_cbor      :: { Codec                                               } ,
+	// web_sys               :: { console::log_1 as dbg                               } ,
 };
+
+
 
 const URL: &str = "ws://127.0.0.1:3212";
 
 
 
 
-async fn connect() -> WsStream
+async fn connect() -> (WsStream, Compat<IntoAsyncRead<WsIoBinary>>)
 {
-	WsStream::connect( URL )
+	let (ws, wsio) = WsStream::connect_binary( URL ).await.expect_throw( "Could not create websocket" );
 
-		.await
-		.map_err     ( |e| { dbg( &e ); e }                   )
-		.expect_throw( "Couldn't create websocket connection" )
-
+	(ws, wsio.into_async_read().compat())
 }
 
 
@@ -94,21 +93,21 @@ async fn echo( name: &str, size: usize, data: Bytes )
 {
 	console_log!( "   Enter echo: {}", name );
 
-	let ws  = connect().await;
-	let ws2 = connect().await;
+	let (_ws , wsio ) = connect().await;
+	// let (ws2, wsio2) = connect().await;
 
-	let ( tx , rx  ) = BytesCodec::new().framed( ws   ).split();
-	let ( tx2, rx2 ) = BytesCodec::new().framed( &ws2 ).split(); // This is where we verify reference works
+	let ( tx , rx  ) = BytesCodec::new().framed(  wsio  ).split();
+	// let ( tx2, rx2 ) = BytesCodec::new().framed( &wsio2 ).split(); // This is where we verify reference works
 
 	let mut tx  = tx .sink_compat();
-	let mut tx2 = tx2.sink_compat();
+	// let mut tx2 = tx2.sink_compat();
 
 	let mut rx  = rx .compat();
-	let mut rx2 = rx2.compat();
+	// let mut rx2 = rx2.compat();
 
 
 	tx .send( data.clone() ).await.expect_throw( "Failed to write to websocket" );
-	tx2.send( data.clone() ).await.expect_throw( "Failed to write to websocket" );
+	// tx2.send( data.clone() ).await.expect_throw( "Failed to write to websocket" );
 
 	let mut result: Vec<u8> = Vec::new();
 
@@ -119,17 +118,17 @@ async fn echo( name: &str, size: usize, data: Bytes )
 		result.extend( buf );
 	}
 
-	let mut result2: Vec<u8> = Vec::new();
+	// let mut result2: Vec<u8> = Vec::new();
 
-	while &result2.len() < &size
-	{
-		let msg = rx2.next().await.unwrap_throw();
-		let buf: &[u8] = msg.as_ref().unwrap_throw();
-		result2.extend( buf );
-	}
+	// while &result2.len() < &size
+	// {
+	// 	let msg = rx2.next().await.unwrap_throw();
+	// 	let buf: &[u8] = msg.as_ref().unwrap_throw();
+	// 	result2.extend( buf );
+	// }
 
 	assert_eq!( &data, &Bytes::from( result  ) );
-	assert_eq!( &data, &Bytes::from( result2 ) );
+	// assert_eq!( &data, &Bytes::from( result2 ) );
 }
 
 
@@ -192,10 +191,10 @@ async fn echo_cbor( data: Data )
 {
 	console_log!( "   Enter echo_cbor: {}", &data.hello );
 
-	let ws = connect().await;
+	let (_ws , wsio) = connect().await;
 
 	let codec: Codec<Data, Data>  = Codec::new().packed( true );
-	let (tx, rx) = codec.framed( ws ).split();
+	let (tx, rx) = codec.framed( wsio ).split();
 
 	let mut tx  = tx .sink_compat();
 	let mut rx  = rx .compat();

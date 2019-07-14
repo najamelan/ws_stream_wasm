@@ -1,331 +1,87 @@
 use
 {
-	crate :: { import::*, ChunkStream, JsWebSocket, WsReadyState },
+	crate :: { import::*, future_event, WsState, WsIo, WsIoBinary },
 };
 
 
-type AsyncTokioResult = Result< Async<()>   , tokio::io::Error >;
-
-
-/// A tokio AsyncRead/AsyncWrite representing a WebSocket connection. It only supports binary mode. Contrary to the rest of this library,
-/// this will work on types from [futures 0.1](https://docs.rs/futures/0.1.25/futures/) instead of [0.3](https://rust-lang-nursery.github.io/futures-api-docs/0.3.0-alpha.13/futures/index.html). This is because tokio currently is on futures 0.1, so the stream returned from
-/// a codec will be 0.1.
-///
-/// Currently !Sync and !Send.
-///
-/// ## Example
-///
-/// This example if from the integration tests. Uses [tokio-serde-cbor](https://docs.rs/tokio-serde-cbor/0.3.1/tokio_serde_cbor/) to send arbitrary data that implements [serde::Serialize](https://docs.rs/serde/1.0.89/serde/trait.Serialize.html) over a websocket.
-///
-/// ```
-/// #[ derive( Debug, Clone, Serialize, Deserialize, PartialEq, Eq ) ]
-/// //
-/// struct Data
-/// {
-///    hello: String   ,
-///    data : Vec<u32> ,
-///    num  : u64      ,
-/// }
-///
-/// let dataset: Vec<Data> = vec!
-/// [
-///    Data{ hello: "Hello CBOR - basic"   .to_string(), data: vec![ 0, 33245, 3, 36 ], num: 3948594 },
-///    Data{ hello: "Hello CBOR - 4MB data".to_string(), data: vec![ 1; 1_024_000    ], num: 3948594 },
-/// ];
-///
-/// let fut = async move
-/// {
-///    for data in dataset
-///    {
-///       echo_cbor( data ).await;
-///    }
-///
-///    Ok(())
-///
-/// }.boxed().compat();
-///
-/// spawn_local( fut );
-///
-///
-///
-/// // Send data to an echo server and verify that what returns is exactly the same
-/// //
-/// async fn echo_cbor( data: Data )
-/// {
-///    console_log!( "   Enter echo_cbor: {}", &data.hello );
-///
-///    let ws = connect().await;
-///
-///    let codec: Codec<Data, Data> = Codec::new().packed( true );
-///    let (tx, mut rx) = codec.framed( ws ).split();
-///
-///    tx.send( data.clone() ).await.expect_throw( "Failed to write to websocket" );
-///
-///    let msg    = rx.next().await;
-///    let result = &mut msg.unwrap_throw().unwrap_throw();
-///
-///    assert_eq!( &data, result );
-/// }
-/// ```
-///
-#[ allow( dead_code ) ] // for the on_mesg...
-//
-#[ derive( Debug ) ]
+/// The meta data related to a websocket
 //
 pub struct WsStream
 {
-	// RefCell because we want to be able to read on a not mutable reference of WsStream.
-	// And because the closure also accesses this property.
-	//
-	incoming : Rc<RefCell< ChunkStream >>        ,
-	ws       : JsWebSocket                       ,
-
-	// The task to be notified if we receive new data
-	//
-	task     : Rc<RefCell< Option<task::Task> >> ,
+	ws: WebSocket
 }
+
 
 
 impl WsStream
 {
-	/// Create a new WsStream. The future resolves when the connection is established.
+	/// Connect to the server. The future will resolve when the connection has been established. There is currently
+	/// no timeout mechanism here in case of failure. You should implement that yourself.
 	///
-	pub async fn connect< T: AsRef<str> >( url: T ) -> Result< WsStream, JsValue >
+	pub async fn connect< T: AsRef<str> >( url: T ) -> Result< (Self, WsIo), JsValue >
 	{
-		let task: Rc<RefCell<Option<task::Task>>> = Rc::new( RefCell::new( None ) ) ;
-		let t2                                    = task.clone();
+		let ws = WebSocket::new( url.as_ref() )?;
 
-		let incoming = Rc::new( RefCell::new( ChunkStream::new() ) );
-		let i2       = incoming.clone();
+		future_event( |cb| ws.set_onopen( cb ) ).await;
+		trace!( "WebSocket connection opened!" );
 
-
-
-		let cb = Box::new( move |msg_evt: MessageEvent|
-		{
-			trace!( "WsStream: message received!" );
+		Ok(( Self{ ws: ws.clone() }, WsIo::new( ws ) ))
+	}
 
 
-			let data = msg_evt.data();
+	/// Connect to the server. The future will resolve when the connection has been established. There is currently
+	/// no timeout mechanism here in case of failure. You should implement that yourself.
+	///
+	pub async fn connect_binary< T: AsRef<str> >( url: T ) -> Result< (Self, WsIoBinary), JsValue >
+	{
+		let ws = WebSocket::new( url.as_ref() )?;
 
-			if data.is_instance_of::< ArrayBuffer >()
-			{
-				let raw = data.dyn_into::< ArrayBuffer >().unwrap_throw();
+		future_event( |cb| ws.set_onopen( cb ) ).await;
+		trace!( "WebSocket connection opened!" );
 
-				trace!( "WsStream: pushing bytes in chunkstream" );
-				i2.borrow_mut().push( Uint8Array::new( raw.as_ref() ) );
-			}
-
-			else if data.is_string()
-			{
-				trace!( "WsStream: pushing string in chunkstream" );
-				i2.borrow_mut().push( Uint8Array::new(&data) )
-			}
-
-			else
-			{
-				error!( "WsStream: Invalid data format" );
-			};
+		Ok(( Self{ ws: ws.clone() }, WsIoBinary::new( ws ) ))
+	}
 
 
-			if let Some( ref t ) = *t2.borrow()
-			{
-				trace!( "WsStream: waking up task" );
-				t.notify()
-			}
-		});
 
-		let ws = JsWebSocket::with_on_message( url.as_ref(), cb )? ;
+	/// Close the socket. The future will resolve once the socket's state has become `WsReadyState::CLOSED`.
+	///
+	pub async fn close( &self )
+	{
+		// This can not throw normally, because the only errors the api
+		// can return is if we use a code or a reason string, which we don't.
+		// See [mdn](https://developer.mozilla.org/en-US/docs/Web/API/WebSocket/close#Exceptions_thrown).
+		//
+		self.ws.close().unwrap_throw();
 
+		future_event( |cb| self.ws.set_onclose( cb ) ).await;
 
-		ws.connect().await;
-
-		Ok( Self { ws, task, incoming } )
+		trace!( "WebSocket connection closed!" );
 	}
 
 
 
 	/// Verify the [WsReadyState] of the connection.
-	///
-	pub fn state( &self ) -> WsReadyState { self.ws.ready_state() }
-
-
-
-	/// Get the url of the server we are connected to.
-	///
-	pub fn url  ( &self ) -> String       { self.ws.url()         }
-
-
-
-	//---------- impl io::Read
+	/// TODO: verify error handling
 	//
-	fn io_read( &self, buf: &mut [u8] ) -> Result< usize, io::Error >
+	pub fn ready_state( &self ) -> WsState
 	{
-		trace!( "WsStream: read called" );
-
-		let mut inc = self.incoming.borrow_mut();
-
-		if inc.is_empty()
-		{
-			trace!( "WsStream: read would block" );
-
-			*self.task.borrow_mut() = Some( task::current() );
-
-			Err( io::Error::from( WouldBlock ) )
-		}
-
-		else
-		{
-			let res = inc.read( 0, buf ) as usize;
-
-			trace!( "WsStream: read {} bytes", &res );
-
-			Ok( res )
-		}
+		self.ws.ready_state().try_into().map_err( |e| error!( "{}", e ) ).unwrap_throw()
 	}
 
 
-
-	// -------io:Write impl
+	/// Access the wrapped [web_sys::WebSocket](https://docs.rs/web-sys/0.3.25/web_sys/struct.WebSocket.html).
 	//
-	fn io_write( &self, buf: &[u8] ) -> io::Result< usize >
+	pub fn wrapped( &self ) -> &WebSocket
 	{
-		// FIXME: avoid extra copy? Probably use one of the other methods on WebSocket, like
-		// send_with_array_buffer_view. We have to figure out how to create those from a &[u8]
-		//
-		let result = self.ws.wrapped().send_with_u8_array( &mut Vec::from( buf ) );
-
-		match result
-		{
-			Ok (_ ) => Ok ( buf.len()                                      ) ,
-			Err(_e) => Err( io::Error::from( io::ErrorKind::NotConnected ) ) ,
-		}
+		&self.ws
 	}
 
 
-	fn io_flush( &self ) -> io::Result<()>
-	{
-		Ok(())
-	}
-
-
-	// -------AsyncWrite impl
+	/// Retrieve the address to which this socket is connected.
 	//
-	fn async_shutdown( &self ) -> AsyncTokioResult
+	pub fn url( &self ) -> String
 	{
-		// This can not throw normally, because the only errors the api
-		// can return is if we use a code or a reason string, which we don't.
-		//
-		self.ws.wrapped().close().unwrap_throw();
-
-		Ok(().into())
-	}
-}
-
-
-impl Drop for WsStream
-{
-	fn drop( &mut self )
-	{
-		// This can not throw normally, because the only errors the api
-		// can return is if we use a code or a reason string, which we don't.
-		//
-		self.ws.wrapped().close().unwrap_throw();
-	}
-}
-
-
-
-// FIXME: Can we not do this by just implementing Deref? It seems dumb to have all this boilerplate.
-//        When I checked tokio code for (Tcp, Uds, ...) they all seem to have 2 copies for each impl,
-//        not at all keeping it DRY. At least here we refactor those into impl WsStream... I'm a bit
-//        confused by this impls for references.
-
-impl     io::Read for           WsStream   { fn read( &mut self, buf: &mut [u8] ) -> Result< usize, io::Error > { self.io_read( buf ) } }
-impl<'a> io::Read for &'a       WsStream   { fn read( &mut self, buf: &mut [u8] ) -> Result< usize, io::Error > { self.io_read( buf ) } }
-impl     io::Read for Pin< &mut WsStream > { fn read( &mut self, buf: &mut [u8] ) -> Result< usize, io::Error > { self.io_read( buf ) } }
-
-
-impl     io::Write for     WsStream
-{
-	fn write( &mut self, buf: &[u8] ) -> io::Result< usize > { self.io_write( buf ) }
-	fn flush( &mut self             ) -> io::Result< ()    > { self.io_flush(     ) }
-}
-
-impl<'a> io::Write for &'a WsStream
-{
-	fn write( &mut self, buf: &[u8] ) -> io::Result< usize > { self.io_write( buf ) }
-	fn flush( &mut self             ) -> io::Result< ()    > { self.io_flush(     ) }
-}
-
-impl io::Write for Pin< &mut WsStream >
-{
-	fn write( &mut self, buf: &[u8] ) -> io::Result< usize > { self.io_write( buf ) }
-	fn flush( &mut self             ) -> io::Result< ()    > { self.io_flush(     ) }
-}
-
-
-impl     AsyncRead01 for           WsStream   {}
-impl<'a> AsyncRead01 for &'a       WsStream   {}
-impl     AsyncRead01 for Pin< &mut WsStream > {}
-
-
-impl     AsyncWrite01 for     WsStream { fn shutdown( &mut self ) -> AsyncTokioResult {  self.async_shutdown() } }
-impl<'a> AsyncWrite01 for &'a WsStream { fn shutdown( &mut self ) -> AsyncTokioResult {  self.async_shutdown() } }
-
-impl AsyncWrite01 for Pin< &mut WsStream >
-{
-	fn shutdown( &mut self ) -> AsyncTokioResult
-	{
-		self.async_shutdown()
-	}
-}
-
-
-
-impl AsyncRead  for WsStream
-{
-	fn poll_read( self: Pin<&mut Self>, cx: &mut Context, buf: &mut [u8] ) -> Poll<Result<usize, io::Error>>
-	{
-		Pin::new( &mut AsyncRead01CompatExt::compat( self ) ).poll_read( cx, buf )
-	}
-}
-
-
-
-impl AsyncWrite for WsStream
-{
-	// TODO: on WouldBlock, we should wake up the task when it becomes ready.
-	//
-	fn poll_write( self: Pin<&mut Self>, cx: &mut Context, buf: &[u8] ) -> Poll<Result<usize, io::Error>>
-	{
-		Pin::new( &mut AsyncWrite01CompatExt::compat( self ) ).poll_write( cx, buf )
-	}
-
-
-
-	fn poll_flush( self: Pin<&mut Self>, _cx: &mut Context ) -> Poll<Result<(), io::Error>>
-	{
-		match self.io_flush()
-		{
-			Ok (())  => { Poll::Ready( Ok(()) ) }
-
-			Err( e ) =>
-			{
-				match e.kind()
-				{
-					io::ErrorKind::WouldBlock => Poll::Pending,
-					_                         => { error!( "{}", &e ); Poll::Ready( Err(e) ) }
-				}
-			}
-		}
-	}
-
-
-	fn poll_close( self: Pin<&mut Self>, _cx: &mut Context ) -> Poll<Result<(), io::Error>>
-	{
-		// This is infallible normally
-		//
-		self.async_shutdown().expect( "shutdown sink for wsstream" );
-		Poll::Ready( Ok(()) )
+		self.ws.url()
 	}
 }

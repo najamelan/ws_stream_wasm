@@ -5,19 +5,19 @@ wasm_bindgen_test_configure!(run_in_browser);
 
 use
 {
-	wasm_bindgen::prelude :: { *                                   } ,
-	wasm_bindgen_test     :: { *                                   } ,
-	ws_stream_wasm        :: { *                                   } ,
-	log                   :: { *                                   } ,
-	rand_xoshiro          :: { *                                   } ,
-	rand                  :: { RngCore, SeedableRng                } ,
-	bytes                 :: { Bytes                               } ,
-	futures_01            :: { Future as Future01                  } ,
-	futures               :: { future::{ FutureExt, TryFutureExt } } ,
-	futures               :: { stream::StreamExt, sink::SinkExt    } ,
-	futures_codec         :: { Framed, LinesCodec, BytesCodec      } ,
-	web_sys               :: { console::log_1 as dbg               } ,
-	serde                 :: { Serialize, Deserialize              } ,
+	wasm_bindgen::prelude :: { *                                                     } ,
+	wasm_bindgen_test     :: { *                                                     } ,
+	ws_stream_wasm        :: { *                                                     } ,
+	log                   :: { *                                                     } ,
+	rand_xoshiro          :: { *                                                     } ,
+	rand                  :: { RngCore, SeedableRng                                  } ,
+	bytes                 :: { Bytes                                                 } ,
+	futures_01            :: { Future as Future01                                    } ,
+	futures               :: { future::{ FutureExt, TryFutureExt }, TryStreamExt     } ,
+	futures               :: { stream::{ StreamExt, IntoAsyncRead }, sink::SinkExt,  } ,
+	futures_codec         :: { Framed, LinesCodec, BytesCodec                        } ,
+	serde                 :: { Serialize, Deserialize                                } ,
+	// web_sys               :: { console::log_1 as dbg                           } ,
 };
 
 const URL: &str = "ws://127.0.0.1:3212";
@@ -25,14 +25,11 @@ const URL: &str = "ws://127.0.0.1:3212";
 
 
 
-async fn connect() -> WsStream
+async fn connect() -> (WsStream, IntoAsyncRead<WsIoBinary>)
 {
-	WsStream::connect( URL )
+	let (ws, wsio) = WsStream::connect_binary( URL ).await.expect_throw( "Could not create websocket" );
 
-		.await
-		.map_err     ( |e| { dbg( &e ); e }                   )
-		.expect_throw( "Couldn't create websocket connection" )
-
+	(ws, wsio.into_async_read())
 }
 
 
@@ -90,9 +87,9 @@ async fn echo( name: &str, size: usize, data: Bytes )
 {
 	console_log!( "   Enter echo: {}", name );
 
-	let ws  = connect().await;
+	let (_ws , wsio) = connect().await;
 
-	let mut framed = Framed::new( ws, BytesCodec {} );
+	let mut framed = Framed::new( wsio, BytesCodec {} );
 
 	framed.send( data.clone() ).await.expect_throw( "Failed to write to websocket" );
 
@@ -140,8 +137,8 @@ pub fn lines_integrity() -> impl Future01<Item = (), Error = JsValue>
 
 	async move
 	{
-		let     ws     = connect().await;
-		let mut framed = Framed::new( ws, LinesCodec {} );
+		let (_ws , wsio ) = connect().await;
+		let mut framed = Framed::new( wsio, LinesCodec {} );
 
 		console_log!( "lines_integrity: start sending" );
 

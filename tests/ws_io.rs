@@ -29,11 +29,10 @@ pub fn round_trip_text() -> impl Future01<Item = (), Error = JsValue>
 
 	async
 	{
-		let ws = JsWebSocket::new( URL ).expect_throw( "Could not create websocket" );
+		let (_ws, wsio) = WsStream::connect( URL ).await.expect_throw( "Could not create websocket" );
 
-		ws.connect().await;
 
-		let (mut tx, mut rx) = ws.split();
+		let (mut tx, mut rx) = wsio.split();
 		let message          = "Hello from browser".to_string();
 
 
@@ -68,11 +67,9 @@ pub fn round_trip_binary() -> impl Future01<Item = (), Error = JsValue>
 
 	async
 	{
-		let ws = JsWebSocket::new( URL ).expect_throw( "Could not create websocket" );
+		let (_ws, wsio) = WsStream::connect( URL ).await.expect_throw( "Could not create websocket" );
 
-		ws.connect().await;
-
-		let (mut tx, mut rx) = ws.split();
+		let (mut tx, mut rx) = wsio.split();
 		let message          = b"Hello from browser".to_vec();
 
 
@@ -108,9 +105,7 @@ pub fn url() -> impl Future01<Item = (), Error = JsValue>
 
 	async
 	{
-		let ws = JsWebSocket::new( URL ).expect_throw( "Could not create websocket" );
-
-		ws.connect().await;
+		let (ws, _wsio) = WsStream::connect( URL ).await.expect_throw( "Could not create websocket" );
 
 		assert_eq!( URL, ws.url() );
 
@@ -135,17 +130,15 @@ pub fn state() -> impl Future01<Item = (), Error = JsValue>
 
 	async
 	{
-		let ws = JsWebSocket::new( URL ).expect_throw( "Could not create websocket" );
+		let (ws, _wsio) = WsStream::connect( URL ).await.expect_throw( "Could not create websocket" );
 
-		assert_eq!( WsReadyState::CONNECTING, ws.ready_state() );
+		// assert_eq!( WsState::CONNECTING, ws.ready_state() );
 
-		ws.connect().await;
-
-		assert_eq!( WsReadyState::OPEN, ws.ready_state() );
+		assert_eq!( WsState::OPEN, ws.ready_state() );
 
 		ws.close().await;
 
-		assert_eq!( WsReadyState::CLOSED, ws.ready_state() );
+		assert_eq!( WsState::CLOSED, ws.ready_state() );
 
 		let r: Result<(), wasm_bindgen::JsValue> = Ok(());
 

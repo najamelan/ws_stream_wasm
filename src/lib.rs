@@ -16,20 +16,22 @@
 #![ forbid ( unsafe_code                                                   ) ]
 #![ allow  ( clippy::suspicious_else_formatting                            ) ]
 
-mod chunk_stream     ;
-mod error            ;
-mod js_msg_event     ;
-mod js_web_socket    ;
-mod ws_stream        ;
-mod callback_future  ;
+mod error             ;
+mod js_msg_event      ;
+mod ws_io             ;
+mod ws_state          ;
+mod ws_io_binary      ;
+mod ws_stream         ;
+mod callback_future   ;
 
 pub use
 {
+	ws_state          :: { WsState                    } ,
 	callback_future   :: { future_event               } ,
-	chunk_stream      :: { ChunkStream                } ,
 	error             :: { WsErr      , WsErrKind     } ,
 	js_msg_event      :: { JsMsgEvent , JsMsgEvtData  } ,
-	js_web_socket     :: { JsWebSocket, WsReadyState  } ,
+	ws_io             :: { WsIo                       } ,
+	ws_io_binary      :: { WsIoBinary                 } ,
 	ws_stream         :: { WsStream                   } ,
 };
 
@@ -39,17 +41,15 @@ mod import
 {
 	pub(crate) use
 	{
-		failure      :: { Backtrace, Fail, Context as FailContext                                                } ,
-		futures      :: { channel::{ mpsc::unbounded }, Poll                                                     } ,
-		futures      :: { prelude::{ Stream, Sink, AsyncWrite, AsyncRead }, stream::StreamExt                    } ,
-		futures      :: { compat ::{ AsyncWrite01CompatExt, AsyncRead01CompatExt }                               } ,
-		futures      :: { task::Context                                                                          } ,
-		tokio        :: { io::{ AsyncRead as AsyncRead01, AsyncWrite as AsyncWrite01 }, prelude::{ Async, task } } ,
-		std          :: { cmp::{ min }, io::{ self, ErrorKind::WouldBlock }, collections::VecDeque               } ,
-		std          :: { rc::Rc, cell::{ RefCell }, pin::Pin, convert::{ TryFrom, TryInto }, fmt                } ,
-		log          :: { *                                                                                      } ,
-		js_sys       :: { ArrayBuffer, Uint8Array                                                                } ,
-		wasm_bindgen :: { closure::Closure, JsCast, JsValue, UnwrapThrowExt                                      } ,
-		web_sys      :: { *, console::debug_1 as dbg, BinaryType, Blob                                           } ,
+		failure      :: { Backtrace, Fail, Context as FailContext                            } ,
+		futures      :: { channel::{ mpsc::unbounded }, Poll                                 } ,
+		futures      :: { prelude::{ Stream, Sink, AsyncWrite }, stream::{ StreamExt }       } ,
+		futures      :: { task::Context, ready                                               } ,
+		std          :: { io::{ self }, collections::VecDeque, fmt, task::Waker              } ,
+		std          :: { rc::Rc, cell::{ RefCell }, pin::Pin, convert::{ TryFrom, TryInto } } ,
+		log          :: { *                                                                  } ,
+		js_sys       :: { ArrayBuffer, Uint8Array                                            } ,
+		wasm_bindgen :: { closure::Closure, JsCast, JsValue, UnwrapThrowExt                  } ,
+		web_sys      :: { *, console::debug_1 as dbg, BinaryType, Blob, WebSocket            } ,
 	};
 }

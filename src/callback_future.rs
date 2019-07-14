@@ -32,6 +32,8 @@ pub async fn future_event( setter: impl Fn( Option<&js_sys::Function> ) )
 	//
 	// The js closure wants an fn mut, so we can't use onshot here
 	//
+	// TODO: why not a oneshot?
+	//
 	let (onready, ready) = unbounded::<()>();
 
 	let on_ready = Closure::wrap( Box::new( move ||
