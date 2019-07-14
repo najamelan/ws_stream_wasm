@@ -59,6 +59,19 @@ pub enum WsErrKind
 	#[ fail( display = "Invalid input to conversion to WsReadyState: {}", _0 ) ]
 	//
 	InvalidReadyState( u16 ),
+
+	/// This happens when you try to write a message after the connection is closed.
+	///
+	#[ fail( display = "The connection is already closed" ) ]
+	//
+	ConnectionClosed,
+
+	/// This happens when you start_send on the Sink while the connection isn't ready yet.
+	/// You should verify the connection state with `poll_ready` before calling `start_send`.
+	///
+	#[ fail( display = "The connection not yet ready" ) ]
+	//
+	ConnectionNotReady,
 }
 
 

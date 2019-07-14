@@ -4,12 +4,12 @@ use
 };
 
 
-/// A wrapper around [web_sys::WebSocket](https://docs.rs/web-sys/0.3.17/web_sys/struct.WebSocket.html) to make it more rust idiomatic.
+/// A wrapper around [web_sys::WebSocket](https://docs.rs/web-sys/0.3.25/web_sys/struct.WebSocket.html) to make it more rust idiomatic.
 /// It does not provide any extra functionality over the wrapped WebSocket object.
 ///
 /// It turns the callback based mechanisms into futures Sink and Stream. The stream yields [JsMsgEvent], which is a wrapper
-/// around [`web_sys::MessageEvent`](https://docs.rs/web-sys/0.3.17/web_sys/struct.MessageEvent.html) and the sink takes a
-/// [JsMsgEvtData] which is a wrapper around  [`web_sys::MessageEvent.data()`](https://docs.rs/web-sys/0.3.17/web_sys/struct.MessageEvent.html#method.data).
+/// around [`web_sys::MessageEvent`](https://docs.rs/web-sys/0.3.25/web_sys/struct.MessageEvent.html) and the sink takes a
+/// [JsMsgEvtData] which is a wrapper around  [`web_sys::MessageEvent.data()`](https://docs.rs/web-sys/0.3.25/web_sys/struct.MessageEvent.html#method.data).
 /// There is no error when the server is not running, and no timeout mechanism provided here to detect that connection
 /// never happens. The connect future will just never resolve.
 ///
@@ -151,9 +151,6 @@ impl JsWebSocket
 	///
 	pub async fn connect( &self )
 	{
-		// FIXME: Can we just pass the function without having to run a closure here? When I tried this didn't work, because
-		//        rustc complained: `Attempted to take value of method 'set_onopen' on type 'web_sys::WebSocket'`
-		//
 		future_event( |cb| self.ws.set_onopen( cb ) ).await;
 
 		trace!( "WebSocket connection opened!" );
@@ -186,7 +183,7 @@ impl JsWebSocket
 	}
 
 
-	/// Access the wrapped [web_sys::WebSocket](https://docs.rs/web-sys/0.3.17/web_sys/struct.WebSocket.html).
+	/// Access the wrapped [web_sys::WebSocket](https://docs.rs/web-sys/0.3.25/web_sys/struct.WebSocket.html).
 	///
 	pub fn wrapped( &self ) -> &WebSocket
 	{
@@ -237,6 +234,10 @@ impl Stream for JsWebSocket
 	{
 		trace!( "JsWebSocket as Stream gets polled" );
 
+		// Once the queue is empty, check the state of the connection.
+		// When it is closing or closed, no more messages will arrive, so
+		// return Poll::Ready( None )
+		//
 		if self.queue.borrow().is_empty()
 		{
 			*self.task.borrow_mut() = Some( task::current() );
@@ -246,10 +247,11 @@ impl Stream for JsWebSocket
 				WsReadyState::OPEN       => Poll::Pending        ,
 				WsReadyState::CONNECTING => Poll::Pending        ,
 				_                        => Poll::Ready  ( None ),
-
 			}
 		}
 
+		// As long as there is things in the queue, just keep reading
+		//
 		else { Poll::Ready( self.queue.borrow_mut().pop_front() ) }
 	}
 }
@@ -260,14 +262,21 @@ impl Stream for JsWebSocket
 
 impl Sink<JsMsgEvtData> for JsWebSocket
 {
-	type Error = JsValue;
+	type Error = WsErr;
 
 
+	// Web api does not really seem to let us check for readiness, other than the connection state.
+	//
 	fn poll_ready( self: Pin<&mut Self>, _: &mut std::task::Context ) -> Poll<Result<(), Self::Error>>
 	{
 		trace!( "Sink: Websocket ready to poll" );
 
-		Poll::Ready( Ok(()) )
+		match self.ready_state()
+		{
+			WsReadyState::CONNECTING => Poll::Pending        ,
+			WsReadyState::OPEN       => Poll::Ready( Ok(()) ),
+			_                        => Poll::Ready( Err( WsErrKind::ConnectionClosed.into() )),
+		}
 	}
 
 
@@ -275,10 +284,25 @@ impl Sink<JsMsgEvtData> for JsWebSocket
 	{
 		trace!( "Sink: start_send" );
 
-		match item
+		match self.ready_state()
 		{
-			JsMsgEvtData::Binary( mut d ) => self.ws.send_with_u8_array( &mut d ),
-			JsMsgEvtData::Text  (     s ) => self.ws.send_with_str     ( &    s ),
+			WsReadyState::CONNECTING => Err( WsErrKind::ConnectionNotReady.into() ),
+			WsReadyState::OPEN       =>
+			{
+				// TODO: fix the unwrap once web-sys can return errors: https://github.com/rustwasm/wasm-bindgen/issues/1286
+				//
+				match item
+				{
+					JsMsgEvtData::Binary( mut d ) => { self.ws.send_with_u8_array( &mut d ).unwrap(); }
+					JsMsgEvtData::Text  (     s ) => { self.ws.send_with_str     ( &    s ).unwrap(); }
+				}
+
+				Ok(())
+			},
+
+			// Closing or Closed
+			//
+			_ => Err( WsErrKind::ConnectionClosed.into() ),
 		}
 	}
 
@@ -297,7 +321,11 @@ impl Sink<JsMsgEvtData> for JsWebSocket
 	{
 		trace!( "Sink: poll_close" );
 
-		Poll::Ready( self.ws.close() )
+		// TODO: fix the unwrap once web-sys can return errors: https://github.com/rustwasm/wasm-bindgen/issues/1286
+		//
+		self.ws.close().unwrap();
+
+		Poll::Ready( Ok(()) )
 	}
 }
 
@@ -344,3 +372,48 @@ impl TryFrom<u16> for WsReadyState
 		}
 	}
 }
+
+
+// #[ cfg(test) ]
+// //
+// mod test
+// {
+// 	wasm_bindgen_test_configure!(run_in_browser);
+
+// 	use
+// 	{
+// 		super::*            ,
+// 		wasm_bindgen_test::*,
+// 		futures      :: { task::Context, future::{ FutureExt, TryFutureExt }, sink::SinkExt                      } ,
+
+// 		futures_01   :: { Future as Future01                                                                     } ,
+
+// 	};
+
+// 	const URL: &str = "ws://127.0.0.1:3212/";
+
+// 	#[ wasm_bindgen_test(async) ]
+// 	//
+// 	fn error() -> impl Future01<Item = (), Error = JsValue>
+// 	{
+// 		info!( "starting test: error" );
+
+// 		async
+// 		{
+// 			let mut ws = JsWebSocket::new( URL ).expect_throw( "Could not create websocket" );
+
+// 			ws.connect().await;
+
+// 			ws.close().await;
+
+
+// 			let message          = "Hello from browser".to_string();
+// 			ws.send( JsMsgEvtData::Text( message.clone() ) ).await
+
+// 				.expect_throw( "Failed to write to websocket" );
+
+// 			Ok(())
+
+// 		}.boxed_local().compat()
+// 	}
+// }

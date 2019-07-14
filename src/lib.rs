@@ -47,7 +47,7 @@ mod import
 		tokio        :: { io::{ AsyncRead as AsyncRead01, AsyncWrite as AsyncWrite01 }, prelude::{ Async, task } } ,
 		std          :: { cmp::{ min }, io::{ self, ErrorKind::WouldBlock }, collections::VecDeque               } ,
 		std          :: { rc::Rc, cell::{ RefCell }, pin::Pin, convert::{ TryFrom, TryInto }, fmt                } ,
-		log          :: { trace, error                                                                           } ,
+		log          :: { *                                                                                      } ,
 		js_sys       :: { ArrayBuffer, Uint8Array                                                                } ,
 		wasm_bindgen :: { closure::Closure, JsCast, JsValue, UnwrapThrowExt                                      } ,
 		web_sys      :: { *, console::debug_1 as dbg, BinaryType, Blob                                           } ,
