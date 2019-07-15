@@ -178,6 +178,21 @@ impl fmt::Display for WsIo
 
 
 
+impl Drop for WsIo
+{
+	fn drop( &mut self )
+	{
+		trace!( "Drop WsIo" );
+
+		// This can not throw normally, because the only errors the api
+		// can return is if we use a code or a reason string, which we don't.
+		//
+		self.ws.close().expect( "WsIo::drop - close ws socket" );
+	}
+}
+
+
+
 impl Stream for WsIo
 {
 	type Item = JsMsgEvent;

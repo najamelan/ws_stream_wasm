@@ -91,8 +91,8 @@ async fn echo( name: &str, size: usize, data: Bytes )
 {
 	console_log!( "   Enter echo: {}", name );
 
-	let (_ws , wsio) = connect().await;
-	let ( tx , rx  ) = BytesCodec::new().framed(  wsio  ).split();
+	let (_ws, wsio) = connect().await;
+	let (tx, rx  ) = BytesCodec::new().framed(  wsio  ).split();
 
 	let mut tx = tx.sink_compat();
 	let mut rx = rx.compat();
@@ -171,7 +171,7 @@ async fn echo_cbor( data: Data )
 {
 	console_log!( "   Enter echo_cbor: {}", &data.hello );
 
-	let (_ws , wsio) = connect().await;
+	let (_ws, wsio) = connect().await;
 
 	let codec: Codec<Data, Data>  = Codec::new().packed( true );
 	let (tx, rx) = codec.framed( wsio ).split();
