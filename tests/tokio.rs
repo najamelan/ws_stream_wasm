@@ -51,7 +51,7 @@ pub fn data_integrity() -> impl Future01<Item = (), Error = JsValue>
 	console_log!( "starting test: data_integrity" );
 
 	let big_size   = 10240;
-	let mut random = vec![ 0; big_size ];
+	let mut random = vec![ 0u8; big_size ];
 	let mut rng    = Xoshiro256Plus::from_seed( [ 1, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 4, 0, 0, 0, 0, 0, 0, 0 ] );
 
 	rng.fill_bytes( &mut random );
@@ -91,17 +91,17 @@ async fn echo( name: &str, size: usize, data: Bytes )
 {
 	console_log!( "   Enter echo: {}", name );
 
-	let (_ws , wsio ) = connect().await;
+	let (_ws , wsio) = connect().await;
 	let ( tx , rx  ) = BytesCodec::new().framed(  wsio  ).split();
 
-	let mut tx  = tx .sink_compat();
-	let mut rx  = rx .compat();
+	let mut tx = tx.sink_compat();
+	let mut rx = rx.compat();
 
-	tx .send( data.clone() ).await.expect_throw( "Failed to write to websocket" );
+	tx.send( data.clone() ).await.expect_throw( "Failed to write to websocket" );
 
 	let mut result: Vec<u8> = Vec::new();
 
-	while &result.len() < &size
+	while result.len() < size
 	{
 		let msg = rx.next().await.unwrap_throw();
 		let buf: &[u8] = msg.as_ref().unwrap_throw();
@@ -147,7 +147,7 @@ pub fn data_integrity_cbor() -> impl Future01<Item = (), Error = JsValue>
 
 		// Test with something big
 		//
-		Data{ hello: "Hello CBOR - 1MB data".to_string(), data: vec![ 1; 1_024_000 ], num: 3948594 },
+		Data{ hello: "Hello CBOR - 1MB data".to_string(), data: vec![ 1; 1_024_000 ], num: 3948595 },
 	];
 
 	async move
@@ -182,10 +182,9 @@ async fn echo_cbor( data: Data )
 
 	tx.send( data.clone() ).await.expect_throw( "Failed to write to websocket" );
 
-	let msg    = rx.next().await;
-	let result = &mut msg.unwrap_throw().unwrap_throw();
+	let msg = rx.next().await.unwrap_throw().unwrap_throw();
 
-	assert_eq!( &data, result );
+	assert_eq!( data, msg );
 }
 
 

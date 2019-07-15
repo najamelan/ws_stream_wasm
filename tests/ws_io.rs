@@ -13,7 +13,8 @@ use
 };
 
 
-const URL: &str = "ws://127.0.0.1:3212/";
+const URL_WSSTREAM: &str = "ws://127.0.0.1:3212/";
+const URL_WS      : &str = "ws://127.0.0.1:3312/";
 
 
 
@@ -29,7 +30,7 @@ pub fn round_trip_text() -> impl Future01<Item = (), Error = JsValue>
 
 	async
 	{
-		let (_ws, wsio) = WsStream::connect( URL ).await.expect_throw( "Could not create websocket" );
+		let (_ws, wsio) = WsStream::connect( URL_WS ).await.expect_throw( "Could not create websocket" );
 
 
 		let (mut tx, mut rx) = wsio.split();
@@ -67,7 +68,7 @@ pub fn round_trip_binary() -> impl Future01<Item = (), Error = JsValue>
 
 	async
 	{
-		let (_ws, wsio) = WsStream::connect( URL ).await.expect_throw( "Could not create websocket" );
+		let (_ws, wsio) = WsStream::connect( URL_WSSTREAM ).await.expect_throw( "Could not create websocket" );
 
 		let (mut tx, mut rx) = wsio.split();
 		let message          = b"Hello from browser".to_vec();
@@ -105,9 +106,9 @@ pub fn url() -> impl Future01<Item = (), Error = JsValue>
 
 	async
 	{
-		let (ws, _wsio) = WsStream::connect( URL ).await.expect_throw( "Could not create websocket" );
+		let (ws, _wsio) = WsStream::connect( URL_WSSTREAM ).await.expect_throw( "Could not create websocket" );
 
-		assert_eq!( URL, ws.url() );
+		assert_eq!( URL_WSSTREAM, ws.url() );
 
 		let r: Result<(), wasm_bindgen::JsValue> = Ok(());
 
@@ -130,7 +131,7 @@ pub fn state() -> impl Future01<Item = (), Error = JsValue>
 
 	async
 	{
-		let (ws, _wsio) = WsStream::connect( URL ).await.expect_throw( "Could not create websocket" );
+		let (ws, _wsio) = WsStream::connect( URL_WSSTREAM ).await.expect_throw( "Could not create websocket" );
 
 		assert_eq!( WsState::OPEN, ws.ready_state() );
 
