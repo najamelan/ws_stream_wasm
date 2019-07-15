@@ -58,7 +58,7 @@ pub fn data_integrity() -> impl Future01<Item = (), Error = JsValue>
 
 	let dataset: Vec<(&str, usize, Bytes)> = vec!
 	[
-		( "basic"       , 18, Bytes::from_static( b"Hello from browser" ) ),
+		( "basic", 18, Bytes::from_static( b"Hello from browser" ) ),
 
 		// 20 random bytes, not valid unicode
 		//
@@ -66,7 +66,7 @@ pub fn data_integrity() -> impl Future01<Item = (), Error = JsValue>
 
 		// Test with something big:
 		//
-		( "big random"  , big_size, Bytes::from( random ) ),
+		( "big random", big_size, Bytes::from( random ) ),
 	];
 
 	async move
@@ -86,28 +86,18 @@ pub fn data_integrity() -> impl Future01<Item = (), Error = JsValue>
 
 
 // Send data to an echo server and verify that what returns is exactly the same
-// We run 2 connections in parallel, the second one we verify that we can use a reference
-// to a WsStream
 //
 async fn echo( name: &str, size: usize, data: Bytes )
 {
 	console_log!( "   Enter echo: {}", name );
 
 	let (_ws , wsio ) = connect().await;
-	// let (ws2, wsio2) = connect().await;
-
 	let ( tx , rx  ) = BytesCodec::new().framed(  wsio  ).split();
-	// let ( tx2, rx2 ) = BytesCodec::new().framed( &wsio2 ).split(); // This is where we verify reference works
 
 	let mut tx  = tx .sink_compat();
-	// let mut tx2 = tx2.sink_compat();
-
 	let mut rx  = rx .compat();
-	// let mut rx2 = rx2.compat();
-
 
 	tx .send( data.clone() ).await.expect_throw( "Failed to write to websocket" );
-	// tx2.send( data.clone() ).await.expect_throw( "Failed to write to websocket" );
 
 	let mut result: Vec<u8> = Vec::new();
 
@@ -118,17 +108,7 @@ async fn echo( name: &str, size: usize, data: Bytes )
 		result.extend( buf );
 	}
 
-	// let mut result2: Vec<u8> = Vec::new();
-
-	// while &result2.len() < &size
-	// {
-	// 	let msg = rx2.next().await.unwrap_throw();
-	// 	let buf: &[u8] = msg.as_ref().unwrap_throw();
-	// 	result2.extend( buf );
-	// }
-
 	assert_eq!( &data, &Bytes::from( result  ) );
-	// assert_eq!( &data, &Bytes::from( result2 ) );
 }
 
 
@@ -167,7 +147,7 @@ pub fn data_integrity_cbor() -> impl Future01<Item = (), Error = JsValue>
 
 		// Test with something big
 		//
-		Data{ hello: "Hello CBOR - 4MB data".to_string(), data: vec![ 1; 1_024_000 ], num: 3948594 },
+		Data{ hello: "Hello CBOR - 1MB data".to_string(), data: vec![ 1; 1_024_000 ], num: 3948594 },
 	];
 
 	async move

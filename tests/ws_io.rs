@@ -132,8 +132,6 @@ pub fn state() -> impl Future01<Item = (), Error = JsValue>
 	{
 		let (ws, _wsio) = WsStream::connect( URL ).await.expect_throw( "Could not create websocket" );
 
-		// assert_eq!( WsState::CONNECTING, ws.ready_state() );
-
 		assert_eq!( WsState::OPEN, ws.ready_state() );
 
 		ws.close().await;
