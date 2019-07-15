@@ -184,9 +184,6 @@ impl Drop for WsIo
 	{
 		trace!( "Drop WsIo" );
 
-		// This can not throw normally, because the only errors the api
-		// can return is if we use a code or a reason string, which we don't.
-		//
 		self.ws.close().expect( "WsIo::drop - close ws socket" );
 	}
 }
@@ -313,13 +310,14 @@ impl Sink<JsMsgEvtData> for WsIo
 
 // 	use
 // 	{
+// 		crate::WsStream     ,
 // 		super::*            ,
 // 		wasm_bindgen_test::*,
-// 		futures      :: { task::Context, future::{ FutureExt, TryFutureExt }, sink::SinkExt                      } ,
-
-// 		futures_01   :: { Future as Future01                                                                     } ,
-
+// 		futures      :: { future::{ FutureExt, TryFutureExt }, sink::SinkExt  } ,
+// 		futures_01   :: { Future as Future01                                  } ,
+// 		web_sys      :: { console::log_1 as dbg                               } ,
 // 	};
+
 
 // 	const URL: &str = "ws://127.0.0.1:3212/";
 
@@ -331,17 +329,16 @@ impl Sink<JsMsgEvtData> for WsIo
 
 // 		async
 // 		{
-// 			let mut ws = WsIo::new( URL ).expect_throw( "Could not create websocket" );
-
-// 			ws.connect().await;
+// 			let (ws, mut wsio) = WsStream::connect( URL ).await.expect_throw( "Could not create websocket" );
 
 // 			ws.close().await;
 
 
 // 			let message          = "Hello from browser".to_string();
-// 			ws.send( JsMsgEvtData::Text( message.clone() ) ).await
 
-// 				.expect_throw( "Failed to write to websocket" );
+// 			let res = wsio.send( JsMsgEvtData::Text( message.clone() ) ).await;
+
+// 			dbg( &format!( "{:?}", &res ).into() );
 
 // 			Ok(())
 
