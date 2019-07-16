@@ -3,6 +3,7 @@
 console_log = "^0.1"
 failure = "^0.1"
 log = "^0.4"
+wasm-logger = "^0.1"
 
 [dependencies.futures-preview]
 default-features = false

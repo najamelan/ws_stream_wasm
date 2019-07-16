@@ -238,7 +238,7 @@ impl Sink<JsMsgEvtData> for WsIo
 	//
 	fn poll_ready( self: Pin<&mut Self>, _: &mut std::task::Context ) -> Poll<Result<(), Self::Error>>
 	{
-		trace!( "Sink: Websocket ready to poll" );
+		trace!( "Sink<JsMsgEvtData> for WsIo: poll_ready" );
 
 		match self.ready_state()
 		{
@@ -251,7 +251,7 @@ impl Sink<JsMsgEvtData> for WsIo
 
 	fn start_send( self: Pin<&mut Self>, item: JsMsgEvtData ) -> Result<(), Self::Error>
 	{
-		trace!( "Sink: start_send" );
+		trace!( "Sink<JsMsgEvtData> for WsIo: start_send" );
 
 		match self.ready_state()
 		{
@@ -279,7 +279,7 @@ impl Sink<JsMsgEvtData> for WsIo
 
 	fn poll_flush( self: Pin<&mut Self>, _: &mut std::task::Context ) -> Poll<Result<(), Self::Error>>
 	{
-		trace!( "Sink: poll_flush" );
+		trace!( "Sink<JsMsgEvtData> for WsIo: poll_flush" );
 
 		Poll::Ready( Ok(()) )
 	}
@@ -288,9 +288,9 @@ impl Sink<JsMsgEvtData> for WsIo
 
 	fn poll_close( self: Pin<&mut Self>, _: &mut std::task::Context ) -> Poll<Result<(), Self::Error>>
 	{
-		trace!( "Sink: poll_close" );
+		trace!( "Sink<JsMsgEvtData> for WsIo: poll_close" );
 
-		// TODO: fix the unwrap once web-sys can return errors: https://github.com/rustwasm/wasm-bindgen/issues/1286
+		// TODO: fix the unwrap
 		//
 		self.ws.close().unwrap();
 

@@ -16,6 +16,7 @@ package:
 
 dependencies:
 
+  wasm-logger             : ^0.1
   console_log             : ^0.1
   failure                 : ^0.1
   futures-preview         : { path: ../../futures-rs/futures, features: [std, io-compat, compat], default-features: false }

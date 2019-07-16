@@ -46,6 +46,10 @@ async fn connect() -> (WsStream, Compat<IntoAsyncRead<WsIoBinary>>)
 //
 pub fn data_integrity() -> impl Future01<Item = (), Error = JsValue>
 {
+	// It's normal for this to fail, since different tests run in the same module and we can only
+	// set the logger once. Since we don't know which test runs first, we ignore the Result.
+	// Logging will only show up in the browser, not in wasm-pack test --headless.
+	//
 	let _ = console_log::init_with_level( Level::Trace );
 
 	console_log!( "starting test: data_integrity" );
@@ -92,7 +96,7 @@ async fn echo( name: &str, size: usize, data: Bytes )
 	console_log!( "   Enter echo: {}", name );
 
 	let (_ws, wsio) = connect().await;
-	let (tx, rx  ) = BytesCodec::new().framed(  wsio  ).split();
+	let (tx, rx)    = BytesCodec::new().framed(  wsio  ).split();
 
 	let mut tx = tx.sink_compat();
 	let mut rx = rx.compat();
@@ -103,9 +107,9 @@ async fn echo( name: &str, size: usize, data: Bytes )
 
 	while result.len() < size
 	{
-		let msg = rx.next().await.unwrap_throw();
-		let buf: &[u8] = msg.as_ref().unwrap_throw();
-		result.extend( buf );
+		let msg        = rx.next().await.expect_throw( "read message" );
+		let buf: &[u8] = msg.as_ref().expect_throw( "msg.as_ref()" );
+		result.extend_from_slice( buf );
 	}
 
 	assert_eq!( &data, &Bytes::from( result  ) );
@@ -137,6 +141,10 @@ struct Data
 //
 pub fn data_integrity_cbor() -> impl Future01<Item = (), Error = JsValue>
 {
+	// It's normal for this to fail, since different tests run in the same module and we can only
+	// set the logger once. Since we don't know which test runs first, we ignore the Result.
+	// Logging will only show up in the browser, not in wasm-pack test --headless.
+	//
 	let _ = console_log::init_with_level( Level::Trace );
 
 	console_log!( "starting test: data_integrity_cbor" );
@@ -176,13 +184,13 @@ async fn echo_cbor( data: Data )
 	let codec: Codec<Data, Data>  = Codec::new().packed( true );
 	let (tx, rx) = codec.framed( wsio ).split();
 
-	let mut tx  = tx .sink_compat();
-	let mut rx  = rx .compat();
+	let mut tx = tx .sink_compat();
+	let mut rx = rx .compat();
 
 
 	tx.send( data.clone() ).await.expect_throw( "Failed to write to websocket" );
 
-	let msg = rx.next().await.unwrap_throw().unwrap_throw();
+	let msg = rx.next().await.expect_throw( "read message" ).expect_throw( "msg" );
 
 	assert_eq!( data, msg );
 }
