@@ -114,33 +114,6 @@ impl WsIo
 	}
 
 
-	/// Create a new WsIo with the callback for received messages. Can fail if there is a
-	/// [security error](https://developer.mozilla.org/en-US/docs/Web/API/WebSocket/WebSocket#Exceptions_thrown).
-	///
-	pub fn with_on_message< T: AsRef<str> >( url: T, onmesg: Box< dyn FnMut( MessageEvent ) > ) -> Result< Self, JsValue >
-	{
-		//  Internal note, in this case self.queue and self.task wont be used.
-		//
-		let waker: Rc<RefCell<Option<Waker>>> = Rc::new( RefCell::new( None ));
-
-		let queue   = Rc::new( RefCell::new( VecDeque::new() ) );
-		let ws      = WebSocket::new( url.as_ref() )?;
-
-		let on_mesg = Closure::wrap( onmesg );
-
-		// Install callback
-		//
-		ws.set_onmessage  ( Some( on_mesg.as_ref().unchecked_ref() ) );
-
-		Ok( Self
-		{
-			ws       ,
-			queue    ,
-			on_mesg  ,
-			waker    ,
-		})
-	}
-
 
 	/// Verify the [WsReadyState] of the connection.
 	/// TODO: verify error handling

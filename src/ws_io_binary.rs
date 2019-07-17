@@ -73,20 +73,6 @@ impl WsIoBinary
 	}
 
 
-	/// Create a new WsIoBinary with the callback for received messages. Can fail if there is a
-	/// [security error](https://developer.mozilla.org/en-US/docs/Web/API/WebSocket/WebSocket#Exceptions_thrown).
-	///
-	pub fn with_on_message< T: AsRef<str> >( url: T, onmesg: Box< dyn FnMut( MessageEvent ) > ) -> Result< Self, JsValue >
-	{
-		let ws = WsIo::with_on_message( url, onmesg );
-
-		match ws
-		{
-			Ok (ws) => Ok( Self { ws } ) ,
-			Err(e ) => Err( e )          ,
-		}
-	}
-
 
 	/// Access the wrapped [web_sys::WebSocket](https://docs.rs/web-sys/0.3.25/web_sys/struct.WebSocket.html).
 	///
