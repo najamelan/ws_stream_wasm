@@ -25,9 +25,29 @@ impl WsStream
 	/// Can fail if there is a
 	/// [security error](https://developer.mozilla.org/en-US/docs/Web/API/WebSocket/WebSocket#Exceptions_thrown).
 	///
-	pub async fn connect< T: AsRef<str> >( url: T ) -> Result< (Self, WsIo), WsErr >
+	pub async fn connect( url: impl AsRef<str>, protocols: impl Into<Option<Vec<&str>>> )
+
+		-> Result< (Self, WsIo), WsErr >
 	{
-		let ws = WebSocket::new( url.as_ref() ).map_err( |_| WsErr::from( WsErrKind::SecurityError ) )?;
+		let ws = match protocols.into()
+		{
+			None => WebSocket::new( url.as_ref() ).map_err( |_| WsErr::from( WsErrKind::SecurityError ) )?,
+
+			Some(v) =>
+			{
+				let js_protos = v.iter().fold( Array::new(), |acc, proto|
+				{
+					acc.push( &JsValue::from_str( proto ) );
+					acc
+				});
+
+				WebSocket::new_with_str_sequence( url.as_ref(), &js_protos )
+
+					.map_err( |_| WsErr::from( WsErrKind::SecurityError ) )?
+			}
+		};
+
+
 		ws.set_binary_type( BinaryType::Arraybuffer );
 
 		future_event( |cb| ws.set_onopen( cb ) ).await;
@@ -45,23 +65,21 @@ impl WsStream
 	///
 	/// Can fail if there is a
 	/// [security error](https://developer.mozilla.org/en-US/docs/Web/API/WebSocket/WebSocket#Exceptions_thrown).
-	///
-	pub async fn connect_binary< T: AsRef<str> >( url: T ) -> Result< (Self, WsIoBinary), WsErr >
+	//
+	pub async fn connect_binary( url: impl AsRef<str>, protocols: impl Into<Option<Vec<&str>>> )
+
+		-> Result< (Self, WsIoBinary), WsErr >
 	{
-		let ws = WebSocket::new( url.as_ref() ).map_err( |_| WsErr::from( WsErrKind::SecurityError ) )?;
-		ws.set_binary_type( BinaryType::Arraybuffer );
+		let (ws_stream, wsio) = Self::connect( url, protocols ).await?;
 
-		future_event( |cb| ws.set_onopen( cb ) ).await;
-		trace!( "WebSocket connection opened!" );
-
-		Ok(( Self{ ws: ws.clone() }, WsIoBinary::new( ws ) ))
+		Ok(( ws_stream, WsIoBinary::new( wsio ) ))
 	}
 
 
 
 	/// Close the socket. The future will resolve once the socket's state has become `WsReadyState::CLOSED`.
 	/// TODO: allow setting reason and code.
-	///
+	//
 	pub async fn close( &self )
 	{
 		// This can not throw normally, because the only errors the api

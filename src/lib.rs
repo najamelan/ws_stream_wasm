@@ -51,5 +51,6 @@ mod import
 		js_sys       :: { ArrayBuffer, Uint8Array                                            } ,
 		wasm_bindgen :: { closure::Closure, JsCast, JsValue, UnwrapThrowExt                  } ,
 		web_sys      :: { *, console::debug_1 as dbg, BinaryType, Blob, WebSocket            } ,
+		js_sys       :: { Array                                                              } ,
 	};
 }

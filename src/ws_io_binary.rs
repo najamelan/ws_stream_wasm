@@ -67,9 +67,9 @@ impl WsIoBinary
 	/// Create a new WsIoBinary. Can fail if there is a
 	/// [security error](https://developer.mozilla.org/en-US/docs/Web/API/WebSocket/WebSocket#Exceptions_thrown).
 	///
-	pub fn new( ws: WebSocket ) -> Self
+	pub fn new( ws: WsIo ) -> Self
 	{
-		Self { ws: WsIo::new( ws ) }
+		Self { ws }
 	}
 
 

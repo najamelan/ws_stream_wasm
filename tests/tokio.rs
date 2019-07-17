@@ -33,7 +33,7 @@ const URL: &str = "ws://127.0.0.1:3212";
 
 async fn connect() -> (WsStream, Compat<IntoAsyncRead<WsIoBinary>>)
 {
-	let (ws, wsio) = WsStream::connect_binary( URL ).await.expect_throw( "Could not create websocket" );
+	let (ws, wsio) = WsStream::connect_binary( URL, None ).await.expect_throw( "Could not create websocket" );
 
 	(ws, wsio.into_async_read().compat())
 }
