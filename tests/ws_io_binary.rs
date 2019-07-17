@@ -1,3 +1,4 @@
+
 #![ feature( async_await, trait_alias )]
 wasm_bindgen_test_configure!(run_in_browser);
 
@@ -13,45 +14,7 @@ use
 };
 
 
-const URL   : &str = "ws://127.0.0.1:3212/";
-const URL_TT: &str = "ws://127.0.0.1:3312/";
-
-
-
-// Verify that a round trip to an echo server generates identical textual data.
-//
-#[ wasm_bindgen_test(async) ]
-//
-pub fn round_trip_text() -> impl Future01<Item = (), Error = JsValue>
-{
-	let _ = console_log::init_with_level( Level::Trace );
-
-	info!( "starting test: round_trip" );
-
-	async
-	{
-		let (_ws, wsio) = WsStream::connect( URL_TT, None ).await.expect_throw( "Could not create websocket" );
-
-
-		let (mut tx, mut rx) = wsio.split();
-		let message          = "Hello from browser".to_string();
-
-
-		tx.send( WsMessage::Text( message.clone() ) ).await
-
-			.expect_throw( "Failed to write to websocket" );
-
-
-		let msg    = rx.next().await;
-		let result = msg.expect_throw( "Stream closed" );
-
-		assert_eq!( WsMessage::Text( message ), result );
-
-		Ok(())
-
-	}.boxed_local().compat()
-}
-
+const URL: &str = "ws://127.0.0.1:3212/";
 
 
 // Verify that a round trip to an echo server generates identical binary data.
@@ -66,21 +29,21 @@ pub fn round_trip_binary() -> impl Future01<Item = (), Error = JsValue>
 
 	async
 	{
-		let (_ws, wsio) = WsStream::connect( URL, None ).await.expect_throw( "Could not create websocket" );
+		let (_ws, wsbio) = WsStream::connect_binary( URL, None ).await.expect_throw( "Could not create websocket" );
 
-		let (mut tx, mut rx) = wsio.split();
+		let (mut tx, mut rx) = wsbio.split();
 		let message          = b"Hello from browser".to_vec();
 
 
-		tx.send( WsMessage::Binary( message.clone() ) ).await
+		tx.send( message.clone() ).await
 
 			.expect_throw( "Failed to write to websocket" );
 
 
 		let msg    = rx.next().await;
-		let result = msg.expect_throw( "Stream closed" );
+		let result = msg.expect_throw( "Stream closed" ).expect_throw( "no io error" );
 
-		assert_eq!( WsMessage::Binary( message ), result );
+		assert_eq!( message, result );
 
 		Ok(())
 
@@ -97,11 +60,11 @@ fn send_while_closing() -> impl Future01<Item = (), Error = JsValue>
 
 	async
 	{
-		let (ws, mut wsio) = WsStream::connect( URL, None ).await.expect_throw( "Could not create websocket" );
+		let (ws, mut wsbio) = WsStream::connect_binary( URL, None ).await.expect_throw( "Could not create websocket" );
 
 		ws.wrapped().close().expect_throw( "close connection" );
 
-		let res = wsio.send( WsMessage::Text("Hello from browser".into() ) ).await;
+		let res = wsbio.send( b"Hello from browser".to_vec() ).await;
 
 		assert_eq!( &WsErrKind::ConnectionClosed, res.unwrap_err().kind() );
 
@@ -120,11 +83,11 @@ fn send_after_close() -> impl Future01<Item = (), Error = JsValue>
 
 	async
 	{
-		let (ws, mut wsio) = WsStream::connect( URL, None ).await.expect_throw( "Could not create websocket" );
+		let (ws, mut wsbio) = WsStream::connect_binary( URL, None ).await.expect_throw( "Could not create websocket" );
 
 		ws.close().await;
 
-		let res = wsio.send( WsMessage::Text("Hello from browser".into() ) ).await;
+		let res = wsbio.send( b"Hello from browser".to_vec() ).await;
 
 		assert_eq!( &WsErrKind::ConnectionClosed, res.unwrap_err().kind() );
 
@@ -148,9 +111,9 @@ pub fn display() -> impl Future01<Item = (), Error = JsValue>
 
 	async
 	{
-		let (_ws, wsio) = WsStream::connect( URL, None ).await.expect_throw( "Could not create websocket" );
+		let (_ws, wsbio) = WsStream::connect_binary( URL, None ).await.expect_throw( "Could not create websocket" );
 
-		assert_eq!( format!( "WsIo for connection: {}", URL ), format!( "{}", wsio ) );
+		assert_eq!( format!( "WsIoBinary for connection: {}", URL ), format!( "{}", wsbio ) );
 
 		Ok(())
 
@@ -171,9 +134,9 @@ pub fn debug() -> impl Future01<Item = (), Error = JsValue>
 
 	async
 	{
-		let (_ws, wsio) = WsStream::connect( URL, None ).await.expect_throw( "Could not create websocket" );
+		let (_ws, wsbio) = WsStream::connect_binary( URL, None ).await.expect_throw( "Could not create websocket" );
 
-		assert_eq!( format!( "WsIo for connection: {}", URL ), format!( "{:?}", wsio ) );
+		assert_eq!( format!( "WsIoBinary for connection: {}", URL ), format!( "{:?}", wsbio ) );
 
 		Ok(())
 

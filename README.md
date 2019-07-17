@@ -1,41 +1,88 @@
 # ws_stream_wasm
 
-A convenience layer for using WebSockets from WebAssembly.
+[![standard-readme compliant](https://img.shields.io/badge/readme%20style-standard-brightgreen.svg?style=flat-square)](https://github.com/RichardLitt/standard-readme)
+[![Build Status](https://api.travis-ci.org/najamelan/ws_stream_wasm.svg?branch=master)](https://travis-ci.org/najamelan/ws_stream_wasm)
+[![Docs](https://docs.rs/ws_stream_wasm/badge.svg)](https://docs.rs/ws_stream_wasm)
+[![crates.io](https://img.shields.io/crates/v/ws_stream_wasm.svg)](https://crates.io/crates/ws_stream_wasm)
 
-It implements a futures Stream/Sink and tokio AsyncRead/AsyncWrite on top of the web-sys interface [WebSocket](https://docs.rs/web-sys/0.3.22/web_sys/struct.WebSocket.html). This allows you to communicate between your server and a browser wasm module transparently without worrying about the underlying protocol. You can use tokio codec to get framed messages of any type that implements [serde::Serialize](https://docs.rs/serde/1.0.89/serde/trait.Serialize.html).
 
-There are basic wrapper types around the JavaScript types MessageEvent and MessageEventData but these are not feature-complete.
-This library tries to work with [async_await] wherever possible, with the exemption of WsStream because tokio is on futures 0.1. It requires a nightly compiler for now.
+> A convenience library for using websockets in WASM
 
-# Examples
+**features:**
+- `WsStream`  : A wrapper around [`web_sys::WebSocket`](https://docs.rs/web-sys/0.3.25/web_sys/struct.WebSocket.html).
+- `WsMessage` : A simple rusty representation of a WebSocket message.
+- `WsIo`      : A futures Sink/Stream of WsMessage. (can use the futures compat layer to get futures 01 versions).
+- `WsIoBinary`: A futures Sink/Stream of Vec<u8>, implements AsyncWrite. You can obtain an object that implements
+	AsyncRead and AsyncWrite by calling `.into_async_read()` from the futures `TryStreamExt` trait. With the compat
+	layer you can obtain futures 01 versions for use with tokio.
 
-For examples please run `cargo doc --open` or look at the unit tests.
+**NOTE:** this crate only works on WASM. If you want a server side equivalent that implements AsyncRead/AsyncWrite over
+WebSockets, check out [ws_stream](https://crates.io/crates/ws_stream).
 
-# Tests
+**missing features:**
+- no automatic reconnect
+- no events (probably I'll make it Observable with [pharos](https://crates.io/crates/pharos) one day)
+- not all features are thoroughly tested. Notably, I have little use for extensions and subprotocols. Tungstenite,
+  which I use for the server end (and for automated testing) doesn't support these, making it hard to write unit tests.
 
-Do not forget to turn on the server:
+## Table of Contents
 
+- [Install](#install)
+  - [Dependencies](#dependencies)
+- [Usage](#usage)
+- [API](#api)
+- [Contributing](#contributing)
+  - [Code of Conduct](#code-of-conduct)
+- [License](#license)
+
+
+## Install
+With [cargo add](https://github.com/killercup/cargo-edit):
+`cargo add ws_stream_wasm`
+
+With [cargo yaml](https://gitlab.com/storedbox/cargo-yaml):
+```yaml
+dependencies:
+
+  ws_stream_wasm: ^0.1
 ```
-cd server
-cargo run
+
+With raw Cargo.toml
+```toml
+[dependencies]
+
+   ws_stream_wasm = "^0.1"
 ```
 
+### Dependencies
 
-## TODO
+This crate has few dependiencies. Cargo will automatically handle it's dependencies for you.
 
-In order to run the tests, go into the server crate and run `cargo run`. In another tab run `wasm-pack test  --firefox --headless`.
+There are no optional features.
 
-little note on performance:
-  - `wasm-pack test  --firefox --headless --release`: 13.3s
-  - `wasm-pack test  --chrome  --headless --release`: 10.4s
+## Usage
 
-  - all `FIXME` in `src/` and `test/`
+Please have a look in the [examples directory of the repository](https://github.com/najamelan/ws_stream_wasm/tree/master/examples).
 
-  - callback_future is not something that belongs in wasm_websocket_stream. Maybe a functionality like that can be added to wasm_bindgen? It should also be possible to do this for callbacks that need to take parameters.
+The [integration tests](https://github.com/najamelan/ws_stream_wasm/tree/master/tests) are also useful.
 
-  - the sink? It's always ready to write, it's always flushed? The websocket browser api does not really give any info about the state here... Need better unit testing to verify what happens under stress I suppose.
+## API
 
-  - We implement AsyncRead for WsStream. This required that we implement std::io::Read, returning WouldBlock. However when calling next on the stream we get from BytesCodec, only read gets called, not poll_read. In principle tokio provides a default implementation of poll_read. It's not clear whether it would ever get called and in what circumstances. Since it is important that the current task gets woken up when a new message arrives, I have implemented poll_read so it wakes up the task. Is this necessary? It doesn't cost much to leave the implementation there now it's written.
+Api documentation can be found on [docs.rs](https://docs.rs/ws_stream_wasm).
 
-  - We don't have Clone or Eq on JsWebSocket or WsStream... Is that ok?
+
+## Contributing
+
+This repository accepts contributions. Ideas, questions, feature requests and bug reports can be filed through github issues.
+
+Pull Requests are welcome on github. By commiting pull requests, you accept that your code might be modified and reformatted to fit the project coding style or to improve the implementation. Please discuss what you want to see modified before filing a pull request if you don't want to be doing work that might be rejected.
+
+
+### Code of conduct
+
+Any of the behaviors described in [point 4 "Unacceptable Behavior" of the Citizens Code of Conduct](http://citizencodeofconduct.org/#unacceptable-behavior) are not welcome here and might get you banned. If anyone including maintainers and moderators of the project fail to respect these/your limits, you are entitled to call them out.
+
+## License
+
+[Unlicence](https://unlicense.org/)
 

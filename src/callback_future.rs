@@ -1,7 +1,4 @@
-use
-{
-	crate :: { import::* },
-};
+use crate::import::*;
 
 
 /// Turn a JavaScript callback type interface into a future. The future will resolve when the callback gets called.
@@ -21,7 +18,6 @@ use
 ///    future_event( |cb| self.ws.set_onopen( cb ) ).await;
 ///
 ///    trace!( "WebSocket connection opened!" );
-///
 /// }
 /// ```
 ///
@@ -30,12 +26,8 @@ pub async fn future_event( setter: impl Fn( Option<&js_sys::Function> ) )
 	// We give the user a closure they can pass to js functions requiring a callback, and when our
 	// closure gets called, the future resolves.
 	//
-	// The js closure wants an fn mut, so we can't use onshot here
-	//
 	// This cannot be a oneshot because the closure needs to be FnMut. In theory these events can
 	// fire several times, even though we only want it once.
-	//
-	// TODO: does this leak memory? as the event handlers don't get removed on the js side?
 	//
 	let (onready, ready) = unbounded::<()>();
 

@@ -70,9 +70,7 @@ pub fn data_integrity() -> impl Future01<Item = (), Error = JsValue>
 			echo( data.0, data.1, data.2 ).await;
 		}
 
-		let r: Result<(), wasm_bindgen::JsValue> = Ok(());
-
-		r
+		Ok(())
 
 	}.boxed_local().compat()
 }
@@ -160,9 +158,7 @@ pub fn lines_integrity() -> impl Future01<Item = (), Error = JsValue>
 
 		info!( "lines_integrity: done" );
 
-		let r: Result<(), wasm_bindgen::JsValue> = Ok(());
-
-		r
+		Ok(())
 
 	}.boxed_local().compat()
 }

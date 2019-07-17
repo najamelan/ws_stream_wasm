@@ -1,5 +1,4 @@
-use crate::{ import::* };
-
+use crate::import::*;
 
 /// The error type for errors happening in `async_runtime`.
 ///
@@ -76,6 +75,7 @@ pub enum WsErrKind
 	/// The port to which the connection is being attempted is being blocked.
 	/// This can happen upon creating the websocket. See:
 	/// [security error](https://developer.mozilla.org/en-US/docs/Web/API/WebSocket/WebSocket#Exceptions_thrown).
+	/// MDN does not mention it, but normally there can also be cross domain limitations.
 	///
 	#[ fail( display = "The port to which the connection is being attempted is being blocked." ) ]
 	//

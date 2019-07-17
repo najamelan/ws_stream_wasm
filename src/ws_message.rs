@@ -1,7 +1,4 @@
-use
-{
-	crate :: { import::* },
-};
+use crate::import::*;
 
 
 /// A wrapper around the [`web_sys::MessageEvent`](https://docs.rs/web-sys/0.3.17/web_sys/struct.MessageEvent.html) for convenience.

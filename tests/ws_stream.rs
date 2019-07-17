@@ -40,9 +40,7 @@ pub fn state() -> impl Future01<Item = (), Error = JsValue>
 		assert_eq!( WsState::Closed, ws  .ready_state() );
 		assert_eq!( WsState::Closed, wsio.ready_state() );
 
-		let r: Result<(), wasm_bindgen::JsValue> = Ok(());
-
-		r
+		Ok(())
 
 	}.boxed_local().compat()
 }
@@ -69,9 +67,7 @@ pub fn close_from_wsio() -> impl Future01<Item = (), Error = JsValue>
 		assert_eq!( WsState::Closed, wsio.ready_state() );
 		assert_eq!( WsState::Closed, ws  .ready_state() );
 
-		let r: Result<(), wasm_bindgen::JsValue> = Ok(());
-
-		r
+		Ok(())
 
 	}.boxed_local().compat()
 }
@@ -95,9 +91,7 @@ pub fn url() -> impl Future01<Item = (), Error = JsValue>
 
 		assert_eq!( URL, ws.url() );
 
-		let r: Result<(), wasm_bindgen::JsValue> = Ok(());
-
-		r
+		Ok(())
 
 	}.boxed_local().compat()
 }
@@ -121,9 +115,7 @@ pub fn no_protocols() -> impl Future01<Item = (), Error = JsValue>
 
 		assert_eq!( "", ws.protocol() );
 
-		let r: Result<(), wasm_bindgen::JsValue> = Ok(());
-
-		r
+		Ok(())
 
 	}.boxed_local().compat()
 }
@@ -147,9 +139,7 @@ pub fn close_code_valid() -> impl Future01<Item = (), Error = JsValue>
 
 		assert!( res.is_ok() );
 
-		let r: Result<(), wasm_bindgen::JsValue> = Ok(());
-
-		r
+		Ok(())
 
 	}.boxed_local().compat()
 }
@@ -173,9 +163,7 @@ pub fn close_code_invalid() -> impl Future01<Item = (), Error = JsValue>
 
 		assert_eq!( &WsErrKind::InvalidCloseCode(500), res.unwrap_err().kind() );
 
-		let r: Result<(), wasm_bindgen::JsValue> = Ok(());
-
-		r
+		Ok(())
 
 	}.boxed_local().compat()
 }
@@ -199,9 +187,7 @@ pub fn close_reason_valid() -> impl Future01<Item = (), Error = JsValue>
 
 		assert!( res.is_ok() );
 
-		let r: Result<(), wasm_bindgen::JsValue> = Ok(());
-
-		r
+		Ok(())
 
 	}.boxed_local().compat()
 }
@@ -225,9 +211,7 @@ pub fn close_reason_invalid_code() -> impl Future01<Item = (), Error = JsValue>
 
 		assert_eq!( &WsErrKind::InvalidCloseCode(500), res.unwrap_err().kind() );
 
-		let r: Result<(), wasm_bindgen::JsValue> = Ok(());
-
-		r
+		Ok(())
 
 	}.boxed_local().compat()
 }
@@ -251,9 +235,7 @@ pub fn close_reason_invalid() -> impl Future01<Item = (), Error = JsValue>
 
 		assert_eq!( &WsErrKind::ReasonStringToLong, res.unwrap_err().kind() );
 
-		let r: Result<(), wasm_bindgen::JsValue> = Ok(());
-
-		r
+		Ok(())
 
 	}.boxed_local().compat()
 }

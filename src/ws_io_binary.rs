@@ -4,57 +4,12 @@ use
 };
 
 
-/// A wrapper around [web_sys::WebSocket](https://docs.rs/web-sys/0.3.25/web_sys/struct.WebSocket.html) to make it more rust idiomatic.
-/// It does not provide any extra functionality over the wrapped WebSocket object.
+/// This implements Sink/Stream over Vec<u8> instead of WsMessage. It further implements AsyncRead/AsyncWrite
+/// that can be framed with codecs. You can use the compat layer from the futures library if you want to
+/// use tokio codecs. See the [integration tests](https://github.com/ws_stream_wasm/tree/master/tests/tokio_codec.rs)
+/// if you need an example.
 ///
-/// It turns the callback based mechanisms into futures Sink and Stream. The stream yields [JsMsgEvent], which is a wrapper
-/// around [`web_sys::MessageEvent`](https://docs.rs/web-sys/0.3.25/web_sys/struct.MessageEvent.html) and the sink takes a
-/// [WsMessage] which is a wrapper around  [`web_sys::MessageEvent.data()`](https://docs.rs/web-sys/0.3.25/web_sys/struct.MessageEvent.html#method.data).
-/// There is no error when the server is not running, and no timeout mechanism provided here to detect that connection
-/// never happens. The connect future will just never resolve.
-///
-/// ## Example
-///
-/// ```
-/// #![ feature( async_await, await_macro, futures_api )]
-///
-/// use
-/// {
-///    futures::prelude      ::* ,
-///    wasm_bindgen::prelude ::* ,
-///    wasm_bindgen_futures  ::* ,
-///    wasm_websocket_stream ::* ,
-///    log                   ::* ,
-/// };
-///
-/// let fut = async
-/// {
-///    let ws = WsIoBinary::new( URL ).expect_throw( "Could not create websocket" );
-///
-///    ws.connect().await;
-///
-///    let (mut tx, mut rx) = ws.split();
-///    let message          = "Hello from browser".to_string();
-///
-///
-///    tx.send( WsMessage::Text( message.clone() )).await
-///
-///       .expect_throw( "Failed to write to websocket" );
-///
-///
-///    let msg    = rx.next().await;
-///    let result = &msg.expect_throw( "Stream closed" );
-///
-///    assert_eq!( WsMessage::Text( message ), result.data() );
-///
-///    Ok(())
-///
-/// }.boxed().compat();
-///
-/// spawn_local( fut );
-/// ```
-///
-#[ allow( dead_code ) ] // we keep the closure to keep it form being dropped
+/// `WsIoBinary` can be created with [WsStream::connect_binary()].
 //
 pub struct WsIoBinary
 {
@@ -66,7 +21,8 @@ impl WsIoBinary
 {
 	/// Create a new WsIoBinary. Can fail if there is a
 	/// [security error](https://developer.mozilla.org/en-US/docs/Web/API/WebSocket/WebSocket#Exceptions_thrown).
-	///
+	/// It is recommended to use [WsStream::connect_binary()] instead of this method.
+	//
 	pub fn new( ws: WsIo ) -> Self
 	{
 		Self { ws }
@@ -74,11 +30,20 @@ impl WsIoBinary
 
 
 
-	/// Access the wrapped [web_sys::WebSocket](https://docs.rs/web-sys/0.3.25/web_sys/struct.WebSocket.html).
-	///
+	/// Access the wrapped [WsIo].
+	//
 	pub fn wrapped( &self ) -> &WsIo
 	{
 		&self.ws
+	}
+
+
+
+	/// Access the wrapped [WsIo] mutably.
+	//
+	pub fn wrapped_mut( &mut self ) -> &mut WsIo
+	{
+		&mut self.ws
 	}
 }
 
@@ -88,7 +53,7 @@ impl fmt::Debug for WsIoBinary
 {
 	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result
 	{
-		write!( f, "WsIoBinary" )
+		write!( f, "WsIoBinary for connection: {}", self.ws.wrapped().url() )
 	}
 }
 
@@ -98,7 +63,7 @@ impl fmt::Display for WsIoBinary
 {
 	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result
 	{
-		write!( f, "WsIoBinary" )
+		write!( f, "WsIoBinary for connection: {}", self.ws.wrapped().url() )
 	}
 }
 
@@ -218,12 +183,9 @@ impl AsyncWrite for WsIoBinary
 
 	fn poll_close( mut self: Pin<&mut Self>, cx: &mut Context ) -> Poll<Result<(), io::Error>>
 	{
-		// TODO: fix the unwrap once web-sys can return errors: https://github.com/rustwasm/wasm-bindgen/issues/1286
-		//
-		let _ = Pin::new( &mut self.ws ).poll_close(cx);
+		let _ = ready!( Pin::new( &mut self.ws ).poll_close( cx ) );
 
-
-		// it's infallible for now
+		// WsIo poll_close is infallible
 		//
 		Poll::Ready( Ok(()) )
 	}

@@ -9,6 +9,7 @@ use
 /// Most of the methods on this type directly map to the web API. For more documentation, check the
 /// [MDN WebSocket documentation]((https://developer.mozilla.org/en-US/docs/Web/API/WebSocket/WebSocket).
 ///
+#[ derive( Clone ) ]
 //
 pub struct WsStream
 {
@@ -19,12 +20,18 @@ pub struct WsStream
 
 impl WsStream
 {
-	/// Connect to the server. The future will resolve when the connection has been established. There is currently
-	/// no timeout mechanism here in case of failure. You should implement that yourself.
+	/// Connect to the server. The future will resolve when the connection has been established and the WebSocket
+	/// handshake sucessful. There is no timeout mechanism here in case of failure. You should implement
+	/// that yourself.
 	///
 	/// Can fail if there is a
 	/// [security error](https://developer.mozilla.org/en-US/docs/Web/API/WebSocket/WebSocket#Exceptions_thrown).
 	///
+	/// This returns both a [WsStream] (allow manipulating and requesting metatdata for the connection) and
+	/// a [WsIo] (Stream/Sink over [WsMessage]).
+	///
+	/// **Note**: Sending protocols to a server that doesn't support them will make the connection fail.
+	//
 	pub async fn connect( url: impl AsRef<str>, protocols: impl Into<Option<Vec<&str>>> )
 
 		-> Result< (Self, WsIo), WsErr >
@@ -51,7 +58,6 @@ impl WsStream
 		ws.set_binary_type( BinaryType::Arraybuffer );
 
 		future_event( |cb| ws.set_onopen( cb ) ).await;
-		ws.set_onopen( None );                           // drop event handler
 
 		trace!( "WebSocket connection opened!" );
 
@@ -63,7 +69,7 @@ impl WsStream
 	/// no timeout mechanism here in case of failure. You should implement that yourself.
 	///
 	/// This creates a WsIoBinary, which is a stream over Vec<u8> and implements AsyncRead/AsyncWrite rather than
-	/// a stream over JsMsgEvent.
+	/// a stream over [WsMessage].
 	///
 	/// Can fail if there is a
 	/// [security error](https://developer.mozilla.org/en-US/docs/Web/API/WebSocket/WebSocket#Exceptions_thrown).
@@ -79,7 +85,7 @@ impl WsStream
 
 
 
-	/// Close the socket. The future will resolve once the socket's state has become `WsReadyState::CLOSED`.
+	/// Close the socket. The future will resolve once the socket's state has become `WsState::CLOSED`.
 	/// See: [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebSocket/close)
 	//
 	pub async fn close( &self )
@@ -97,7 +103,7 @@ impl WsStream
 
 
 
-	/// Close the socket. The future will resolve once the socket's state has become `WsReadyState::CLOSED`.
+	/// Close the socket. The future will resolve once the socket's state has become `WsState::CLOSED`.
 	/// See: [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebSocket/close)
 	//
 	pub async fn close_code( &self, code: u16  ) -> Result<(), WsErr>
@@ -126,7 +132,7 @@ impl WsStream
 
 
 
-	/// Close the socket. The future will resolve once the socket's state has become `WsReadyState::CLOSED`.
+	/// Close the socket. The future will resolve once the socket's state has become `WsState::CLOSED`.
 	/// See: [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebSocket/close)
 	//
 	pub async fn close_reason( &self, code: u16, reason: impl AsRef<str>  ) -> Result<(), WsErr>
@@ -160,16 +166,17 @@ impl WsStream
 
 
 
-	/// Verify the [WsReadyState] of the connection.
-	/// TODO: verify error handling
+	/// Verify the [WsState] of the connection.
 	//
 	pub fn ready_state( &self ) -> WsState
 	{
-		self.ws.ready_state().try_into().map_err( |e| error!( "{}", e ) ).unwrap_throw()
+		self.ws.ready_state().try_into().map_err( |e| error!( "{}", e ) )
+
+			.expect_throw( "Convert ready state from browser API" )
 	}
 
 
-	/// Access the wrapped [web_sys::WebSocket](https://docs.rs/web-sys/0.3.25/web_sys/struct.WebSocket.html).
+	/// Access the wrapped [web_sys::WebSocket](https://docs.rs/web-sys/0.3.25/web_sys/struct.WebSocket.html) directly.
 	//
 	pub fn wrapped( &self ) -> &WebSocket
 	{
@@ -189,6 +196,9 @@ impl WsStream
 
 
 	/// The extensions selected by the server as negotiated during the connection.
+	///
+	/// **NOTE**: This is an untested feature. The backend server we use for testing (tungstenite)
+	/// does not support Extensions.
 	//
 	pub fn extensions( &self ) -> String
 	{
