@@ -124,7 +124,7 @@ impl Stream for WsIoBinary
 			return Poll::Ready( None );
 		}
 
-		match item.unwrap().data()
+		match item.unwrap()
 		{
 			WsMessage::Text  ( string ) => Poll::Ready(Some(Ok( string.into() ))),
 			WsMessage::Binary( chunk  ) => Poll::Ready(Some(Ok( chunk         ))),

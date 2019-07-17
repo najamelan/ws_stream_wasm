@@ -43,9 +43,9 @@ pub fn round_trip_text() -> impl Future01<Item = (), Error = JsValue>
 
 
 		let msg    = rx.next().await;
-		let result = &msg.expect_throw( "Stream closed" );
+		let result = msg.expect_throw( "Stream closed" );
 
-		assert_eq!( WsMessage::Text( message ), result.data() );
+		assert_eq!( WsMessage::Text( message ), result );
 
 		let r: Result<(), wasm_bindgen::JsValue> = Ok(());
 
@@ -80,9 +80,9 @@ pub fn round_trip_binary() -> impl Future01<Item = (), Error = JsValue>
 
 
 		let msg    = rx.next().await;
-		let result = &msg.unwrap();
+		let result = msg.expect_throw( "Stream closed" );
 
-		assert_eq!( WsMessage::Binary( message ), result.data() );
+		assert_eq!( WsMessage::Binary( message ), result );
 
 		let r: Result<(), wasm_bindgen::JsValue> = Ok(());
 

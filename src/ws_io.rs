@@ -84,7 +84,7 @@ impl WsIo
 		{
 			trace!( "WsStream: message received!" );
 
-			q2.borrow_mut().push_back( JsMsgEvent{ msg_evt } );
+			q2.borrow_mut().push_back( WsMessage::from( &JsMsgEvent{ msg_evt } ) );
 
 			if let Some( w ) = w2.borrow_mut().take()
 			{
@@ -167,7 +167,7 @@ impl Drop for WsIo
 
 impl Stream for WsIo
 {
-	type Item = JsMsgEvent;
+	type Item = WsMessage;
 
 	// Forward the call to the channel on which we are listening.
 	//
