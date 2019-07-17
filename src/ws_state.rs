@@ -12,10 +12,10 @@ use crate :: { import::*, WsErr, WsErrKind };
 //
 pub enum WsState
 {
-	CONNECTING,
-	OPEN      ,
-	CLOSING   ,
-	CLOSED    ,
+	Connecting,
+	Open      ,
+	Closing   ,
+	Closed    ,
 }
 
 
@@ -31,11 +31,11 @@ impl TryFrom<u16> for WsState
 	{
 		match state
 		{
-			0 => Ok ( WsState::CONNECTING                     ) ,
-			1 => Ok ( WsState::OPEN                           ) ,
-			2 => Ok ( WsState::CLOSING                        ) ,
-			3 => Ok ( WsState::CLOSED                         ) ,
-			_ => Err( WsErrKind::InvalidReadyState( state ).into() ) ,
+			0 => Ok ( WsState::Connecting                       ) ,
+			1 => Ok ( WsState::Open                             ) ,
+			2 => Ok ( WsState::Closing                          ) ,
+			3 => Ok ( WsState::Closed                           ) ,
+			_ => Err( WsErrKind::InvalidWsState( state ).into() ) ,
 		}
 	}
 }

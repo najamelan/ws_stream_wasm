@@ -1,6 +1,6 @@
 use
 {
-	crate :: { import::*, WsErr, WsErrKind, JsMsgEvent, JsMsgEvtData, WsState },
+	crate :: { import::*, WsErr, WsErrKind, JsMsgEvent, WsMessage, WsState },
 };
 
 
@@ -9,7 +9,7 @@ use
 ///
 /// It turns the callback based mechanisms into futures Sink and Stream. The stream yields [JsMsgEvent], which is a wrapper
 /// around [`web_sys::MessageEvent`](https://docs.rs/web-sys/0.3.25/web_sys/struct.MessageEvent.html) and the sink takes a
-/// [JsMsgEvtData] which is a wrapper around  [`web_sys::MessageEvent.data()`](https://docs.rs/web-sys/0.3.25/web_sys/struct.MessageEvent.html#method.data).
+/// [WsMessage] which is a wrapper around  [`web_sys::MessageEvent.data()`](https://docs.rs/web-sys/0.3.25/web_sys/struct.MessageEvent.html#method.data).
 /// There is no error when the server is not running, and no timeout mechanism provided here to detect that connection
 /// never happens. The connect future will just never resolve.
 ///
@@ -37,7 +37,7 @@ use
 ///    let message          = "Hello from browser".to_string();
 ///
 ///
-///    tx.send( JsMsgEvtData::Text( message.clone() )).await
+///    tx.send( WsMessage::Text( message.clone() )).await
 ///
 ///       .expect_throw( "Failed to write to websocket" );
 ///
@@ -45,7 +45,7 @@ use
 ///    let msg    = rx.next().await;
 ///    let result = &msg.expect_throw( "Stream closed" );
 ///
-///    assert_eq!( JsMsgEvtData::Text( message ), result.data() );
+///    assert_eq!( WsMessage::Text( message ), result.data() );
 ///
 ///    Ok(())
 ///
@@ -67,10 +67,7 @@ pub struct WsIo
 
 impl WsIo
 {
-	/// Create a new WsIo. Can fail if there is a
-	/// [security error](https://developer.mozilla.org/en-US/docs/Web/API/WebSocket/WebSocket#Exceptions_thrown).
-	///
-	/// TODO: fix error. Currently it will panic because of: https://github.com/rustwasm/wasm-bindgen/issues/1286
+	/// Create a new WsIo.
 	//
 	pub fn new( ws: WebSocket ) -> Self
 	{
@@ -105,7 +102,6 @@ impl WsIo
 		// Install callback
 		//
 		ws.set_onmessage  ( Some( on_mesg.as_ref().unchecked_ref() ) );
-		ws.set_binary_type( BinaryType::Arraybuffer                  );
 
 
 		Self
@@ -135,7 +131,6 @@ impl WsIo
 		// Install callback
 		//
 		ws.set_onmessage  ( Some( on_mesg.as_ref().unchecked_ref() ) );
-		ws.set_binary_type( BinaryType::Arraybuffer                  );
 
 		Ok( Self
 		{
@@ -213,9 +208,9 @@ impl Stream for WsIo
 
 			match self.ready_state()
 			{
-				WsState::OPEN       => Poll::Pending        ,
-				WsState::CONNECTING => Poll::Pending        ,
-				_                        => Poll::Ready  ( None ),
+				WsState::Open       => Poll::Pending        ,
+				WsState::Connecting => Poll::Pending        ,
+				_                   => Poll::Ready  ( None ),
 			}
 		}
 
@@ -229,7 +224,7 @@ impl Stream for WsIo
 
 
 
-impl Sink<JsMsgEvtData> for WsIo
+impl Sink<WsMessage> for WsIo
 {
 	type Error = WsErr;
 
@@ -238,32 +233,32 @@ impl Sink<JsMsgEvtData> for WsIo
 	//
 	fn poll_ready( self: Pin<&mut Self>, _: &mut std::task::Context ) -> Poll<Result<(), Self::Error>>
 	{
-		trace!( "Sink<JsMsgEvtData> for WsIo: poll_ready" );
+		trace!( "Sink<WsMessage> for WsIo: poll_ready" );
 
 		match self.ready_state()
 		{
-			WsState::CONNECTING => Poll::Pending        ,
-			WsState::OPEN       => Poll::Ready( Ok(()) ),
+			WsState::Connecting => Poll::Pending        ,
+			WsState::Open       => Poll::Ready( Ok(()) ),
 			_                   => Poll::Ready( Err( WsErrKind::ConnectionClosed.into() )),
 		}
 	}
 
 
-	fn start_send( self: Pin<&mut Self>, item: JsMsgEvtData ) -> Result<(), Self::Error>
+	fn start_send( self: Pin<&mut Self>, item: WsMessage ) -> Result<(), Self::Error>
 	{
-		trace!( "Sink<JsMsgEvtData> for WsIo: start_send" );
+		trace!( "Sink<WsMessage> for WsIo: start_send" );
 
 		match self.ready_state()
 		{
-			WsState::CONNECTING => Err( WsErrKind::ConnectionNotReady.into() ),
-			WsState::OPEN       =>
+			WsState::Connecting => Err( WsErrKind::ConnectionNotReady.into() ),
+			WsState::Open       =>
 			{
 				// TODO: fix the unwrap once web-sys can return errors: https://github.com/rustwasm/wasm-bindgen/issues/1286
 				//
 				match item
 				{
-					JsMsgEvtData::Binary( mut d ) => { self.ws.send_with_u8_array( &mut d ).unwrap(); }
-					JsMsgEvtData::Text  (     s ) => { self.ws.send_with_str     ( &    s ).unwrap(); }
+					WsMessage::Binary( mut d ) => { self.ws.send_with_u8_array( &mut d ).unwrap(); }
+					WsMessage::Text  (     s ) => { self.ws.send_with_str     ( &    s ).unwrap(); }
 				}
 
 				Ok(())
@@ -279,7 +274,7 @@ impl Sink<JsMsgEvtData> for WsIo
 
 	fn poll_flush( self: Pin<&mut Self>, _: &mut std::task::Context ) -> Poll<Result<(), Self::Error>>
 	{
-		trace!( "Sink<JsMsgEvtData> for WsIo: poll_flush" );
+		trace!( "Sink<WsMessage> for WsIo: poll_flush" );
 
 		Poll::Ready( Ok(()) )
 	}
@@ -288,7 +283,7 @@ impl Sink<JsMsgEvtData> for WsIo
 
 	fn poll_close( self: Pin<&mut Self>, _: &mut std::task::Context ) -> Poll<Result<(), Self::Error>>
 	{
-		trace!( "Sink<JsMsgEvtData> for WsIo: poll_close" );
+		trace!( "Sink<WsMessage> for WsIo: poll_close" );
 
 		// TODO: fix the unwrap
 		//
@@ -336,7 +331,7 @@ impl Sink<JsMsgEvtData> for WsIo
 
 // 			let message          = "Hello from browser".to_string();
 
-// 			let res = wsio.send( JsMsgEvtData::Text( message.clone() ) ).await;
+// 			let res = wsio.send( WsMessage::Text( message.clone() ) ).await;
 
 // 			dbg( &format!( "{:?}", &res ).into() );
 

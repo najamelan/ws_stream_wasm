@@ -1,10 +1,14 @@
 use
 {
-	crate :: { import::*, future_event, WsState, WsIo, WsIoBinary },
+	crate :: { import::*, future_event, WsErr, WsErrKind, WsState, WsIo, WsIoBinary },
 };
 
 
-/// The meta data related to a websocket
+/// The meta data related to a websocket.
+///
+/// Most of the methods on this type directly map to the web API. For more documentation, check the
+/// [MDN WebSocket documentation]((https://developer.mozilla.org/en-US/docs/Web/API/WebSocket/WebSocket).
+///
 //
 pub struct WsStream
 {
@@ -18,9 +22,13 @@ impl WsStream
 	/// Connect to the server. The future will resolve when the connection has been established. There is currently
 	/// no timeout mechanism here in case of failure. You should implement that yourself.
 	///
-	pub async fn connect< T: AsRef<str> >( url: T ) -> Result< (Self, WsIo), JsValue >
+	/// Can fail if there is a
+	/// [security error](https://developer.mozilla.org/en-US/docs/Web/API/WebSocket/WebSocket#Exceptions_thrown).
+	///
+	pub async fn connect< T: AsRef<str> >( url: T ) -> Result< (Self, WsIo), WsErr >
 	{
-		let ws = WebSocket::new( url.as_ref() )?;
+		let ws = WebSocket::new( url.as_ref() ).map_err( |_| WsErr::from( WsErrKind::SecurityError ) )?;
+		ws.set_binary_type( BinaryType::Arraybuffer );
 
 		future_event( |cb| ws.set_onopen( cb ) ).await;
 		trace!( "WebSocket connection opened!" );
@@ -32,9 +40,16 @@ impl WsStream
 	/// Connect to the server. The future will resolve when the connection has been established. There is currently
 	/// no timeout mechanism here in case of failure. You should implement that yourself.
 	///
-	pub async fn connect_binary< T: AsRef<str> >( url: T ) -> Result< (Self, WsIoBinary), JsValue >
+	/// This creates a WsIoBinary, which is a stream over Vec<u8> and implements AsyncRead/AsyncWrite rather than
+	/// a stream over JsMsgEvent.
+	///
+	/// Can fail if there is a
+	/// [security error](https://developer.mozilla.org/en-US/docs/Web/API/WebSocket/WebSocket#Exceptions_thrown).
+	///
+	pub async fn connect_binary< T: AsRef<str> >( url: T ) -> Result< (Self, WsIoBinary), WsErr >
 	{
-		let ws = WebSocket::new( url.as_ref() )?;
+		let ws = WebSocket::new( url.as_ref() ).map_err( |_| WsErr::from( WsErrKind::SecurityError ) )?;
+		ws.set_binary_type( BinaryType::Arraybuffer );
 
 		future_event( |cb| ws.set_onopen( cb ) ).await;
 		trace!( "WebSocket connection opened!" );
@@ -45,6 +60,7 @@ impl WsStream
 
 
 	/// Close the socket. The future will resolve once the socket's state has become `WsReadyState::CLOSED`.
+	/// TODO: allow setting reason and code.
 	///
 	pub async fn close( &self )
 	{
@@ -75,6 +91,36 @@ impl WsStream
 	pub fn wrapped( &self ) -> &WebSocket
 	{
 		&self.ws
+	}
+
+
+	/// The number of bytes of data that have been queued but not yet transmitted to the network.
+	///
+	/// **NOTE:** that this is the number of bytes buffered by the underlying platform WebSocket
+	/// implementation. It does not reflect any buffering performed by ws_stream.
+	//
+	pub fn buffered_amount( &self ) -> u32
+	{
+		self.ws.buffered_amount()
+	}
+
+
+	/// The extensions selected by the server as negotiated during the connection.
+	//
+	pub fn extensions( &self ) -> String
+	{
+		self.ws.extensions()
+	}
+
+
+	/// The name of the subprotocol the server selected during the connection.
+	///
+	/// This will be one of the strings specified in the protocols parameter when
+	/// creating this WsStream instance.
+	//
+	pub fn protocol(&self) -> String
+	{
+		self.ws.protocol()
 	}
 
 

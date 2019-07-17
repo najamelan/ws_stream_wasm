@@ -58,7 +58,7 @@ pub enum WsErrKind
 	///
 	#[ fail( display = "Invalid input to conversion to WsReadyState: {}", _0 ) ]
 	//
-	InvalidReadyState( u16 ),
+	InvalidWsState( u16 ),
 
 	/// This happens when you try to write a message after the connection is closed.
 	///
@@ -72,6 +72,14 @@ pub enum WsErrKind
 	#[ fail( display = "The connection not yet ready" ) ]
 	//
 	ConnectionNotReady,
+
+	/// The port to which the connection is being attempted is being blocked.
+	/// This can happen upon creating the websocket. See:
+	/// [security error](https://developer.mozilla.org/en-US/docs/Web/API/WebSocket/WebSocket#Exceptions_thrown).
+	///
+	#[ fail( display = "The port to which the connection is being attempted is being blocked." ) ]
+	//
+	SecurityError,
 }
 
 

@@ -1,6 +1,6 @@
 use
 {
-	crate :: { import::*, WsErr, WsErrKind, WsIo, JsMsgEvtData },
+	crate :: { import::*, WsErr, WsErrKind, WsIo, WsMessage },
 };
 
 
@@ -9,7 +9,7 @@ use
 ///
 /// It turns the callback based mechanisms into futures Sink and Stream. The stream yields [JsMsgEvent], which is a wrapper
 /// around [`web_sys::MessageEvent`](https://docs.rs/web-sys/0.3.25/web_sys/struct.MessageEvent.html) and the sink takes a
-/// [JsMsgEvtData] which is a wrapper around  [`web_sys::MessageEvent.data()`](https://docs.rs/web-sys/0.3.25/web_sys/struct.MessageEvent.html#method.data).
+/// [WsMessage] which is a wrapper around  [`web_sys::MessageEvent.data()`](https://docs.rs/web-sys/0.3.25/web_sys/struct.MessageEvent.html#method.data).
 /// There is no error when the server is not running, and no timeout mechanism provided here to detect that connection
 /// never happens. The connect future will just never resolve.
 ///
@@ -37,7 +37,7 @@ use
 ///    let message          = "Hello from browser".to_string();
 ///
 ///
-///    tx.send( JsMsgEvtData::Text( message.clone() )).await
+///    tx.send( WsMessage::Text( message.clone() )).await
 ///
 ///       .expect_throw( "Failed to write to websocket" );
 ///
@@ -45,7 +45,7 @@ use
 ///    let msg    = rx.next().await;
 ///    let result = &msg.expect_throw( "Stream closed" );
 ///
-///    assert_eq!( JsMsgEvtData::Text( message ), result.data() );
+///    assert_eq!( WsMessage::Text( message ), result.data() );
 ///
 ///    Ok(())
 ///
@@ -140,8 +140,8 @@ impl Stream for WsIoBinary
 
 		match item.unwrap().data()
 		{
-			JsMsgEvtData::Text  ( string ) => Poll::Ready(Some(Ok( string.into() ))),
-			JsMsgEvtData::Binary( chunk  ) => Poll::Ready(Some(Ok( chunk         ))),
+			WsMessage::Text  ( string ) => Poll::Ready(Some(Ok( string.into() ))),
+			WsMessage::Binary( chunk  ) => Poll::Ready(Some(Ok( chunk         ))),
 		}
 	}
 }
@@ -165,7 +165,7 @@ impl Sink<Vec<u8>> for WsIoBinary
 
 	fn start_send( mut self: Pin<&mut Self>, item: Vec<u8> ) -> Result<(), Self::Error>
 	{
-		Pin::new( &mut self.ws ).start_send( JsMsgEvtData::Binary( item ) )
+		Pin::new( &mut self.ws ).start_send( WsMessage::Binary( item ) )
 	}
 
 
