@@ -118,31 +118,3 @@ pub fn url() -> impl Future01<Item = (), Error = JsValue>
 }
 
 
-
-// Verify state method.
-//
-#[ wasm_bindgen_test(async) ]
-//
-pub fn state() -> impl Future01<Item = (), Error = JsValue>
-{
-	let _ = console_log::init_with_level( Level::Trace );
-
-	info!( "starting test: state" );
-
-	async
-	{
-		let (ws, _wsio) = WsStream::connect( URL_WSSTREAM, None ).await.expect_throw( "Could not create websocket" );
-
-		assert_eq!( WsState::Open, ws.ready_state() );
-
-		ws.close().await;
-
-		assert_eq!( WsState::Closed, ws.ready_state() );
-
-		let r: Result<(), wasm_bindgen::JsValue> = Ok(());
-
-		r
-
-	}.boxed_local().compat()
-}
-

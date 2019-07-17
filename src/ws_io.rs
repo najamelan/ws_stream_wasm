@@ -1,6 +1,6 @@
 use
 {
-	crate :: { import::*, WsErr, WsErrKind, JsMsgEvent, WsMessage, WsState },
+	crate :: { import::*, WsErr, WsErrKind, JsMsgEvent, WsMessage, WsState, future_event },
 };
 
 
@@ -122,6 +122,17 @@ impl WsIo
 	{
 		self.ws.ready_state().try_into().map_err( |e| error!( "{}", e ) ).unwrap_throw()
 	}
+
+
+
+	// This method allows to do async close in the poll_close of Sink
+	//
+	async fn wake_on_close( ws: WebSocket, waker: Waker )
+	{
+		future_event( |cb| ws.set_onclose( cb ) ).await;
+
+		waker.wake();
+	}
 }
 
 
@@ -167,7 +178,7 @@ impl Stream for WsIo
 	// Currently requires an unfortunate copy from Js memory to Wasm memory. Hopefully one
 	// day we will be able to receive the JsMsgEvent directly in Wasm.
 	//
-	fn poll_next( mut self: Pin<&mut Self>, cx: &mut std::task::Context ) -> Poll<Option< Self::Item >>
+	fn poll_next( mut self: Pin<&mut Self>, cx: &mut Context ) -> Poll<Option< Self::Item >>
 	{
 		trace!( "WsIo as Stream gets polled" );
 
@@ -204,7 +215,7 @@ impl Sink<WsMessage> for WsIo
 
 	// Web api does not really seem to let us check for readiness, other than the connection state.
 	//
-	fn poll_ready( self: Pin<&mut Self>, _: &mut std::task::Context ) -> Poll<Result<(), Self::Error>>
+	fn poll_ready( self: Pin<&mut Self>, _: &mut Context ) -> Poll<Result<(), Self::Error>>
 	{
 		trace!( "Sink<WsMessage> for WsIo: poll_ready" );
 
@@ -245,7 +256,7 @@ impl Sink<WsMessage> for WsIo
 
 
 
-	fn poll_flush( self: Pin<&mut Self>, _: &mut std::task::Context ) -> Poll<Result<(), Self::Error>>
+	fn poll_flush( self: Pin<&mut Self>, _: &mut Context ) -> Poll<Result<(), Self::Error>>
 	{
 		trace!( "Sink<WsMessage> for WsIo: poll_flush" );
 
@@ -254,15 +265,36 @@ impl Sink<WsMessage> for WsIo
 
 
 
-	fn poll_close( self: Pin<&mut Self>, _: &mut std::task::Context ) -> Poll<Result<(), Self::Error>>
+	// TODO: find a simpler implementation, notably this needs to clone the websocket and spawn a future.
+	//
+	fn poll_close( self: Pin<&mut Self>, cx: &mut Context ) -> Poll<Result<(), Self::Error>>
 	{
 		trace!( "Sink<WsMessage> for WsIo: poll_close" );
 
-		// TODO: fix the unwrap
-		//
-		self.ws.close().unwrap();
+		let state = self.ready_state();
 
-		Poll::Ready( Ok(()) )
+
+		if state == WsState::Connecting
+		|| state == WsState::Open
+		{
+			self.ws.close().unwrap_throw();
+		}
+
+
+		match state
+		{
+			WsState::Closed =>
+			{
+				trace!( "WebSocket connection closed!" );
+				Poll::Ready( Ok(()) )
+			}
+
+			_ =>
+			{
+				rt::spawn_local( Self::wake_on_close( self.ws.clone(), cx.waker().clone() ) ).expect( "spawn wake_on_close" );
+				Poll::Pending
+			}
+		}
 	}
 }
 

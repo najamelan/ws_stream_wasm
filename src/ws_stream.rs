@@ -51,6 +51,8 @@ impl WsStream
 		ws.set_binary_type( BinaryType::Arraybuffer );
 
 		future_event( |cb| ws.set_onopen( cb ) ).await;
+		ws.set_onopen( None );                           // drop event handler
+
 		trace!( "WebSocket connection opened!" );
 
 		Ok(( Self{ ws: ws.clone() }, WsIo::new( ws ) ))

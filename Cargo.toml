@@ -17,6 +17,10 @@ version = "^0.1"
 [dependencies.js-sys]
 version = "^0.3"
 
+[dependencies.naja_async_runtime]
+default-features = false
+version = "^0.2"
+
 [dependencies.tokio]
 default-features = false
 features = ["codec"]
@@ -39,10 +43,6 @@ rand_xoshiro = "^0.1"
 serde_cbor = "0.9.0"
 tokio-serde-cbor = "0.3.1"
 wasm-bindgen-test = "^0.2"
-
-[dev-dependencies.async_runtime]
-package = "naja_async_runtime"
-version = "=0.1.7"
 
 [dev-dependencies.futures_codec]
 path = "../../futures-codec"

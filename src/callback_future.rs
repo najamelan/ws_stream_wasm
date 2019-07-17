@@ -32,7 +32,10 @@ pub async fn future_event( setter: impl Fn( Option<&js_sys::Function> ) )
 	//
 	// The js closure wants an fn mut, so we can't use onshot here
 	//
-	// TODO: why not a oneshot?
+	// This cannot be a oneshot because the closure needs to be FnMut. In theory these events can
+	// fire several times, even though we only want it once.
+	//
+	// TODO: does this leak memory? as the event handlers don't get removed on the js side?
 	//
 	let (onready, ready) = unbounded::<()>();
 

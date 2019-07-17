@@ -41,16 +41,17 @@ mod import
 {
 	pub(crate) use
 	{
-		failure      :: { Backtrace, Fail, Context as FailContext                            } ,
-		futures      :: { channel::{ mpsc::unbounded }, Poll                                 } ,
-		futures      :: { prelude::{ Stream, Sink, AsyncWrite }, stream::{ StreamExt }       } ,
-		futures      :: { task::Context, ready                                               } ,
-		std          :: { io::{ self }, collections::VecDeque, fmt, task::Waker              } ,
-		std          :: { rc::Rc, cell::{ RefCell }, pin::Pin, convert::{ TryFrom, TryInto } } ,
-		log          :: { *                                                                  } ,
-		js_sys       :: { ArrayBuffer, Uint8Array                                            } ,
-		wasm_bindgen :: { closure::Closure, JsCast, JsValue, UnwrapThrowExt                  } ,
-		web_sys      :: { *, console::debug_1 as dbg, BinaryType, Blob, WebSocket            } ,
-		js_sys       :: { Array                                                              } ,
+		async_runtime :: { rt                                                                    } ,
+		failure       :: { Backtrace, Fail, Context as FailContext                               } ,
+		futures       :: { channel::mpsc::unbounded, Poll                                        } ,
+		futures       :: { prelude::{ Stream, Sink, AsyncWrite }, stream::{ StreamExt }          } ,
+		futures       :: { ready                                                                 } ,
+		std           :: { io::{ self }, collections::VecDeque, fmt, task::{ Context, Waker }    } ,
+		std           :: { rc::Rc, cell::{ RefCell }, pin::Pin, convert::{ TryFrom, TryInto }    } ,
+		log           :: { *                                                                     } ,
+		js_sys        :: { ArrayBuffer, Uint8Array                                               } ,
+		wasm_bindgen  :: { closure::Closure, JsCast, JsValue, UnwrapThrowExt                     } ,
+		web_sys       :: { *, console::debug_1 as dbg, BinaryType, Blob, WebSocket               } ,
+		js_sys        :: { Array                                                                 } ,
 	};
 }
