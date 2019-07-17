@@ -80,7 +80,7 @@ impl WsStream
 
 
 	/// Close the socket. The future will resolve once the socket's state has become `WsReadyState::CLOSED`.
-	/// TODO: allow setting reason and code.
+	/// See: [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebSocket/close)
 	//
 	pub async fn close( &self )
 	{
@@ -93,6 +93,69 @@ impl WsStream
 		future_event( |cb| self.ws.set_onclose( cb ) ).await;
 
 		trace!( "WebSocket connection closed!" );
+	}
+
+
+
+	/// Close the socket. The future will resolve once the socket's state has become `WsReadyState::CLOSED`.
+	/// See: [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebSocket/close)
+	//
+	pub async fn close_code( &self, code: u16  ) -> Result<(), WsErr>
+	{
+		match self.ws.close_with_code( code )
+		{
+			Ok(_) =>
+			{
+				future_event( |cb| self.ws.set_onclose( cb ) ).await;
+
+				trace!( "WebSocket connection closed!" );
+
+				Ok(())
+			}
+
+			Err( _e ) =>
+			{
+				// TODO: figure out how to print the original error
+				//
+				// error!( "{}", e.as_string().expect( "JsValue to string" ) );
+				//
+				Err( WsErrKind::InvalidCloseCode( code ).into() )
+			}
+		}
+	}
+
+
+
+	/// Close the socket. The future will resolve once the socket's state has become `WsReadyState::CLOSED`.
+	/// See: [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebSocket/close)
+	//
+	pub async fn close_reason( &self, code: u16, reason: impl AsRef<str>  ) -> Result<(), WsErr>
+	{
+		if reason.as_ref().len() > 123
+		{
+			return Err( WsErrKind::ReasonStringToLong.into() )
+		}
+
+		match self.ws.close_with_code_and_reason( code, reason.as_ref() )
+		{
+			Ok(_) =>
+			{
+				future_event( |cb| self.ws.set_onclose( cb ) ).await;
+
+				trace!( "WebSocket connection closed!" );
+
+				Ok(())
+			}
+
+			Err( _e ) =>
+			{
+				// TODO: figure out how to print the original error
+				//
+				// error!( "{}", e.as_string().expect( "JsValue to string" ) );
+				//
+				Err( WsErrKind::InvalidCloseCode(code).into() )
+			}
+		}
 	}
 
 

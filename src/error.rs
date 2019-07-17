@@ -80,6 +80,20 @@ pub enum WsErrKind
 	#[ fail( display = "The port to which the connection is being attempted is being blocked." ) ]
 	//
 	SecurityError,
+
+	/// An invalid close code was given to a close method. For valid close codes, please see:
+	/// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/CloseEvent#Status_codes)
+	///
+	#[ fail( display = "An invalid close code was given to a close method: {}", _0 ) ]
+	//
+	InvalidCloseCode(u16),
+
+	/// The reason string given to a close method is to long, please see:
+	/// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebSocket/close)
+	///
+	#[ fail( display = "The reason string given to a close method is to long." ) ]
+	//
+	ReasonStringToLong,
 }
 
 

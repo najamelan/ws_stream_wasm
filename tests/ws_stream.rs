@@ -26,7 +26,7 @@ pub fn state() -> impl Future01<Item = (), Error = JsValue>
 {
 	let _ = console_log::init_with_level( Level::Trace );
 
-	console_log!( "starting test: state" );
+	info!( "starting test: state" );
 
 	async
 	{
@@ -56,7 +56,7 @@ pub fn close_from_wsio() -> impl Future01<Item = (), Error = JsValue>
 {
 	let _ = console_log::init_with_level( Level::Trace );
 
-	console_log!( "starting test: close_from_wsio" );
+	info!( "starting test: close_from_wsio" );
 
 	async
 	{
@@ -87,7 +87,7 @@ pub fn url() -> impl Future01<Item = (), Error = JsValue>
 {
 	let _ = console_log::init_with_level( Level::Trace );
 
-	console_log!( "starting test: url" );
+	info!( "starting test: url" );
 
 	async
 	{
@@ -113,13 +113,143 @@ pub fn no_protocols() -> impl Future01<Item = (), Error = JsValue>
 {
 	let _ = console_log::init_with_level( Level::Trace );
 
-	console_log!( "starting test: no_protocols" );
+	info!( "starting test: no_protocols" );
 
 	async
 	{
 		let (ws, _wsio) = WsStream::connect( URL, None ).await.expect_throw( "Could not create websocket" );
 
 		assert_eq!( "", ws.protocol() );
+
+		let r: Result<(), wasm_bindgen::JsValue> = Ok(());
+
+		r
+
+	}.boxed_local().compat()
+}
+
+
+// Verify close_code method.
+//
+#[ wasm_bindgen_test(async) ]
+//
+pub fn close_code_valid() -> impl Future01<Item = (), Error = JsValue>
+{
+	let _ = console_log::init_with_level( Level::Trace );
+
+	info!( "starting test: close_code_valid" );
+
+	async
+	{
+		let (ws, _wsio) = WsStream::connect( URL, None ).await.expect_throw( "Could not create websocket" );
+
+		let res = ws.close_code( 1000 ).await;
+
+		assert!( res.is_ok() );
+
+		let r: Result<(), wasm_bindgen::JsValue> = Ok(());
+
+		r
+
+	}.boxed_local().compat()
+}
+
+
+// Verify close_code method.
+//
+#[ wasm_bindgen_test(async) ]
+//
+pub fn close_code_invalid() -> impl Future01<Item = (), Error = JsValue>
+{
+	let _ = console_log::init_with_level( Level::Trace );
+
+	info!( "starting test: close_code_invalid" );
+
+	async
+	{
+		let (ws, _wsio) = WsStream::connect( URL, None ).await.expect_throw( "Could not create websocket" );
+
+		let res = ws.close_code( 500 ).await;
+
+		assert_eq!( &WsErrKind::InvalidCloseCode(500), res.unwrap_err().kind() );
+
+		let r: Result<(), wasm_bindgen::JsValue> = Ok(());
+
+		r
+
+	}.boxed_local().compat()
+}
+
+
+// Verify close_code method.
+//
+#[ wasm_bindgen_test(async) ]
+//
+pub fn close_reason_valid() -> impl Future01<Item = (), Error = JsValue>
+{
+	let _ = console_log::init_with_level( Level::Trace );
+
+	info!( "starting test: close_reason_valid" );
+
+	async
+	{
+		let (ws, _wsio) = WsStream::connect( URL, None ).await.expect_throw( "Could not create websocket" );
+
+		let res = ws.close_reason( 1000, "Normal shutdown" ).await;
+
+		assert!( res.is_ok() );
+
+		let r: Result<(), wasm_bindgen::JsValue> = Ok(());
+
+		r
+
+	}.boxed_local().compat()
+}
+
+
+// Verify close_code method.
+//
+#[ wasm_bindgen_test(async) ]
+//
+pub fn close_reason_invalid_code() -> impl Future01<Item = (), Error = JsValue>
+{
+	let _ = console_log::init_with_level( Level::Trace );
+
+	info!( "starting test: close_reason_invalid_code" );
+
+	async
+	{
+		let (ws, _wsio) = WsStream::connect( URL, None ).await.expect_throw( "Could not create websocket" );
+
+		let res = ws.close_reason( 500, "Normal Shutdown" ).await;
+
+		assert_eq!( &WsErrKind::InvalidCloseCode(500), res.unwrap_err().kind() );
+
+		let r: Result<(), wasm_bindgen::JsValue> = Ok(());
+
+		r
+
+	}.boxed_local().compat()
+}
+
+
+// Verify close_code method.
+//
+#[ wasm_bindgen_test(async) ]
+//
+pub fn close_reason_invalid() -> impl Future01<Item = (), Error = JsValue>
+{
+	let _ = console_log::init_with_level( Level::Trace );
+
+	info!( "starting test: close_reason_invalid" );
+
+	async
+	{
+		let (ws, _wsio) = WsStream::connect( URL, None ).await.expect_throw( "Could not create websocket" );
+
+		let res = ws.close_reason( 1000, vec![ "a"; 124 ].join( "" ) ).await;
+
+		assert_eq!( &WsErrKind::ReasonStringToLong, res.unwrap_err().kind() );
 
 		let r: Result<(), wasm_bindgen::JsValue> = Ok(());
 
@@ -140,7 +270,7 @@ pub fn protocols_server_accept_none() -> impl Future01<Item = (), Error = JsValu
 {
 	let _ = console_log::init_with_level( Level::Trace );
 
-	console_log!( "starting test: protocols_server_accept_none" );
+	info!( "starting test: protocols_server_accept_none" );
 
 	async
 	{

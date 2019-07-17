@@ -2,8 +2,6 @@
 
 ## Features
 - include events (pharos)
-
-- close reason
 - reconnect?
 
 ## Testing

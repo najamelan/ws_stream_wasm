@@ -84,10 +84,6 @@ impl WsIo
 		{
 			trace!( "WsStream: message received!" );
 
-			#[ cfg( debug_assertions )]
-			//
-			dbg( &msg_evt );
-
 			q2.borrow_mut().push_back( JsMsgEvent{ msg_evt } );
 
 			if let Some( w ) = w2.borrow_mut().take()

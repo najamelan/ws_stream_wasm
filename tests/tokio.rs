@@ -52,7 +52,7 @@ pub fn data_integrity() -> impl Future01<Item = (), Error = JsValue>
 	//
 	let _ = console_log::init_with_level( Level::Trace );
 
-	console_log!( "starting test: data_integrity" );
+	info!( "starting test: data_integrity" );
 
 	let big_size   = 10240;
 	let mut random = vec![ 0u8; big_size ];
@@ -93,7 +93,7 @@ pub fn data_integrity() -> impl Future01<Item = (), Error = JsValue>
 //
 async fn echo( name: &str, size: usize, data: Bytes )
 {
-	console_log!( "   Enter echo: {}", name );
+	info!( "   Enter echo: {}", name );
 
 	let (_ws, wsio) = connect().await;
 	let (tx, rx)    = BytesCodec::new().framed(  wsio  ).split();
@@ -147,7 +147,7 @@ pub fn data_integrity_cbor() -> impl Future01<Item = (), Error = JsValue>
 	//
 	let _ = console_log::init_with_level( Level::Trace );
 
-	console_log!( "starting test: data_integrity_cbor" );
+	info!( "starting test: data_integrity_cbor" );
 
 	let dataset: Vec<Data> = vec!
 	[
@@ -177,7 +177,7 @@ pub fn data_integrity_cbor() -> impl Future01<Item = (), Error = JsValue>
 //
 async fn echo_cbor( data: Data )
 {
-	console_log!( "   Enter echo_cbor: {}", &data.hello );
+	info!( "   Enter echo_cbor: {}", &data.hello );
 
 	let (_ws, wsio) = connect().await;
 

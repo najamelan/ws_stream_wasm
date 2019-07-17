@@ -42,7 +42,7 @@ pub fn data_integrity() -> impl Future01<Item = (), Error = JsValue>
 {
 	let _ = console_log::init_with_level( Level::Trace );
 
-	console_log!( "starting test: data_integrity" );
+	info!( "starting test: data_integrity" );
 
 	let big_size   = 10240;
 	let mut random = vec![ 0; big_size ];
@@ -85,7 +85,7 @@ pub fn data_integrity() -> impl Future01<Item = (), Error = JsValue>
 //
 async fn echo( name: &str, size: usize, data: Bytes )
 {
-	console_log!( "   Enter echo: {}", name );
+	info!( "   Enter echo: {}", name );
 
 	let (_ws , wsio) = connect().await;
 
@@ -132,7 +132,7 @@ pub fn lines_integrity() -> impl Future01<Item = (), Error = JsValue>
 {
 	let _ = console_log::init_with_level( Level::Trace );
 
-	console_log!( "starting test: lines_integrity" );
+	info!( "starting test: lines_integrity" );
 
 
 	async move
@@ -140,25 +140,25 @@ pub fn lines_integrity() -> impl Future01<Item = (), Error = JsValue>
 		let (_ws , wsio ) = connect().await;
 		let mut framed = Framed::new( wsio, LinesCodec {} );
 
-		console_log!( "lines_integrity: start sending" );
+		info!( "lines_integrity: start sending" );
 
 		framed.send( "A line\n"       .to_string() ).await.expect_throw( "Send a line"        );
 		framed.send( "A second line\n".to_string() ).await.expect_throw( "Send a second line" );
 		framed.send( "A third line\n" .to_string() ).await.expect_throw( "Send a third line"  );
 
-		console_log!( "lines_integrity: start receiving" );
+		info!( "lines_integrity: start receiving" );
 
 		let one   = framed.next().await.expect_throw( "Some" ).expect_throw( "Receive a line"        );
 		let two   = framed.next().await.expect_throw( "Some" ).expect_throw( "Receive a second line" );
 		let three = framed.next().await.expect_throw( "Some" ).expect_throw( "Receive a third line"  );
 
-		console_log!( "lines_integrity: start asserting" );
+		info!( "lines_integrity: start asserting" );
 
 		assert_eq!( "A line\n"       , &one   );
 		assert_eq!( "A second line\n", &two   );
 		assert_eq!( "A third line\n" , &three );
 
-		console_log!( "lines_integrity: done" );
+		info!( "lines_integrity: done" );
 
 		let r: Result<(), wasm_bindgen::JsValue> = Ok(());
 
