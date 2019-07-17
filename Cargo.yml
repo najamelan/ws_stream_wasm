@@ -7,8 +7,8 @@ package:
   description   : Provide AsyncRead/AsyncWrite over WebSockets (both tokio and 0.3) in WASM
   license       : Unlicense
   documentation : https://docs.rs/ws_stream_wasm
-  homepage      : https://github.com/najamelan/wasm_websocket_stream
-  repository    : https://github.com/najamelan/wasm_websocket_stream
+  homepage      : https://github.com/najamelan/ws_stream_wasm
+  repository    : https://github.com/najamelan/ws_stream_wasm
   readme        : README.md
   keywords      : [ wasm, websocket, tokio, stream, async ]
   categories    : [ api-bindings, wasm, web-programming, "web-programming::websocket" ]
@@ -20,7 +20,7 @@ dependencies:
   wasm-logger             : ^0.1
   console_log             : ^0.1
   failure                 : ^0.1
-  futures-preview         : { path: ../../futures-rs/futures, features: [std, io-compat, compat], default-features: false }
+  futures-preview         : { path: ../futures-rs/futures, features: [std, io-compat, compat], default-features: false }
   # futures-preview         : { version: =0.3.0-alpha.17, features: [io-compat, compat] }
   log                     : ^0.4
   futures_01              : { version: ^0.1, package: futures }
@@ -51,7 +51,7 @@ dev-dependencies:
   serde            : { version: 1.0.87, features: [ derive ] }
   bytes            : ^0.4
   flexi_logger     : ^0.11
-  futures_codec    : { path: ../../futures-codec }
+  futures_codec    : { path: ../futures-codec }
   wasm-bindgen-test: ^0.2
 
 

@@ -8,7 +8,7 @@ wasm-logger = "^0.1"
 [dependencies.futures-preview]
 default-features = false
 features = ["std", "io-compat", "compat"]
-path = "../../futures-rs/futures"
+path = "../futures-rs/futures"
 
 [dependencies.futures_01]
 package = "futures"
@@ -45,7 +45,7 @@ tokio-serde-cbor = "0.3.1"
 wasm-bindgen-test = "^0.2"
 
 [dev-dependencies.futures_codec]
-path = "../../futures-codec"
+path = "../futures-codec"
 
 [dev-dependencies.serde]
 features = ["derive"]
@@ -57,12 +57,12 @@ categories = ["api-bindings", "wasm", "web-programming", "web-programming::webso
 description = "Provide AsyncRead/AsyncWrite over WebSockets (both tokio and 0.3) in WASM"
 documentation = "https://docs.rs/ws_stream_wasm"
 edition = "2018"
-homepage = "https://github.com/najamelan/wasm_websocket_stream"
+homepage = "https://github.com/najamelan/ws_stream_wasm"
 keywords = ["wasm", "websocket", "tokio", "stream", "async"]
 license = "Unlicense"
 name = "ws_stream_wasm"
 readme = "README.md"
-repository = "https://github.com/najamelan/wasm_websocket_stream"
+repository = "https://github.com/najamelan/ws_stream_wasm"
 version = "0.1.0"
 
 [profile]
