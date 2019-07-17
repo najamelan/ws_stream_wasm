@@ -17,8 +17,6 @@ package:
 dependencies:
 
   naja_async_runtime      : { version: ^0.2, default-features: false }
-  wasm-logger             : ^0.1
-  console_log             : ^0.1
   failure                 : ^0.1
   futures-preview         : { path: ../futures-rs/futures, features: [std, io-compat, compat], default-features: false }
   # futures-preview         : { version: =0.3.0-alpha.17, features: [io-compat, compat] }
@@ -27,7 +25,6 @@ dependencies:
 
   js-sys            : { version: ^0.3 }
   wasm-bindgen      : { version: ^0.2 }
-  tokio             : { version: ^0.1, default-features: false, features: [codec] }
 
   web-sys:
     version : ^0.3
@@ -42,6 +39,9 @@ dependencies:
 
 dev-dependencies:
 
+  tokio             : { version: ^0.1, default-features: false, features: [codec] }
+  wasm-logger             : ^0.1
+  console_log             : ^0.1
   console_error_panic_hook: ^0.1
   pretty_assertions: ^0.6
   rand_xoshiro     : ^0.1

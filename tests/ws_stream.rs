@@ -13,8 +13,7 @@ use
 };
 
 
-const URL_WSSTREAM: &str = "ws://127.0.0.1:3212/";
-const URL_WS      : &str = "ws://127.0.0.1:3312/";
+const URL: &str = "ws://127.0.0.1:3212/";
 
 
 
@@ -27,11 +26,11 @@ pub fn state() -> impl Future01<Item = (), Error = JsValue>
 {
 	let _ = console_log::init_with_level( Level::Trace );
 
-	info!( "starting test: state" );
+	console_log!( "starting test: state" );
 
 	async
 	{
-		let (ws, wsio) = WsStream::connect( URL_WS, None ).await.expect_throw( "Could not create websocket" );
+		let (ws, wsio) = WsStream::connect( URL, None ).await.expect_throw( "Could not create websocket" );
 
 		assert_eq!( WsState::Open, ws  .ready_state() );
 		assert_eq!( WsState::Open, wsio.ready_state() );
@@ -57,11 +56,11 @@ pub fn close_from_wsio() -> impl Future01<Item = (), Error = JsValue>
 {
 	let _ = console_log::init_with_level( Level::Trace );
 
-	info!( "starting test: state" );
+	console_log!( "starting test: close_from_wsio" );
 
 	async
 	{
-		let (ws, mut wsio) = WsStream::connect( URL_WS, None ).await.expect_throw( "Could not create websocket" );
+		let (ws, mut wsio) = WsStream::connect( URL, None ).await.expect_throw( "Could not create websocket" );
 
 		assert_eq!( WsState::Open, ws.ready_state() );
 
@@ -77,3 +76,82 @@ pub fn close_from_wsio() -> impl Future01<Item = (), Error = JsValue>
 	}.boxed_local().compat()
 }
 
+
+
+
+// Verify url method.
+//
+#[ wasm_bindgen_test(async) ]
+//
+pub fn url() -> impl Future01<Item = (), Error = JsValue>
+{
+	let _ = console_log::init_with_level( Level::Trace );
+
+	console_log!( "starting test: url" );
+
+	async
+	{
+		let (ws, _wsio) = WsStream::connect( URL, None ).await.expect_throw( "Could not create websocket" );
+
+		assert_eq!( URL, ws.url() );
+
+		let r: Result<(), wasm_bindgen::JsValue> = Ok(());
+
+		r
+
+	}.boxed_local().compat()
+}
+
+
+
+
+// Verify protocols.
+//
+#[ wasm_bindgen_test(async) ]
+//
+pub fn no_protocols() -> impl Future01<Item = (), Error = JsValue>
+{
+	let _ = console_log::init_with_level( Level::Trace );
+
+	console_log!( "starting test: no_protocols" );
+
+	async
+	{
+		let (ws, _wsio) = WsStream::connect( URL, None ).await.expect_throw( "Could not create websocket" );
+
+		assert_eq!( "", ws.protocol() );
+
+		let r: Result<(), wasm_bindgen::JsValue> = Ok(());
+
+		r
+
+	}.boxed_local().compat()
+}
+
+
+
+/*
+// Verify protocols.
+// This doesn't work with tungstenite for the moment.
+//
+#[ wasm_bindgen_test(async) ]
+//
+pub fn protocols_server_accept_none() -> impl Future01<Item = (), Error = JsValue>
+{
+	let _ = console_log::init_with_level( Level::Trace );
+
+	console_log!( "starting test: protocols_server_accept_none" );
+
+	async
+	{
+		let (ws, _wsio) = WsStream::connect( URL, vec![ "chat" ] ).await.expect_throw( "Could not create websocket" );
+
+		assert_eq!( "", ws.protocol() );
+
+		let r: Result<(), wasm_bindgen::JsValue> = Ok(());
+
+		r
+
+	}.boxed_local().compat()
+}
+*/

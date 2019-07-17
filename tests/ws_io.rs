@@ -14,7 +14,7 @@ use
 
 
 const URL_WSSTREAM: &str = "ws://127.0.0.1:3212/";
-const URL_WS      : &str = "ws://127.0.0.1:3312/";
+const URL_TT      : &str = "ws://127.0.0.1:3312/";
 
 
 
@@ -30,7 +30,7 @@ pub fn round_trip_text() -> impl Future01<Item = (), Error = JsValue>
 
 	async
 	{
-		let (_ws, wsio) = WsStream::connect( URL_WS, None ).await.expect_throw( "Could not create websocket" );
+		let (_ws, wsio) = WsStream::connect( URL_TT, None ).await.expect_throw( "Could not create websocket" );
 
 
 		let (mut tx, mut rx) = wsio.split();
@@ -90,31 +90,3 @@ pub fn round_trip_binary() -> impl Future01<Item = (), Error = JsValue>
 
 	}.boxed_local().compat()
 }
-
-
-
-
-// Verify url method.
-//
-#[ wasm_bindgen_test(async) ]
-//
-pub fn url() -> impl Future01<Item = (), Error = JsValue>
-{
-	let _ = console_log::init_with_level( Level::Trace );
-
-	info!( "starting test: url" );
-
-	async
-	{
-		let (ws, _wsio) = WsStream::connect( URL_WSSTREAM, None ).await.expect_throw( "Could not create websocket" );
-
-		assert_eq!( URL_WSSTREAM, ws.url() );
-
-		let r: Result<(), wasm_bindgen::JsValue> = Ok(());
-
-		r
-
-	}.boxed_local().compat()
-}
-
-
