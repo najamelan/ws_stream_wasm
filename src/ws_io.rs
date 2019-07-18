@@ -9,7 +9,7 @@ use
 /// use tokio codecs. See the [integration tests](https://github.com/ws_stream_wasm/tree/master/tests/tokio_codec.rs)
 /// if you need an example.
 ///
-/// Created with [WsStream::connect].
+/// Created with [WsStream::connect](crate::WsStream::connect).
 ///
 #[ allow( dead_code ) ] // we need to store the closure to keep it form being dropped
 //

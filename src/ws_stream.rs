@@ -28,9 +28,9 @@ impl WsStream
 	/// [security error](https://developer.mozilla.org/en-US/docs/Web/API/WebSocket/WebSocket#Exceptions_thrown).
 	///
 	/// This returns both a [WsStream] (allow manipulating and requesting metatdata for the connection) and
-	/// a [WsIo] (Stream/Sink over [WsMessage] + AsyncRead/AsyncWrite).
+	/// a [WsIo] (Stream/Sink over [WsMessage](crate::WsMessage) + AsyncRead/AsyncWrite).
 	///
-	/// When you drop this, the connection does not get closed, however when you drop WsIo it does.
+	/// When you drop this, the connection does not get closed, however when you drop [WsIo] it does.
 	///
 	/// **Note**: Sending protocols to a server that doesn't support them will make the connection fail.
 	//

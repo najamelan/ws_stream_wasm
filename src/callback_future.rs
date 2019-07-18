@@ -8,14 +8,25 @@ use crate::import::*;
 ///
 /// ## Example
 ///
-/// This example shows how to set the [`on_open`](https://docs.rs/web-sys/0.3.22/web_sys/struct.WebSocket.html#method.set_onopen) callback for [web_sys::WebSocket](https://docs.rs/web-sys/0.3.22/web_sys/struct.WebSocket.html)
+/// This example shows how to set the [`on_open`](https://docs.rs/web-sys/0.3.22/web_sys/struct.WebSocket.html#method.set_onopen) callback for [web_sys::WebSocket](https://docs.rs/web-sys/0.3.22/web_sys/struct.WebSocket.html) and await the event.
 ///
 /// ```
-/// use wasm_websocket_stream::future_event;
+/// #![ feature( async_await ) ]
 ///
-/// pub async fn connect( &self )
+/// use
 /// {
-///    future_event( |cb| self.ws.set_onopen( cb ) ).await;
+///    ws_stream_wasm::future_event,
+///    log::*,
+///    web_sys::WebSocket,
+/// };
+///
+/// pub async fn connect()
+/// {
+///    // connect to the websocket
+///    //
+///    let ws = WebSocket::new( "127.0.0.1:3012" ).unwrap();
+///
+///    future_event( |cb| ws.set_onopen( cb ) ).await;
 ///
 ///    trace!( "WebSocket connection opened!" );
 /// }

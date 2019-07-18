@@ -1,11 +1,8 @@
 use crate::import::*;
 
 
-/// [Data](https://docs.rs/web-sys/0.3.17/web_sys/struct.MessageEvent.html#method.data) contained in a MessageEvent. See:
-/// [Html5 specs](https://html.spec.whatwg.org/multipage/web-sockets.html#feedback-from-the-protocol)
-///
-/// Data can be a string or binary.
-///
+/// Represents a WebSocket Message, after converting from JavaScript type.
+//
 #[ derive( Debug, Clone, PartialEq, Eq, Hash ) ]
 //
 pub enum WsMessage

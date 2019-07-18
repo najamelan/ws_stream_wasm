@@ -3,7 +3,6 @@ use crate::import::*;
 /// The error type for errors happening in `ws_stream_wasm`.
 ///
 /// Use [`WsErr::kind()`] to know which kind of error happened.
-/// ```
 //
 #[ derive( Debug ) ]
 //
@@ -20,12 +19,6 @@ pub struct WsErr
 //
 pub enum WsErrKind
 {
-	/// This is an error from tokio-tungstenite.
-	//
-	#[ fail( display = "The WebSocket handshake failed" ) ]
-	//
-	WsHandshake,
-
 	/// Invalid input to `WsReadyState::try_from( u16 )`
 	///
 	#[ fail( display = "Invalid input to conversion to WsReadyState: {}", _0 ) ]

@@ -95,7 +95,7 @@ wasm-pack test --firefox [--headless] [--release]
 wasm-pack test --chrome  [--headless] [--release]
 ```
 
-In general chrome is well faster. When running it in the browser (not --headless) you get trace logging
+In general chrome is well faster. When running it in the browser (without `--headless`) you get trace logging
 in the console, which helps debugging. In chrome you need to enable verbose output in the console,
 otherwise only info and up level are reported.
 

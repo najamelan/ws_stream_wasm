@@ -37,6 +37,7 @@ script:
   - cargo run --example echo --release &
   - cargo run --example echo_tt --release -- "127.0.0.1:3312"  &
   - cd ..
+  - cargo test # for doc tests
   - wasm-pack test  --firefox --headless
   - wasm-pack test  --chrome  --headless
   - wasm-pack test  --firefox --headless --release
