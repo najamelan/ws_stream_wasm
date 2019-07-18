@@ -5,19 +5,19 @@ wasm_bindgen_test_configure!(run_in_browser);
 
 use
 {
-	wasm_bindgen::prelude :: { *                                                     } ,
-	wasm_bindgen_test     :: { *                                                     } ,
-	ws_stream_wasm        :: { *                                                     } ,
-	log                   :: { *                                                     } ,
-	rand_xoshiro          :: { *                                                     } ,
-	rand                  :: { RngCore, SeedableRng                                  } ,
-	bytes                 :: { Bytes                                                 } ,
-	futures_01            :: { Future as Future01                                    } ,
-	futures               :: { future::{ FutureExt, TryFutureExt }, TryStreamExt     } ,
-	futures               :: { stream::{ StreamExt, IntoAsyncRead }, sink::SinkExt,  } ,
-	futures_codec         :: { Framed, LinesCodec, BytesCodec                        } ,
-	serde                 :: { Serialize, Deserialize                                } ,
-	// web_sys               :: { console::log_1 as dbg                           } ,
+	wasm_bindgen::prelude :: { *                                    } ,
+	wasm_bindgen_test     :: { *                                    } ,
+	ws_stream_wasm        :: { *                                    } ,
+	log                   :: { *                                    } ,
+	rand_xoshiro          :: { *                                    } ,
+	rand                  :: { RngCore, SeedableRng                 } ,
+	bytes                 :: { Bytes                                } ,
+	futures_01            :: { Future as Future01                   } ,
+	futures               :: { future::{ FutureExt, TryFutureExt }  } ,
+	futures               :: { stream::StreamExt, sink::SinkExt,    } ,
+	futures_codec         :: { Framed, LinesCodec, BytesCodec       } ,
+	serde                 :: { Serialize, Deserialize               } ,
+	// web_sys               :: { console::log_1 as dbg               } ,
 };
 
 const URL: &str = "ws://127.0.0.1:3212";
@@ -25,11 +25,11 @@ const URL: &str = "ws://127.0.0.1:3212";
 
 
 
-async fn connect() -> (WsStream, IntoAsyncRead<WsIoBinary>)
+async fn connect() -> (WsStream, WsIo)
 {
-	let (ws, wsio) = WsStream::connect_binary( URL, None ).await.expect_throw( "Could not create websocket" );
+	let (ws, wsio) = WsStream::connect( URL, None ).await.expect_throw( "Could not create websocket" );
 
-	(ws, wsio.into_async_read())
+	(ws, wsio)
 }
 
 

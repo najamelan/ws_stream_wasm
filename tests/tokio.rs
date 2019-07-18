@@ -5,22 +5,22 @@ wasm_bindgen_test_configure!(run_in_browser);
 
 use
 {
-	wasm_bindgen::prelude :: { *                                                   } ,
-	wasm_bindgen_test     :: { *                                                   } ,
-	ws_stream_wasm        :: { *                                                   } ,
-	log                   :: { *                                                   } ,
-	rand_xoshiro          :: { *                                                   } ,
-	rand                  :: { RngCore, SeedableRng                                } ,
-	tokio                 :: { codec::{ BytesCodec, Decoder }                      } ,
-	bytes                 :: { Bytes                                               } ,
-	futures_01            :: { Future as Future01                                  } ,
-	futures               :: { future::{ FutureExt, TryFutureExt }                 } ,
-	futures               :: { stream::{ StreamExt, IntoAsyncRead }, sink::SinkExt } ,
-	futures               :: { TryStreamExt, AsyncReadExt, compat::Compat          } ,
-	futures::compat       :: { Stream01CompatExt, Sink01CompatExt                  } ,
-	tokio::prelude        :: { Stream                                              } ,
-	serde                 :: { Serialize, Deserialize                              } ,
-	tokio_serde_cbor      :: { Codec                                               } ,
+	wasm_bindgen::prelude :: { *                                    } ,
+	wasm_bindgen_test     :: { *                                    } ,
+	ws_stream_wasm        :: { *                                    } ,
+	log                   :: { *                                    } ,
+	rand_xoshiro          :: { *                                    } ,
+	rand                  :: { RngCore, SeedableRng                 } ,
+	tokio                 :: { codec::{ BytesCodec, Decoder }       } ,
+	bytes                 :: { Bytes                                } ,
+	futures_01            :: { Future as Future01                   } ,
+	futures               :: { future::{ FutureExt, TryFutureExt }  } ,
+	futures               :: { stream::{ StreamExt }, sink::SinkExt } ,
+	futures               :: { AsyncReadExt, compat::Compat         } ,
+	futures::compat       :: { Stream01CompatExt, Sink01CompatExt   } ,
+	tokio::prelude        :: { Stream                               } ,
+	serde                 :: { Serialize, Deserialize               } ,
+	tokio_serde_cbor      :: { Codec                                } ,
 	// web_sys               :: { console::log_1 as dbg                               } ,
 };
 
@@ -31,11 +31,11 @@ const URL: &str = "ws://127.0.0.1:3212";
 
 
 
-async fn connect() -> (WsStream, Compat<IntoAsyncRead<WsIoBinary>>)
+async fn connect() -> (WsStream, Compat<WsIo>)
 {
-	let (ws, wsio) = WsStream::connect_binary( URL, None ).await.expect_throw( "Could not create websocket" );
+	let (ws, wsio) = WsStream::connect( URL, None ).await.expect_throw( "Could not create websocket" );
 
-	(ws, wsio.into_async_read().compat())
+	( ws, AsyncReadExt::compat(wsio) )
 }
 
 

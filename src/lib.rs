@@ -16,23 +16,21 @@
 #![ forbid ( unsafe_code                                      ) ]
 #![ allow  ( clippy::suspicious_else_formatting               ) ]
 
-mod error             ;
-mod ws_message        ;
-mod ws_io             ;
-mod ws_state          ;
-mod ws_io_binary      ;
-mod ws_stream         ;
-mod callback_future   ;
+mod error           ;
+mod ws_message      ;
+mod ws_io           ;
+mod ws_state        ;
+mod ws_stream       ;
+mod callback_future ;
 
 pub use
 {
-	ws_state          :: { WsState                    } ,
-	callback_future   :: { future_event               } ,
-	error             :: { WsErr      , WsErrKind     } ,
-	ws_message        :: { WsMessage                  } ,
-	ws_io             :: { WsIo                       } ,
-	ws_io_binary      :: { WsIoBinary                 } ,
-	ws_stream         :: { WsStream                   } ,
+	ws_state          :: { WsState                } ,
+	callback_future   :: { future_event           } ,
+	error             :: { WsErr      , WsErrKind } ,
+	ws_message        :: { WsMessage              } ,
+	ws_io             :: { WsIo                   } ,
+	ws_stream         :: { WsStream               } ,
 };
 
 
@@ -41,17 +39,17 @@ mod import
 {
 	pub(crate) use
 	{
-		async_runtime :: { rt                                                                 } ,
-		failure       :: { Backtrace, Fail, Context as FailContext                            } ,
-		futures       :: { channel::mpsc::unbounded, Poll                                     } ,
-		futures       :: { prelude::{ Stream, Sink, AsyncWrite }, stream::{ StreamExt }       } ,
-		futures       :: { ready                                                              } ,
-		std           :: { io::{ self }, collections::VecDeque, fmt, task::{ Context, Waker } } ,
-		std           :: { rc::Rc, cell::{ RefCell }, pin::Pin, convert::{ TryFrom, TryInto } } ,
-		log           :: { *                                                                  } ,
-		js_sys        :: { ArrayBuffer, Uint8Array                                            } ,
-		wasm_bindgen  :: { closure::Closure, JsCast, JsValue, UnwrapThrowExt                  } ,
-		web_sys       :: { *, BinaryType, Blob, WebSocket                                     } ,
-		js_sys        :: { Array                                                              } ,
+		async_runtime :: { rt                                                                      } ,
+		failure       :: { Backtrace, Fail, Context as FailContext                                 } ,
+		futures       :: { channel::mpsc::unbounded, Poll                                          } ,
+		futures       :: { prelude::{ Stream, Sink, AsyncWrite, AsyncRead }, stream::{ StreamExt } } ,
+		futures       :: { ready                                                                   } ,
+		std           :: { io, cmp, collections::VecDeque, fmt, task::{ Context, Waker }           } ,
+		std           :: { rc::Rc, cell::{ RefCell }, pin::Pin, convert::{ TryFrom, TryInto }      } ,
+		log           :: { *                                                                       } ,
+		js_sys        :: { ArrayBuffer, Uint8Array                                                 } ,
+		wasm_bindgen  :: { closure::Closure, JsCast, JsValue, UnwrapThrowExt                       } ,
+		web_sys       :: { *, BinaryType, Blob, WebSocket                                          } ,
+		js_sys        :: { Array                                                                   } ,
 	};
 }

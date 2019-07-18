@@ -18,8 +18,7 @@ dependencies:
 
   naja_async_runtime      : { version: ^0.2, default-features: false }
   failure                 : ^0.1
-  futures-preview         : { path: ../futures-rs/futures, features: [std, io-compat, compat], default-features: false }
-  # futures-preview         : { version: =0.3.0-alpha.17, features: [io-compat, compat] }
+  futures-preview         : { version: ^0.3.0-alpha.17, features: [io-compat, compat] }
   log                     : ^0.4
   futures_01              : { version: ^0.1, package: futures }
   js-sys                  : { version: ^0.3 }

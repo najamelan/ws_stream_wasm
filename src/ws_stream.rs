@@ -1,6 +1,6 @@
 use
 {
-	crate :: { import::*, future_event, WsErr, WsErrKind, WsState, WsIo, WsIoBinary },
+	crate :: { import::*, future_event, WsErr, WsErrKind, WsState, WsIo },
 };
 
 
@@ -28,7 +28,7 @@ impl WsStream
 	/// [security error](https://developer.mozilla.org/en-US/docs/Web/API/WebSocket/WebSocket#Exceptions_thrown).
 	///
 	/// This returns both a [WsStream] (allow manipulating and requesting metatdata for the connection) and
-	/// a [WsIo] (Stream/Sink over [WsMessage]).
+	/// a [WsIo] (Stream/Sink over [WsMessage] + AsyncRead/AsyncWrite).
 	///
 	/// **Note**: Sending protocols to a server that doesn't support them will make the connection fail.
 	//
@@ -62,25 +62,6 @@ impl WsStream
 		trace!( "WebSocket connection opened!" );
 
 		Ok(( Self{ ws: ws.clone() }, WsIo::new( ws ) ))
-	}
-
-
-	/// Connect to the server. The future will resolve when the connection has been established. There is currently
-	/// no timeout mechanism here in case of failure. You should implement that yourself.
-	///
-	/// This creates a WsIoBinary, which is a stream over Vec<u8> and implements AsyncRead/AsyncWrite rather than
-	/// a stream over [WsMessage].
-	///
-	/// Can fail if there is a
-	/// [security error](https://developer.mozilla.org/en-US/docs/Web/API/WebSocket/WebSocket#Exceptions_thrown).
-	//
-	pub async fn connect_binary( url: impl AsRef<str>, protocols: impl Into<Option<Vec<&str>>> )
-
-		-> Result< (Self, WsIoBinary), WsErr >
-	{
-		let (ws_stream, wsio) = Self::connect( url, protocols ).await?;
-
-		Ok(( ws_stream, WsIoBinary::new( wsio ) ))
 	}
 
 

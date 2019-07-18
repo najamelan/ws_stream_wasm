@@ -14,6 +14,7 @@ pub struct WsIo
 	on_mesg: Closure< dyn FnMut( MessageEvent ) + 'static > ,
 	queue  : Rc<RefCell< VecDeque<WsMessage> >>             ,
 	waker  : Rc<RefCell<Option<Waker>>>                     ,
+	state  : ReadState                                      ,
 }
 
 
@@ -25,6 +26,7 @@ impl WsIo
 	{
 		let waker: Rc<RefCell<Option<Waker>>> = Rc::new( RefCell::new( None ));
 
+		let state = ReadState::PendingChunk;
 		let queue = Rc::new( RefCell::new( VecDeque::new() ) );
 		let q2    = queue.clone();
 		let w2    = waker.clone();
@@ -57,6 +59,7 @@ impl WsIo
 			ws      ,
 			queue   ,
 			on_mesg ,
+			state   ,
 			waker   ,
 		}
 	}
@@ -261,4 +264,144 @@ impl Sink<WsMessage> for WsIo
 		}
 	}
 }
+
+
+
+
+
+impl AsyncWrite for WsIo
+{
+	fn poll_write( mut self: Pin<&mut Self>, cx: &mut Context, buf: &[u8] ) -> Poll<Result<usize, io::Error>>
+	{
+		let res = ready!( self.as_mut().poll_ready( cx ) );
+
+		match res
+		{
+			Ok(_) =>
+			{
+				let n = buf.len();
+
+				match self.start_send( WsMessage::Binary( buf.into() ) )
+				{
+					Ok (_) => { return Poll::Ready( Ok(n) ); }
+					Err(e) =>
+					{
+						match e.kind()
+						{
+							WsErrKind::ConnectionClosed => { return Poll::Ready( Err( io::Error::from( io::ErrorKind::NotConnected ))) }
+							_                           => unreachable!()
+						}
+					}
+				}
+			}
+
+			Err(e) => match e.kind()
+			{
+				WsErrKind::ConnectionClosed => { return Poll::Ready( Err( io::Error::from( io::ErrorKind::NotConnected ))) }
+				_                           => unreachable!()
+			}
+		}
+	}
+
+
+
+	fn poll_flush( self: Pin<&mut Self>, _cx: &mut Context ) -> Poll<Result<(), io::Error>>
+	{
+		Poll::Ready( Ok(()) )
+	}
+
+
+	fn poll_close( self: Pin<&mut Self>, cx: &mut Context ) -> Poll<Result<(), io::Error>>
+	{
+		let _ = ready!( < Self as Sink<WsMessage> >::poll_close( self, cx ) );
+
+		// WsIo poll_close is infallible
+		//
+		Poll::Ready( Ok(()) )
+	}
+}
+
+
+
+#[derive(Debug, Clone)]
+//
+enum ReadState
+{
+	Ready { chunk: Vec<u8>, chunk_start: usize },
+	PendingChunk,
+}
+
+
+
+impl AsyncRead for WsIo
+{
+	fn poll_read( mut self: Pin<&mut Self>, cx: &mut Context, buf: &mut [u8] ) -> Poll< Result<usize, io::Error> >
+	{
+		trace!( "WsIo - AsyncRead: poll_read called" );
+
+		loop
+		{
+			match &mut self.state
+			{
+				ReadState::Ready { chunk, chunk_start } =>
+				{
+					let end = cmp::min( *chunk_start + buf.len(), chunk.len() );
+					let len = end - *chunk_start;
+
+					buf[..len].copy_from_slice( &chunk[*chunk_start..end] );
+
+
+					if chunk.len() == end
+					{
+						self.state = ReadState::PendingChunk;
+					}
+
+					else
+					{
+						*chunk_start = end;
+					}
+
+
+					return Poll::Ready( Ok(len) );
+				}
+
+
+				ReadState::PendingChunk =>
+				{
+					trace!( "poll_read: pending" );
+
+					match Pin::new( &mut self ).poll_next(cx)
+					{
+						// We have a message
+						//
+						Poll::Ready( Some(chunk) ) =>
+						{
+							self.state = ReadState::Ready { chunk: chunk.into(), chunk_start: 0 };
+							continue;
+						}
+
+						// The stream has ended
+						//
+						Poll::Ready( None ) =>
+						{
+							trace!( "poll_read: stream has ended" );
+							return Poll::Ready( Ok(0) );
+						}
+
+						// No chunk yet, save the task to be woken up
+						//
+						Poll::Pending =>
+						{
+							trace!( "poll_read: return Pending" );
+
+							return Poll::Pending;
+						}
+					}
+				}
+			}
+		}
+	}
+}
+
+
 

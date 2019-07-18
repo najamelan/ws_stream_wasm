@@ -4,12 +4,13 @@ wasm_bindgen_test_configure!(run_in_browser);
 
 use
 {
-	futures_01            :: Future as Future01,
-	futures::prelude      :: * ,
-	wasm_bindgen::prelude :: * ,
-	wasm_bindgen_test     :: * ,
-	ws_stream_wasm        :: * ,
-	log                   :: * ,
+	futures_01            :: { Future as Future01 } ,
+	futures::prelude      :: { *                  } ,
+	futures               :: { sink::SinkExt      } ,
+	wasm_bindgen::prelude :: { *                  } ,
+	wasm_bindgen_test     :: { *                  } ,
+	ws_stream_wasm        :: { *                  } ,
+	log                   :: { *                  } ,
 };
 
 
@@ -62,7 +63,7 @@ pub fn close_from_wsio() -> impl Future01<Item = (), Error = JsValue>
 
 		assert_eq!( WsState::Open, ws.ready_state() );
 
-		wsio.close().await.expect( "close wsio sink" );
+		SinkExt::close( &mut wsio ).await.expect( "close wsio sink" );
 
 		assert_eq!( WsState::Closed, wsio.ready_state() );
 		assert_eq!( WsState::Closed, ws  .ready_state() );

@@ -5,9 +5,7 @@
 - reconnect?
 
 - derive Debug/Clone/PartialEq/Eq on all types
-- remove JsMsgEvent and just keep WsMessage?
-- implement AsyncRead ourselves and not wait for futures to merge our pull request.
-  this has the added benefit that we can have a stream of Vec<u8> and not of IoResult.
+
 
 ## Testing
 - what if server refuses connection? What error?

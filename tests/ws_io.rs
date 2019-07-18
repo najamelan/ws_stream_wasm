@@ -30,19 +30,16 @@ pub fn round_trip_text() -> impl Future01<Item = (), Error = JsValue>
 
 	async
 	{
-		let (_ws, wsio) = WsStream::connect( URL_TT, None ).await.expect_throw( "Could not create websocket" );
+		let (_ws, mut wsio) = WsStream::connect( URL_TT, None ).await.expect_throw( "Could not create websocket" );
+		let message         = "Hello from browser".to_string();
 
 
-		let (mut tx, mut rx) = wsio.split();
-		let message          = "Hello from browser".to_string();
-
-
-		tx.send( WsMessage::Text( message.clone() ) ).await
+		wsio.send( WsMessage::Text( message.clone() ) ).await
 
 			.expect_throw( "Failed to write to websocket" );
 
 
-		let msg    = rx.next().await;
+		let msg    = wsio.next().await;
 		let result = msg.expect_throw( "Stream closed" );
 
 		assert_eq!( WsMessage::Text( message ), result );
@@ -66,18 +63,16 @@ pub fn round_trip_binary() -> impl Future01<Item = (), Error = JsValue>
 
 	async
 	{
-		let (_ws, wsio) = WsStream::connect( URL, None ).await.expect_throw( "Could not create websocket" );
-
-		let (mut tx, mut rx) = wsio.split();
-		let message          = b"Hello from browser".to_vec();
+		let (_ws, mut wsio) = WsStream::connect( URL, None ).await.expect_throw( "Could not create websocket" );
+		let message         = b"Hello from browser".to_vec();
 
 
-		tx.send( WsMessage::Binary( message.clone() ) ).await
+		wsio.send( WsMessage::Binary( message.clone() ) ).await
 
 			.expect_throw( "Failed to write to websocket" );
 
 
-		let msg    = rx.next().await;
+		let msg    = wsio.next().await;
 		let result = msg.expect_throw( "Stream closed" );
 
 		assert_eq!( WsMessage::Binary( message ), result );

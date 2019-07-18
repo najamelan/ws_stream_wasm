@@ -71,3 +71,16 @@ impl From< MessageEvent > for WsMessage
 		}
 	}
 }
+
+
+impl From<WsMessage> for Vec<u8>
+{
+	fn from( msg: WsMessage ) -> Self
+	{
+		match msg
+		{
+			WsMessage::Text  ( string ) => string.into(),
+			WsMessage::Binary( vec    ) => vec          ,
+		}
+	}
+}
