@@ -10,7 +10,6 @@
 - check all unwrap/expect
 - verify all features are tested
 - verify Cargo.yml + all dependencies
-- mention above all integration tests what is tested
 - enable travis CI
 
 ## Documentation

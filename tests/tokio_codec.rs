@@ -2,7 +2,13 @@
 wasm_bindgen_test_configure!(run_in_browser);
 
 
-
+// What's tested:
+//
+// Tests send to an echo server which just bounces back all data.
+//
+// ✔ Frame with a BytesCodec and verify that a round trip returns identical data
+// ✔ Send 1MB data in a custom struct serialized with cbor_codec
+//
 use
 {
 	wasm_bindgen::prelude :: { *                                    } ,
@@ -27,7 +33,6 @@ use
 
 
 const URL: &str = "ws://127.0.0.1:3212";
-
 
 
 

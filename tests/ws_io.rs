@@ -2,6 +2,19 @@
 wasm_bindgen_test_configure!(run_in_browser);
 
 
+
+// What's tested:
+//
+// Tests send to an echo server which just bounces back all data.
+//
+// ✔ Send a WsMessage::Text   and verify we get an identical WsMessage back.
+// ✔ Send a WsMessage::Binary and verify we get an identical WsMessage back.
+// ✔ Send while closing and verify the error
+// ✔ Send while closed  and verify the error
+// ✔ Test Debug impl
+//
+// Note that AsyncRead/AsyncWrite are tested by futures_codec.rs and tokio_codec.rs
+//
 use
 {
 	futures_01            :: Future as Future01,
@@ -11,6 +24,7 @@ use
 	ws_stream_wasm        :: * ,
 	log                   :: * ,
 };
+
 
 
 const URL   : &str = "ws://127.0.0.1:3212/";

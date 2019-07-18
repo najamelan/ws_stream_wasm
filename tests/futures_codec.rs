@@ -1,8 +1,13 @@
 #![ feature( async_await, trait_alias )]
 wasm_bindgen_test_configure!(run_in_browser);
 
-
-
+// What's tested:
+//
+// Tests send to an echo server which just bounces back all data.
+//
+// ✔ Frame with a BytesCodec and verify that a round trip returns identical data
+// ✔ Use a LinesCodec and get back identical lines
+//
 use
 {
 	wasm_bindgen::prelude :: { *                                    } ,

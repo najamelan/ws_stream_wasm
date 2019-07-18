@@ -222,7 +222,9 @@ impl Sink<WsMessage> for WsIo
 
 
 
-	// TODO: find a simpler implementation, notably this needs to clone the websocket and spawn a future.
+	// TODO: find a simpler implementation, notably this needs to spawn a future.
+	//       this can be done by creating a custom future. If we are going to implement
+	//       events with pharos, that's probably a good time to re-evaluate this.
 	//
 	fn poll_close( self: Pin<&mut Self>, cx: &mut Context ) -> Poll<Result<(), Self::Error>>
 	{
