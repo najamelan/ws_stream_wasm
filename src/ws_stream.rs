@@ -100,13 +100,13 @@ impl WsStream
 				Ok(())
 			}
 
-			Err( _e ) =>
+			Err(_) =>
 			{
-				// TODO: figure out how to print the original error
-				//
-				// error!( "{}", e.as_string().expect( "JsValue to string" ) );
-				//
-				Err( WsErrKind::InvalidCloseCode( code ).into() )
+				let e = WsErr::from( WsErrKind::InvalidCloseCode( code ) );
+
+				error!( "{}", e );
+
+				Err( e )
 			}
 		}
 	}
@@ -134,13 +134,13 @@ impl WsStream
 				Ok(())
 			}
 
-			Err( _e ) =>
+			Err(_) =>
 			{
-				// TODO: figure out how to print the original error
-				//
-				// error!( "{}", e.as_string().expect( "JsValue to string" ) );
-				//
-				Err( WsErrKind::InvalidCloseCode(code).into() )
+				let e = WsErr::from( WsErrKind::InvalidCloseCode( code ) );
+
+				error!( "{}", e );
+
+				Err( e )
 			}
 		}
 	}

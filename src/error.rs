@@ -59,18 +59,11 @@ pub enum WsErrKind
 	//
 	InvalidWsState( u16 ),
 
-	/// This happens when you try to write a message after the connection is closed.
-	///
-	#[ fail( display = "The connection is already closed" ) ]
+	/// When trying to send and WsState is anything but WsState::Open this error is returned.
 	//
-	ConnectionClosed,
-
-	/// This happens when you start_send on the Sink while the connection isn't ready yet.
-	/// You should verify the connection state with `poll_ready` before calling `start_send`.
-	///
-	#[ fail( display = "The connection not yet ready" ) ]
+	#[ fail( display = "The connection state is not \"Open\"" ) ]
 	//
-	ConnectionNotReady,
+	ConnectionNotOpen,
 
 	/// The port to which the connection is being attempted is being blocked.
 	/// This can happen upon creating the websocket. See:
@@ -147,12 +140,3 @@ impl From< FailContext<WsErrKind> > for WsErr
 		WsErr { inner }
 	}
 }
-
-
-// TODO: this no longer compiles. It compiles fine in thespis, but not in this crate even though this
-// file is largely copy/paste. The problem is that there is a blanket impl for Fail in failure for every
-// E: std::error::Error + 'static + Send + Sync
-//
-// impl std::error::Error for WsErr {}
-
-

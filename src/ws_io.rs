@@ -129,10 +129,7 @@ impl Stream for WsIo
 	type Item = WsMessage;
 
 	// Currently requires an unfortunate copy from Js memory to Wasm memory. Hopefully one
-	// day we will be able to receive the JsMsgEvent directly in Wasm.
-	//
-	// TODO: if we would use a channel, this would be simplified somewhat. The question
-	//       is what is the performance difference.
+	// day we will be able to receive the MessageEvt directly in Wasm.
 	//
 	fn poll_next( mut self: Pin<&mut Self>, cx: &mut Context ) -> Poll<Option< Self::Item >>
 	{
@@ -178,7 +175,7 @@ impl Sink<WsMessage> for WsIo
 		{
 			WsState::Connecting => Poll::Pending        ,
 			WsState::Open       => Poll::Ready( Ok(()) ),
-			_                   => Poll::Ready( Err( WsErrKind::ConnectionClosed.into() )),
+			_                   => Poll::Ready( Err( WsErrKind::ConnectionNotOpen.into() )),
 		}
 	}
 
@@ -189,25 +186,28 @@ impl Sink<WsMessage> for WsIo
 
 		match self.ready_state()
 		{
-			WsState::Open       =>
+			WsState::Open =>
 			{
-				// TODO: fix the unwrap
+				// The send method can return 2 errors:
+				// - unpaired surrogates in UTF (we shouldn't get those in rust strings)
+				// - connection is already closed.
+				//
+				// So if this returns an error, we will return ConnectionNotOpen. In principle
+				// we just checked that it's open, but this guarantees correctness.
 				//
 				match item
 				{
-					WsMessage::Binary( mut d ) => { self.ws.send_with_u8_array( &mut d ).unwrap(); }
-					WsMessage::Text  (     s ) => { self.ws.send_with_str     ( &    s ).unwrap(); }
+					WsMessage::Binary( mut d ) => { self.ws.send_with_u8_array( &mut d ).map_err( |_| WsErrKind::ConnectionNotOpen)?; }
+					WsMessage::Text  (     s ) => { self.ws.send_with_str     ( &    s ).map_err( |_| WsErrKind::ConnectionNotOpen)?; }
 				}
 
 				Ok(())
 			},
 
 
-			WsState::Connecting => Err( WsErrKind::ConnectionNotReady.into() ),
-
-			// Closing or Closed
+			// Connecting, Closing or Closed
 			//
-			_ => Err( WsErrKind::ConnectionClosed.into() ),
+			_ => Err( WsErrKind::ConnectionNotOpen.into() ),
 		}
 	}
 
@@ -280,8 +280,14 @@ impl AsyncWrite for WsIo
 					{
 						match e.kind()
 						{
-							WsErrKind::ConnectionClosed => { return Poll::Ready( Err( io::Error::from( io::ErrorKind::NotConnected ))) }
-							_                           => unreachable!()
+							WsErrKind::ConnectionNotOpen =>
+							{
+								return Poll::Ready( Err( io::Error::from( io::ErrorKind::NotConnected )))
+							}
+
+							// This shouldn't happen, so panic for early detection.
+							//
+							_ => unreachable!()
 						}
 					}
 				}
@@ -289,8 +295,12 @@ impl AsyncWrite for WsIo
 
 			Err(e) => match e.kind()
 			{
-				WsErrKind::ConnectionClosed => { return Poll::Ready( Err( io::Error::from( io::ErrorKind::NotConnected ))) }
-				_                           => unreachable!()
+				WsErrKind::ConnectionNotOpen =>
+				{
+					return Poll::Ready( Err( io::Error::from( io::ErrorKind::NotConnected )))
+				}
+
+				_ => unreachable!()
 			}
 		}
 	}

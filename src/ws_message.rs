@@ -31,10 +31,10 @@ impl From< MessageEvent > for WsMessage
 		{
 			trace!( "JsWebSocket received binary message" );
 
-			let buf = data.dyn_into::< ArrayBuffer >().unwrap_throw();
+			let buf: ArrayBuffer = data.unchecked_into();
 
-			let     buffy          = Uint8Array::new( buf.as_ref() );
-			let mut v    : Vec<u8> = vec![ 0; buffy.length() as usize ];
+			let     buffy = Uint8Array::new( &buf );
+			let mut v     = vec![ 0; buffy.length() as usize ];
 
 			buffy.copy_to( &mut v ); // FIXME: get rid of this copy
 
@@ -44,6 +44,8 @@ impl From< MessageEvent > for WsMessage
 
 		else if data.is_string()
 		{
+			// should never fail
+			//
 			let text = data.as_string().expect_throw( "From< &JsMsgEvent > for WsMessage: data.as_string()" );
 
 			WsMessage::Text( text )

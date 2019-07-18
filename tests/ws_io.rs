@@ -112,7 +112,7 @@ fn send_while_closing() -> impl Future01<Item = (), Error = JsValue>
 
 		let res = wsio.send( WsMessage::Text("Hello from browser".into() ) ).await;
 
-		assert_eq!( &WsErrKind::ConnectionClosed, res.unwrap_err().kind() );
+		assert_eq!( &WsErrKind::ConnectionNotOpen, res.unwrap_err().kind() );
 
 		Ok(())
 
@@ -135,7 +135,7 @@ fn send_after_close() -> impl Future01<Item = (), Error = JsValue>
 
 		let res = wsio.send( WsMessage::Text("Hello from browser".into() ) ).await;
 
-		assert_eq!( &WsErrKind::ConnectionClosed, res.unwrap_err().kind() );
+		assert_eq!( &WsErrKind::ConnectionNotOpen, res.unwrap_err().kind() );
 
 		Ok(())
 
