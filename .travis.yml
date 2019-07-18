@@ -32,6 +32,8 @@ script:
 
   - git clone https://github.com/najamelan/ws_stream
   - cd ws_stream
+  - cargo build --example echo --release
+  - cargo build --example echo_tt --release
   - cargo run --example echo --release &
   - cargo run --example echo_tt --release -- "127.0.0.1:3312"  &
   - cd ..
