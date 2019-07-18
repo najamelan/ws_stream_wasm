@@ -129,31 +129,6 @@ fn send_after_close() -> impl Future01<Item = (), Error = JsValue>
 }
 
 
-
-
-// Verify Display impl.
-//
-#[ wasm_bindgen_test(async) ]
-//
-pub fn display() -> impl Future01<Item = (), Error = JsValue>
-{
-	let _ = console_log::init_with_level( Level::Trace );
-
-	info!( "starting test: display" );
-
-	async
-	{
-		let (_ws, wsio) = WsStream::connect( URL, None ).await.expect_throw( "Could not create websocket" );
-
-		assert_eq!( format!( "WsIo for connection: {}", URL ), format!( "{}", wsio ) );
-
-		Ok(())
-
-	}.boxed_local().compat()
-}
-
-
-
 // Verify Debug impl.
 //
 #[ wasm_bindgen_test(async) ]

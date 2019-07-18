@@ -243,6 +243,29 @@ pub fn close_reason_invalid() -> impl Future01<Item = (), Error = JsValue>
 
 
 
+// Verify Debug impl.
+//
+#[ wasm_bindgen_test(async) ]
+//
+pub fn debug() -> impl Future01<Item = (), Error = JsValue>
+{
+	let _ = console_log::init_with_level( Level::Trace );
+
+	info!( "starting test: debug" );
+
+	async
+	{
+		let (ws, _wsio) = WsStream::connect( URL, None ).await.expect_throw( "Could not create websocket" );
+
+		assert_eq!( format!( "WsStream for connection: {}", URL ), format!( "{:?}", ws ) );
+
+		Ok(())
+
+	}.boxed_local().compat()
+}
+
+
+
 /*
 // Verify protocols.
 // This doesn't work with tungstenite for the moment.

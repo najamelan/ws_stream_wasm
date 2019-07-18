@@ -4,9 +4,6 @@
 - include events (pharos)
 - reconnect?
 
-- derive Debug/Clone/PartialEq/Eq on all types
-
-
 ## Testing
 - what if server refuses connection? What error?
 - check all TODO/FIXME

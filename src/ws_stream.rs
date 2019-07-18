@@ -205,3 +205,13 @@ impl WsStream
 		self.ws.url()
 	}
 }
+
+
+
+impl fmt::Debug for WsStream
+{
+	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result
+	{
+		write!( f, "WsStream for connection: {}", self.url() )
+	}
+}

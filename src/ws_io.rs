@@ -108,16 +108,6 @@ impl fmt::Debug for WsIo
 
 
 
-impl fmt::Display for WsIo
-{
-	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result
-	{
-		write!( f, "WsIo for connection: {}", self.ws.url() )
-	}
-}
-
-
-
 impl Drop for WsIo
 {
 	// We don't block here, just tell the browser to close the connection and move on.
