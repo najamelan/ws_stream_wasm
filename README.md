@@ -12,9 +12,8 @@
 - `WsStream`  : A wrapper around [`web_sys::WebSocket`](https://docs.rs/web-sys/0.3.25/web_sys/struct.WebSocket.html).
 - `WsMessage` : A simple rusty representation of a WebSocket message.
 - `WsIo`      : A futures Sink/Stream of WsMessage. (can use the futures compat layer to get futures 01 versions).
-- `WsIoBinary`: A futures Sink/Stream of Vec<u8>, implements AsyncWrite. You can obtain an object that implements
-	AsyncRead and AsyncWrite by calling `.into_async_read()` from the futures `TryStreamExt` trait. With the compat
-	layer you can obtain futures 01 versions for use with tokio.
+                It also implements AsyncRead/AsyncWrite from futures 0.3. With the compat layer you can obtain futures
+                01 versions for use with tokio codec.
 
 **NOTE:** this crate only works on WASM. If you want a server side equivalent that implements AsyncRead/AsyncWrite over
 WebSockets, check out [ws_stream](https://crates.io/crates/ws_stream).
@@ -77,6 +76,28 @@ This repository accepts contributions. Ideas, questions, feature requests and bu
 
 Pull Requests are welcome on github. By commiting pull requests, you accept that your code might be modified and reformatted to fit the project coding style or to improve the implementation. Please discuss what you want to see modified before filing a pull request if you don't want to be doing work that might be rejected.
 
+### Testing
+
+For testing we need backend servers to echo data back to the tests. These are in the `ws_stream` crate.
+```shell
+git clone https://github.com/najamelan/ws_stream
+cd ws_stream
+cargo run --expample echo --release
+
+# in a different terminal:
+cargo run --example echo_tt --release -- "127.0.0.1:3312"
+
+# the second server is pure tokio-tungstenite without ws_stream wrapping it in AsyncRead/Write. This
+# is needed for testing a WsMessage::Text because ws_stream only does binary.
+
+# in a third terminal, in ws_stream_wasm you have different options:
+wasm-pack test --firefox [--headless] [--release]
+wasm-pack test --chrome  [--headless] [--release]
+```
+
+In general chrome is well faster. When running it in the browser (not --headless) you get trace logging
+in the console, which helps debugging. In chrome you need to enable verbose output in the console,
+otherwise only info and up level are reported.
 
 ### Code of conduct
 
