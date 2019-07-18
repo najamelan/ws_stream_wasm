@@ -13,7 +13,7 @@ use
 //
 pub struct WsStream
 {
-	ws: WebSocket
+	ws: Rc<WebSocket>
 }
 
 
@@ -36,7 +36,7 @@ impl WsStream
 
 		-> Result< (Self, WsIo), WsErr >
 	{
-		let ws = match protocols.into()
+		let ws = Rc::new( match protocols.into()
 		{
 			None => WebSocket::new( url.as_ref() ).map_err( |_| WsErr::from( WsErrKind::SecurityError ) )?,
 
@@ -52,7 +52,7 @@ impl WsStream
 
 					.map_err( |_| WsErr::from( WsErrKind::SecurityError ) )?
 			}
-		};
+		});
 
 
 		ws.set_binary_type( BinaryType::Arraybuffer );

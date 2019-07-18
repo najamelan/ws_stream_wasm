@@ -10,7 +10,7 @@ use
 //
 pub struct WsIo
 {
-	ws     : WebSocket                                      ,
+	ws     : Rc< WebSocket >                                ,
 	on_mesg: Closure< dyn FnMut( MessageEvent ) + 'static > ,
 	queue  : Rc<RefCell< VecDeque<WsMessage> >>             ,
 	waker  : Rc<RefCell<Option<Waker>>>                     ,
@@ -21,7 +21,7 @@ impl WsIo
 {
 	/// Create a new WsIo.
 	//
-	pub fn new( ws: WebSocket ) -> Self
+	pub fn new( ws: Rc<WebSocket> ) -> Self
 	{
 		let waker: Rc<RefCell<Option<Waker>>> = Rc::new( RefCell::new( None ));
 
@@ -85,7 +85,7 @@ impl WsIo
 
 	// This method allows to do async close in the poll_close of Sink
 	//
-	async fn wake_on_close( ws: WebSocket, waker: Waker )
+	async fn wake_on_close( ws: Rc<WebSocket>, waker: Waker )
 	{
 		future_event( |cb| ws.set_onclose( cb ) ).await;
 
