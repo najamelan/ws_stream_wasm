@@ -4,7 +4,12 @@ use
 };
 
 
-/// Sink/Stream of [WsMessage]. Created with [WsStream::connect].
+/// Sink/Stream of [WsMessage]. It further implements AsyncRead/AsyncWrite
+/// that can be framed with codecs. You can use the compat layer from the futures library if you want to
+/// use tokio codecs. See the [integration tests](https://github.com/ws_stream_wasm/tree/master/tests/tokio_codec.rs)
+/// if you need an example.
+///
+/// Created with [WsStream::connect].
 ///
 #[ allow( dead_code ) ] // we need to store the closure to keep it form being dropped
 //
@@ -72,6 +77,8 @@ impl WsIo
 	{
 		self.ws.ready_state().try_into().map_err( |e| error!( "{}", e ) )
 
+			// This can't throw unless the browser gives us an invalid ready state
+			//
 			.expect_throw( "Convert ready state from browser API" )
 	}
 
@@ -118,7 +125,9 @@ impl Drop for WsIo
 	{
 		trace!( "Drop WsIo" );
 
-		self.ws.close().expect( "WsIo::drop - close ws socket" );
+		// This can't fail
+		//
+		self.ws.close_with_code( 1000 ).expect( "WsIo::drop - close ws socket" );
 	}
 }
 
@@ -236,6 +245,8 @@ impl Sink<WsMessage> for WsIo
 		if state == WsState::Connecting
 		|| state == WsState::Open
 		{
+			// Can't fail
+			//
 			self.ws.close().unwrap_throw();
 		}
 
@@ -250,6 +261,8 @@ impl Sink<WsMessage> for WsIo
 
 			_ =>
 			{
+				// Spawning on wasm is infallible
+				//
 				rt::spawn_local( Self::wake_on_close( self.ws.clone(), cx.waker().clone() ) ).expect( "spawn wake_on_close" );
 				Poll::Pending
 			}

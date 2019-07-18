@@ -30,6 +30,8 @@ impl WsStream
 	/// This returns both a [WsStream] (allow manipulating and requesting metatdata for the connection) and
 	/// a [WsIo] (Stream/Sink over [WsMessage] + AsyncRead/AsyncWrite).
 	///
+	/// When you drop this, the connection does not get closed, however when you drop WsIo it does.
+	///
 	/// **Note**: Sending protocols to a server that doesn't support them will make the connection fail.
 	//
 	pub async fn connect( url: impl AsRef<str>, protocols: impl Into<Option<Vec<&str>>> )
@@ -120,8 +122,13 @@ impl WsStream
 	{
 		if reason.as_ref().len() > 123
 		{
-			return Err( WsErrKind::ReasonStringToLong.into() )
+			let e = WsErr::from( WsErrKind::ReasonStringToLong );
+
+			error!( "{}", e );
+
+			return Err( e );
 		}
+
 
 		match self.ws.close_with_code_and_reason( code, reason.as_ref() )
 		{
@@ -153,6 +160,8 @@ impl WsStream
 	{
 		self.ws.ready_state().try_into().map_err( |e| error!( "{}", e ) )
 
+			// This can't throw unless the browser gives us an invalid ready state
+			//
 			.expect_throw( "Convert ready state from browser API" )
 	}
 

@@ -33,6 +33,8 @@ pub async fn future_event( setter: impl Fn( Option<&js_sys::Function> ) )
 
 	let on_ready = Closure::wrap( Box::new( move ||
 	{
+		// Since we await the channel below, this should never throw
+		//
 		onready.unbounded_send(()).expect_throw( "unbounded channel failed" );
 		onready.close_channel();
 

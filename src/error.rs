@@ -1,35 +1,8 @@
 use crate::import::*;
 
-/// The error type for errors happening in `async_runtime`.
+/// The error type for errors happening in `ws_stream_wasm`.
 ///
-/// Use [`WsErr::kind()`] to know which kind of error happened. [WsErrKind] implements [Eq],
-/// so you can do the following if all you want to know is the kind of error:
-///
-/// ```ignore
-/// use async_runtime::*;
-///
-/// rt::init( RtConfig::Local ).expect( "Set default executor" );
-///
-/// match rt::init( RtConfig::Pool )
-/// {
-///    Err(e) =>
-///    {
-///       if let WsErrKind::DoubleExecutorInit = e.kind()
-///       {
-///          println!( "{}", e );
-///       }
-///
-///       // This also works:
-///       //
-///       match e.kind()
-///       {
-///          WsErrKind::DoubleExecutorInit => println!( "{}", e ),
-///          _ => {},
-///       }
-///    },
-///
-///    Ok(_) => {}
-/// }
+/// Use [`WsErr::kind()`] to know which kind of error happened.
 /// ```
 //
 #[ derive( Debug ) ]
@@ -41,7 +14,7 @@ pub struct WsErr
 
 
 
-/// The different kind of errors that can happen when you use the `async_runtime` API.
+/// The different kind of errors that can happen when you use the `ws_stream_wasm` API.
 //
 #[ derive( Clone, PartialEq, Eq, Debug, Fail ) ]
 //
