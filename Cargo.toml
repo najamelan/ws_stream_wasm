@@ -39,7 +39,7 @@ wasm-bindgen-test = "^0.2"
 wasm-logger = "^0.1"
 
 [dev-dependencies.futures_codec]
-path = "../futures-codec"
+git = "https://github.com/najamelan/futures-codec"
 
 [dev-dependencies.serde]
 features = ["derive"]
