@@ -1,30 +1,6 @@
 use crate::import::*;
 
 
-/// A wrapper around the [`web_sys::MessageEvent`](https://docs.rs/web-sys/0.3.17/web_sys/struct.MessageEvent.html) for convenience.
-/// Allows to extract data as a [WsMessage].
-///
-#[ derive( Debug, Clone ) ]
-//
-pub struct JsMsgEvent
-{
-	/// The wrapped web_sys::MessageEvent if you need it
-	///
-	pub msg_evt: MessageEvent
-}
-
-
-impl JsMsgEvent
-{
-	/// The data contained by the message.
-	///
-	pub fn data( &self ) -> WsMessage
-	{
-		WsMessage::from( self )
-	}
-}
-
-
 /// [Data](https://docs.rs/web-sys/0.3.17/web_sys/struct.MessageEvent.html#method.data) contained in a MessageEvent. See:
 /// [Html5 specs](https://html.spec.whatwg.org/multipage/web-sockets.html#feedback-from-the-protocol)
 ///
@@ -45,11 +21,11 @@ pub enum WsMessage
 
 
 
-impl From< &JsMsgEvent > for WsMessage
+impl From< MessageEvent > for WsMessage
 {
-	fn from( evt: &JsMsgEvent ) -> Self
+	fn from( evt: MessageEvent ) -> Self
 	{
-		let data = evt.msg_evt.data();
+		let data = evt.data();
 
 		if data.is_instance_of::< ArrayBuffer >()
 		{

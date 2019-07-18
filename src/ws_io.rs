@@ -1,6 +1,6 @@
 use
 {
-	crate :: { import::*, WsErr, WsErrKind, JsMsgEvent, WsMessage, WsState, future_event },
+	crate :: { import::*, WsErr, WsErrKind, WsMessage, WsState, future_event },
 };
 
 
@@ -36,7 +36,7 @@ impl WsIo
 		{
 			trace!( "WsStream: message received!" );
 
-			q2.borrow_mut().push_back( WsMessage::from( &JsMsgEvent{ msg_evt } ) );
+			q2.borrow_mut().push_back( WsMessage::from( msg_evt ) );
 
 			if let Some( w ) = w2.borrow_mut().take()
 			{

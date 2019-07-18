@@ -29,7 +29,7 @@ pub use
 	ws_state          :: { WsState                    } ,
 	callback_future   :: { future_event               } ,
 	error             :: { WsErr      , WsErrKind     } ,
-	ws_message        :: { JsMsgEvent , WsMessage     } ,
+	ws_message        :: { WsMessage                  } ,
 	ws_io             :: { WsIo                       } ,
 	ws_io_binary      :: { WsIoBinary                 } ,
 	ws_stream         :: { WsStream                   } ,
