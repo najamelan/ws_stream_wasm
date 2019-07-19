@@ -1,10 +1,10 @@
 use
 {
-	crate :: { import::*, WsErr, WsErrKind, WsMessage, WsState, future_event },
+	crate :: { import::*, WsErr, WsErrKind, WsMessage, WsState, WsEvent, NextEvent, WsEventType },
 };
 
 
-/// Sink/Stream of [WsMessage]. It further implements AsyncRead/AsyncWrite
+/// A futures 0.3 Sink/Stream of [WsMessage]. It further implements AsyncRead/AsyncWrite
 /// that can be framed with codecs. You can use the compat layer from the futures library if you want to
 /// use tokio codecs. See the [integration tests](https://github.com/ws_stream_wasm/tree/master/tests/tokio_codec.rs)
 /// if you need an example.
@@ -16,10 +16,35 @@ use
 pub struct WsIo
 {
 	ws     : Rc< WebSocket >                                ,
-	on_mesg: Closure< dyn FnMut( MessageEvent ) + 'static > ,
+
+	// The queue of received messages
+	//
 	queue  : Rc<RefCell< VecDeque<WsMessage> >>             ,
-	waker  : Rc<RefCell<Option<Waker>>>                     ,
+
+	// Last waker of task that wants to read incoming messages
+	// to be woken up on a new message
+	//
+	waker  : Rc<RefCell< Option<Waker>       >>             ,
+
+
+	// A pointer to the pharos of WsStream for when we
+	// need to listen to events
+	//
+	pharos : Rc<RefCell< Pharos<WsEvent>     >>             ,
+
+	// State information for partially read messages in
+	// AsyncRead
+	//
 	state  : ReadState                                      ,
+
+	// The closure that will receive the messages
+	//
+	on_mesg: Closure< dyn FnMut( MessageEvent ) + 'static > ,
+
+	// This allows us to store a future to poll when
+	// Sink::poll_close is called
+	//
+	closer : Option< NextEvent >                            ,
 }
 
 
@@ -27,7 +52,7 @@ impl WsIo
 {
 	/// Create a new WsIo.
 	//
-	pub fn new( ws: Rc<WebSocket> ) -> Self
+	pub fn new( ws: Rc<WebSocket>, pharos : Rc<RefCell< Pharos<WsEvent> >> ) -> Self
 	{
 		let waker: Rc<RefCell<Option<Waker>>> = Rc::new( RefCell::new( None ));
 
@@ -66,6 +91,8 @@ impl WsIo
 			on_mesg ,
 			state   ,
 			waker   ,
+			pharos  ,
+			closer: None,
 		}
 	}
 
@@ -85,21 +112,17 @@ impl WsIo
 
 
 	/// Access the wrapped [web_sys::WebSocket](https://docs.rs/web-sys/0.3.25/web_sys/struct.WebSocket.html) directly.
+	///
+	/// `ws_stream_wasm` tries to expose all useful functionality through an idiomatic rust API, so hopefully
+	/// you won't need this, however if I missed something, you can.
+	///
+	/// ## Caveats
+	/// If you call `set_onopen`, `set_onerror`, `set_onmessage` or `set_onclose` on this, you will overwrite
+	/// the event listeners from `ws_stream_wasm`, and things will break.
 	//
 	pub fn wrapped( &self ) -> &WebSocket
 	{
 		&self.ws
-	}
-
-
-
-	// This method allows to do async close in the poll_close of Sink
-	//
-	async fn wake_on_close( ws: Rc<WebSocket>, waker: Waker )
-	{
-		future_event( |cb| ws.set_onclose( cb ) ).await;
-
-		waker.wake();
 	}
 }
 
@@ -128,6 +151,10 @@ impl Drop for WsIo
 		// This can't fail
 		//
 		self.ws.close_with_code( 1000 ).expect( "WsIo::drop - close ws socket" );
+
+		rt::block_on( self.pharos.borrow_mut().notify( &WsEvent::Closing ) );
+
+		self.ws.set_onmessage( None );
 	}
 }
 
@@ -235,7 +262,7 @@ impl Sink<WsMessage> for WsIo
 	//       this can be done by creating a custom future. If we are going to implement
 	//       events with pharos, that's probably a good time to re-evaluate this.
 	//
-	fn poll_close( self: Pin<&mut Self>, cx: &mut Context ) -> Poll<Result<(), Self::Error>>
+	fn poll_close( mut self: Pin<&mut Self>, cx: &mut Context ) -> Poll<Result<(), Self::Error>>
 	{
 		trace!( "Sink<WsMessage> for WsIo: poll_close" );
 
@@ -248,6 +275,10 @@ impl Sink<WsMessage> for WsIo
 			// Can't fail
 			//
 			self.ws.close().unwrap_throw();
+
+			// notify observers
+			//
+			rt::block_on( self.pharos.borrow_mut().notify( &WsEvent::Closing ) );
 		}
 
 
@@ -261,10 +292,19 @@ impl Sink<WsMessage> for WsIo
 
 			_ =>
 			{
-				// Spawning on wasm is infallible
+				// Create a future that will resolve with the close event, so we can
+				// poll it.
 				//
-				rt::spawn_local( Self::wake_on_close( self.ws.clone(), cx.waker().clone() ) ).expect( "spawn wake_on_close" );
-				Poll::Pending
+				if self.closer.is_none()
+				{
+					let rx = self.pharos.borrow_mut().observe_unbounded();
+					self.closer = Some( NextEvent::new( rx, WsEventType::CLOSE ) );
+				}
+
+
+				let _ = ready!( Pin::new( &mut self.closer.as_mut().unwrap() ).poll(cx) );
+
+				Poll::Ready( Ok(()) )
 			}
 		}
 	}

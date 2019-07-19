@@ -6,6 +6,10 @@ wasm_bindgen_test_configure!(run_in_browser);
 //
 // Tests send to an echo server which just bounces back all data.
 //
+// ✔ WsStream::connect: Verify error when connecting to a wrong port
+// ✔ WsStream::connect: Verify error when connecting to a forbidden port
+// ✔ WsStream::connect: Verify error when connecting to wss:// on ws:// server
+// ✔ WsStream::connect: Verify error when connecting to a wrong scheme
 // ✔ Verify the state method
 // ✔ Verify closing from WsIo
 // ✔ Verify url method
@@ -33,6 +37,139 @@ use
 
 
 const URL: &str = "ws://127.0.0.1:3212/";
+
+
+
+// WsStream::connect: Verify error when connecting to a wrong port
+//
+#[ wasm_bindgen_test(async) ]
+//
+pub fn connect_wrong_port() -> impl Future01<Item = (), Error = JsValue>
+{
+	let _ = console_log::init_with_level( Level::Trace );
+
+	info!( "starting test: connect_wrong_port" );
+
+	async
+	{
+		let err = WsStream::connect( "ws://127.0.0.1:33212/", None ).await;
+
+		assert!( err.is_err() );
+
+		let err = err.unwrap_err();
+
+		assert_eq!
+		(
+			&WsErrKind::ConnectionFailed
+			(
+				CloseEvent
+				{
+					was_clean: false,
+					code     : 1006 ,
+					reason   : "".to_string(),
+				}
+			),
+			err.kind()
+		);
+
+		Ok(())
+
+	}.boxed_local().compat()
+}
+
+
+
+// WsStream::connect: Verify error when connecting to a forbidden port
+//
+#[ wasm_bindgen_test(async) ]
+//
+pub fn connect_forbidden_port() -> impl Future01<Item = (), Error = JsValue>
+{
+	let _ = console_log::init_with_level( Level::Trace );
+
+	info!( "starting test: connect_forbidden_port" );
+
+	async
+	{
+		let err = WsStream::connect( "ws://127.0.0.1:6666/", None ).await;
+
+		assert!( err.is_err() );
+
+		let err = err.unwrap_err();
+
+		assert_eq!( &WsErrKind::ForbiddenPort, err.kind() );
+
+
+		Ok(())
+
+	}.boxed_local().compat()
+}
+
+
+
+// WsStream::connect: Verify error when connecting to wss:// on ws:// server
+//
+#[ wasm_bindgen_test(async) ]
+//
+pub fn connect_wrong_wss() -> impl Future01<Item = (), Error = JsValue>
+{
+	let _ = console_log::init_with_level( Level::Trace );
+
+	info!( "starting test: connect_wrong_wss" );
+
+	async
+	{
+		let err = WsStream::connect( "wss://127.0.0.1:3212/", None ).await;
+
+		assert!( err.is_err() );
+
+		let err = err.unwrap_err();
+
+		assert_eq!
+		(
+			&WsErrKind::ConnectionFailed
+			(
+				CloseEvent
+				{
+					was_clean: false,
+					code     : 1006 ,
+					reason   : "".to_string(),
+				}
+			),
+			err.kind()
+		);
+
+		Ok(())
+
+	}.boxed_local().compat()
+}
+
+
+
+// WsStream::connect: Verify error when connecting to a wrong scheme
+//
+#[ wasm_bindgen_test(async) ]
+//
+pub fn connect_wrong_scheme() -> impl Future01<Item = (), Error = JsValue>
+{
+	let _ = console_log::init_with_level( Level::Trace );
+
+	info!( "starting test: connect_wrong_scheme" );
+
+	async
+	{
+		let err = WsStream::connect( "http://127.0.0.1:3212/", None ).await;
+
+		assert!( err.is_err() );
+
+		let err = err.unwrap_err();
+
+		assert_eq!( &WsErrKind::InvalidUrl( "http://127.0.0.1:3212/".to_string() ), err.kind() );
+
+		Ok(())
+
+	}.boxed_local().compat()
+}
 
 
 

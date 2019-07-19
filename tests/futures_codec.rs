@@ -25,8 +25,8 @@ use
 	// web_sys               :: { console::log_1 as dbg               } ,
 };
 
-const URL: &str = "ws://127.0.0.1:3212";
 
+const URL: &str = "ws://127.0.0.1:3212";
 
 
 

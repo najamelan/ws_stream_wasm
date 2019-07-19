@@ -1,7 +1,9 @@
 # Auto-generated from "Cargo.yml"
 [dependencies]
+bitflags = "^1"
 failure = "^0.1"
 log = "^0.4"
+pharos = "^0.2"
 
 [dependencies.futures-preview]
 features = ["io-compat", "compat"]
@@ -22,7 +24,7 @@ version = "^0.2"
 version = "^0.2"
 
 [dependencies.web-sys]
-features = ["BinaryType", "Blob", "console", "MessageEvent", "WebSocket"]
+features = ["BinaryType", "Blob", "console", "MessageEvent", "WebSocket", "CloseEvent", "Event", "DomException"]
 version = "^0.3"
 
 [dev-dependencies]

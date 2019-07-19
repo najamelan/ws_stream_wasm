@@ -9,18 +9,18 @@
 > A convenience library for using websockets in WASM
 
 **features:**
-- `WsStream`  : A wrapper around [`web_sys::WebSocket`](https://docs.rs/web-sys/0.3.25/web_sys/struct.WebSocket.html).
-- `WsMessage` : A simple rusty representation of a WebSocket message.
-- `WsIo`      : A futures Sink/Stream of WsMessage. (can use the futures compat layer to get futures 01 versions).
+- `WsStream`: A wrapper around [`web_sys::WebSocket`](https://docs.rs/web-sys/0.3.25/web_sys/struct.WebSocket.html).
+- `WsMessage`: A simple rusty representation of a WebSocket message.
+- `WsIo`: A futures Sink/Stream of WsMessage. (can use the futures compat layer to get futures 01 versions).
                 It also implements AsyncRead/AsyncWrite from futures 0.3. With the compat layer you can obtain futures
                 01 versions for use with tokio codec.
+- `WsEvents`: `WsStream` is observable with [pharos](https://crates.io/crates/pharos) for events (mainly connection close).
 
 **NOTE:** this crate only works on WASM. If you want a server side equivalent that implements AsyncRead/AsyncWrite over
 WebSockets, check out [ws_stream](https://crates.io/crates/ws_stream).
 
 **missing features:**
 - no automatic reconnect
-- no events (probably I'll make it Observable with [pharos](https://crates.io/crates/pharos) one day)
 - not all features are thoroughly tested. Notably, I have little use for extensions and subprotocols. Tungstenite,
   which I use for the server end (and for automated testing) doesn't support these, making it hard to write unit tests.
 
@@ -30,6 +30,7 @@ WebSockets, check out [ws_stream](https://crates.io/crates/ws_stream).
   - [Dependencies](#dependencies)
 - [Usage](#usage)
 - [API](#api)
+- [References](#references)
 - [Contributing](#contributing)
   - [Code of Conduct](#code-of-conduct)
 - [License](#license)
@@ -59,15 +60,55 @@ This crate has few dependiencies. Cargo will automatically handle it's dependenc
 
 There are no optional features.
 
+
 ## Usage
 
 Please have a look in the [examples directory of the repository](https://github.com/najamelan/ws_stream_wasm/tree/master/examples).
 
 The [integration tests](https://github.com/najamelan/ws_stream_wasm/tree/master/tests) are also useful.
 
+### Basic events example
+```rust
+#![ feature( async_await ) ]
+
+use
+{
+   async_runtime  :: rt                , // from crate naja_async_runtime
+   ws_stream_wasm :: *                 ,
+   pharos         :: *                 ,
+   wasm_bindgen   :: UnwrapThrowExt    ,
+   futures        :: stream::StreamExt ,
+};
+
+let program = async
+{
+   let (mut ws, _wsio) = WsStream::connect( "127.0.0.1:3012", None ).await
+
+      .expect_throw( "assume the connection succeeds" );
+
+   let mut evts = ws.observe_unbounded();
+
+   ws.close().await;
+
+   // Note that since WsStream::connect resolves to an opened connection, we don't see
+   // any Open events here.
+   //
+   assert_eq!( WsEventType::CLOSING, evts.next().await.unwrap_throw().ws_type() );
+   assert_eq!( WsEventType::CLOSE  , evts.next().await.unwrap_throw().ws_type() );
+};
+
+rt::spawn_local( program ).expect_throw( "spawn program" );
+```
+
 ## API
 
 Api documentation can be found on [docs.rs](https://docs.rs/ws_stream_wasm).
+
+
+## References
+The reference documents for understanding websockets and how the browser handles them are:
+- [HTML Living Standard](https://html.spec.whatwg.org/multipage/web-sockets.html)
+- [RFC 6455 - The WebSocket Protocol](https://tools.ietf.org/html/rfc6455)
 
 
 ## Contributing
@@ -75,6 +116,7 @@ Api documentation can be found on [docs.rs](https://docs.rs/ws_stream_wasm).
 This repository accepts contributions. Ideas, questions, feature requests and bug reports can be filed through github issues.
 
 Pull Requests are welcome on github. By commiting pull requests, you accept that your code might be modified and reformatted to fit the project coding style or to improve the implementation. Please discuss what you want to see modified before filing a pull request if you don't want to be doing work that might be rejected.
+
 
 ### Testing
 

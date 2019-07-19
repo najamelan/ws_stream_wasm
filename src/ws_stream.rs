@@ -1,46 +1,65 @@
 use
 {
-	crate :: { import::*, future_event, WsErr, WsErrKind, WsState, WsIo },
+	crate :: { import::*, WsErr, WsErrKind, WsState, WsIo, WsEvent, CloseEvent, NextEvent, WsEventType },
 };
 
 
 /// The meta data related to a websocket.
 ///
 /// Most of the methods on this type directly map to the web API. For more documentation, check the
-/// [MDN WebSocket documentation]((https://developer.mozilla.org/en-US/docs/Web/API/WebSocket/WebSocket).
-///
-#[ derive( Clone ) ]
+/// [MDN WebSocket documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebSocket/WebSocket).
+//
+#[ allow( dead_code ) ] // we need to store the closures to keep it form being dropped
 //
 pub struct WsStream
 {
-	ws: Rc<WebSocket>
+	ws    : Rc<WebSocket>                             ,
+	pharos: Rc<RefCell< Pharos<WsEvent> >>            ,
+
+	on_open : Closure< dyn FnMut() + 'static > ,
+	on_error: Closure< dyn FnMut() + 'static > ,
+	on_close: Closure< dyn FnMut( JsCloseEvt ) + 'static > ,
 }
 
 
 
 impl WsStream
 {
-	/// Connect to the server. The future will resolve when the connection has been established and the WebSocket
-	/// handshake sucessful. There is no timeout mechanism here in case of failure. You should implement
-	/// that yourself.
-	///
-	/// Can fail if there is a
-	/// [security error](https://developer.mozilla.org/en-US/docs/Web/API/WebSocket/WebSocket#Exceptions_thrown).
+	/// Connect to the server. The future will resolve when the connection has been established with a successful WebSocket
+	/// handshake.
 	///
 	/// This returns both a [WsStream] (allow manipulating and requesting metatdata for the connection) and
-	/// a [WsIo] (Stream/Sink over [WsMessage](crate::WsMessage) + AsyncRead/AsyncWrite).
+	/// a [WsIo] (AsyncRead/AsyncWrite + Stream/Sink over [WsMessage](crate::WsMessage)).
 	///
-	/// When you drop this, the connection does not get closed, however when you drop [WsIo] it does.
+	/// A WsStream instance is observable through the [`pharos::Observable`](https://docs.rs/pharos/0.2.0/pharos/trait.Observable.html) and [`pharos::ObservableUnbounded`](https://docs.rs/pharos/0.2.0/pharos/trait.UnboundedObservable.html) traits. The type of event is [WsEvent]. In the case of a Close event, there will be additional information included
+	/// as a [CloseEvent].
+	///
+	/// When you drop this, the connection does not get closed, however when you drop [WsIo] it does. Streams
+	/// of events will be dropped, so you will no longer receive events. One thing is possible if you really
+	/// need it, that's dropping [WsStream] but keeping [WsIo]. Now through [WsIo::wrapped] you can
+	/// access the underlying [web_sys::WebSocket] and set event handlers on it for `on_open`, `on_close`,
+	/// `on_error`. If you would do that while [WsStream] is still around, that would break the event system
+	/// and can lead to errors if you still call methods on [WsStream].
 	///
 	/// **Note**: Sending protocols to a server that doesn't support them will make the connection fail.
+	///
+	/// ## Errors
+	///
+	/// Browsers will forbid making websocket connections to certain ports. See this [Stack Overflow question](https://stackoverflow.com/questions/4313403/why-do-browsers-block-some-ports/4314070).
+	/// `connect` will return a [WsErrKind::ForbiddenPort].
+	///
+	/// If the url is invalid, a [WsErrKind::InvalidUrl] is returned. See the [HTML Living Standard](https://html.spec.whatwg.org/multipage/web-sockets.html#dom-websocket) for more information.
+	///
+	/// When the connection fails (server port not open, wrong ip, wss:// on ws:// server, ... See the [HTML Living Standard](https://html.spec.whatwg.org/multipage/web-sockets.html#dom-websocket)
+	/// for details on all failure possibilities), a [WsErrKind::ConnectionFailed] is returned.
 	//
 	pub async fn connect( url: impl AsRef<str>, protocols: impl Into<Option<Vec<&str>>> )
 
 		-> Result< (Self, WsIo), WsErr >
 	{
-		let ws = Rc::new( match protocols.into()
+		let res = match protocols.into()
 		{
-			None => WebSocket::new( url.as_ref() ).map_err( |_| WsErr::from( WsErrKind::SecurityError ) )?,
+			None => WebSocket::new( url.as_ref() ),
 
 			Some(v) =>
 			{
@@ -51,19 +70,121 @@ impl WsStream
 				});
 
 				WebSocket::new_with_str_sequence( url.as_ref(), &js_protos )
-
-					.map_err( |_| WsErr::from( WsErrKind::SecurityError ) )?
 			}
-		});
+		};
 
 
-		ws.set_binary_type( BinaryType::Arraybuffer );
+		// Deal with errors from the WebSocket constructor
+		//
+		let ws = match res
+		{
+			Ok(ws) => ws,
 
-		future_event( |cb| ws.set_onopen( cb ) ).await;
+			Err(e) =>
+			{
+				let de: &DomException = e.unchecked_ref();
+
+				match de.code()
+				{
+					DomException::SECURITY_ERR => return Err( WsErrKind::ForbiddenPort.into()                         ),
+					DomException::SYNTAX_ERR   => return Err( WsErrKind::InvalidUrl( url.as_ref().to_string()).into() ),
+					_                          => unreachable!(),
+				};
+			}
+		};
+
+
+		// Create our pharos
+		//
+		let pharos = Rc::new( RefCell::new( Pharos::new() ));
+		let ph1    = pharos.clone();
+		let ph2    = pharos.clone();
+		let ph3    = pharos.clone();
+		let ph4    = pharos.clone();
+
+
+		// Setup our event listeners
+		//
+		let on_open = Closure::wrap( Box::new( move ||
+		{
+			trace!( "websocket open event" );
+
+			rt::block_on( ph1.borrow_mut().notify( &WsEvent::Open ) );
+
+		}) as Box< dyn FnMut() > );
+
+
+		let on_error = Closure::wrap( Box::new( move ||
+		{
+			trace!( "websocket error event" );
+
+			rt::block_on( ph2.borrow_mut().notify( &WsEvent::Error ) );
+
+		}) as Box< dyn FnMut() > );
+
+
+		let on_close = Closure::wrap( Box::new( move |evt: JsCloseEvt|
+		{
+			trace!( "websocket close event" );
+
+			let e = CloseEvent
+			{
+				code     : evt.code()     ,
+				reason   : evt.reason()   ,
+				was_clean: evt.was_clean(),
+			};
+
+			rt::block_on( ph3.borrow_mut().notify( &WsEvent::Close(e) ));
+
+		}) as Box< dyn FnMut( JsCloseEvt ) > );
+
+
+		ws.set_onopen ( Some( &on_open .as_ref().unchecked_ref() ));
+		ws.set_onclose( Some( &on_close.as_ref().unchecked_ref() ));
+		ws.set_onerror( Some( &on_error.as_ref().unchecked_ref() ));
+
+
+
+		// Listen to the events to figure out whether the connection opens
+		// successfully. We don't want to deal with the error event. Either
+		// a close event happens, in which case we want to recover the CloseEvent
+		// to return it to the user, or an Open event happens in which case we are
+		// happy campers.
+		//
+		let evts = NextEvent::new( pharos.borrow_mut().observe_unbounded(), WsEventType::CLOSE | WsEventType::OPEN );
+
+
+		// If the connection is closed, return error
+		//
+		if let Some( WsEvent::Close(evt) ) = evts.await
+		{
+			trace!( "WebSocket connection closed!" );
+
+			return Err( WsErrKind::ConnectionFailed(evt).into() )
+		}
+
 
 		trace!( "WebSocket connection opened!" );
 
-		Ok(( Self{ ws: ws.clone() }, WsIo::new( ws ) ))
+		// We don't handle Blob's
+		//
+		ws.set_binary_type( BinaryType::Arraybuffer );
+
+		let ws = Rc::new( ws );
+
+		Ok
+		((
+			Self
+			{
+				ws      : ws.clone() ,
+				pharos               ,
+				on_open              ,
+				on_error             ,
+				on_close             ,
+			},
+
+			WsIo::new( ws, ph4 )
+		))
 	}
 
 
@@ -71,7 +192,7 @@ impl WsStream
 	/// Close the socket. The future will resolve once the socket's state has become `WsState::CLOSED`.
 	/// See: [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebSocket/close)
 	//
-	pub async fn close( &self )
+	pub async fn close( &self ) -> CloseEvent
 	{
 		// This can not throw normally, because the only errors the api
 		// can return is if we use a code or a reason string, which we don't.
@@ -79,27 +200,48 @@ impl WsStream
 		//
 		self.ws.close().unwrap_throw();
 
-		future_event( |cb| self.ws.set_onclose( cb ) ).await;
 
+		// Notify Observers
+		//
+		rt::block_on( self.pharos.borrow_mut().notify( &WsEvent::Closing ) );
+
+		let evts = NextEvent::new( self.pharos.borrow_mut().observe_unbounded(), WsEventType::CLOSE );
+
+
+		// We promised the user a CloseEvent, so we don't have much choice but to unwrap this.
+		// In any case, the stream will never end and this will hang if the browser fails to
+		// send a close event.
+		//
+		let ce = evts.await.expect_throw( "receive a close event" );
 		trace!( "WebSocket connection closed!" );
+
+		if let WsEvent::Close(e) = ce { e              }
+		else                          { unreachable!() }
 	}
+
 
 
 
 	/// Close the socket. The future will resolve once the socket's state has become `WsState::CLOSED`.
 	/// See: [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebSocket/close)
 	//
-	pub async fn close_code( &self, code: u16  ) -> Result<(), WsErr>
+	pub async fn close_code( &self, code: u16  ) -> Result<CloseEvent, WsErr>
 	{
 		match self.ws.close_with_code( code )
 		{
 			Ok(_) =>
 			{
-				future_event( |cb| self.ws.set_onclose( cb ) ).await;
+				// Notify Observers
+				//
+				rt::block_on( self.pharos.borrow_mut().notify( &WsEvent::Closing ) );
 
+				let evts = NextEvent::new( self.pharos.borrow_mut().observe_unbounded(), WsEventType::CLOSE );
+
+				let ce = evts.await.expect_throw( "receive a close event" );
 				trace!( "WebSocket connection closed!" );
 
-				Ok(())
+				if let WsEvent::Close(e) = ce { Ok(e)          }
+				else                          { unreachable!() }
 			}
 
 			Err(_) =>
@@ -118,7 +260,7 @@ impl WsStream
 	/// Close the socket. The future will resolve once the socket's state has become `WsState::CLOSED`.
 	/// See: [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebSocket/close)
 	//
-	pub async fn close_reason( &self, code: u16, reason: impl AsRef<str>  ) -> Result<(), WsErr>
+	pub async fn close_reason( &self, code: u16, reason: impl AsRef<str>  ) -> Result<CloseEvent, WsErr>
 	{
 		if reason.as_ref().len() > 123
 		{
@@ -134,11 +276,17 @@ impl WsStream
 		{
 			Ok(_) =>
 			{
-				future_event( |cb| self.ws.set_onclose( cb ) ).await;
+				// Notify Observers
+				//
+				rt::block_on( self.pharos.borrow_mut().notify( &WsEvent::Closing ) );
 
+				let evts = NextEvent::new( self.pharos.borrow_mut().observe_unbounded(), WsEventType::CLOSE );
+
+				let ce = evts.await.expect_throw( "receive a close event" );
 				trace!( "WebSocket connection closed!" );
 
-				Ok(())
+				if let WsEvent::Close(e) = ce { Ok(e)          }
+				else                          { unreachable!() }
 			}
 
 			Err(_) =>
@@ -167,6 +315,13 @@ impl WsStream
 
 
 	/// Access the wrapped [web_sys::WebSocket](https://docs.rs/web-sys/0.3.25/web_sys/struct.WebSocket.html) directly.
+	///
+	/// `ws_stream_wasm` tries to expose all useful functionality through an idiomatic rust API, so hopefully
+	/// you won't need this, however if I missed something, you can.
+	///
+	/// ## Caveats
+	/// If you call `set_onopen`, `set_onerror`, `set_onmessage` or `set_onclose` on this, you will overwrite
+	/// the event listeners from `ws_stream_wasm`, and things will break.
 	//
 	pub fn wrapped( &self ) -> &WebSocket
 	{
@@ -222,5 +377,43 @@ impl fmt::Debug for WsStream
 	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result
 	{
 		write!( f, "WsStream for connection: {}", self.url() )
+	}
+}
+
+
+
+impl Observable<WsEvent> for WsStream
+{
+	fn observe( &mut self, queue_size: usize ) -> Receiver<WsEvent>
+	{
+		self.pharos.borrow_mut().observe( queue_size )
+	}
+}
+
+
+
+impl UnboundedObservable<WsEvent> for WsStream
+{
+	fn observe_unbounded( &mut self ) -> UnboundedReceiver<WsEvent>
+	{
+		self.pharos.borrow_mut().observe_unbounded()
+	}
+}
+
+
+
+impl Drop for WsStream
+{
+	// We don't block here, just tell the browser to close the connection and move on.
+	// TODO: is this necessary or would it be closed automatically when we drop the WebSocket
+	// object? Note that there is also the WsStream which holds a clone.
+	//
+	fn drop( &mut self )
+	{
+		trace!( "Drop WsStream" );
+
+		self.ws.set_onopen ( None );
+		self.ws.set_onclose( None );
+		self.ws.set_onerror( None );
 	}
 }

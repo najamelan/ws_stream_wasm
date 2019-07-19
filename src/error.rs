@@ -1,4 +1,4 @@
-use crate::import::*;
+use crate::{ import::*, CloseEvent };
 
 /// The error type for errors happening in `ws_stream_wasm`.
 ///
@@ -19,26 +19,30 @@ pub struct WsErr
 //
 pub enum WsErrKind
 {
-	/// Invalid input to `WsReadyState::try_from( u16 )`
+	/// Invalid input to [WsState::try_from( u16 )](crate::WsState)
 	///
 	#[ fail( display = "Invalid input to conversion to WsReadyState: {}", _0 ) ]
 	//
 	InvalidWsState( u16 ),
 
-	/// When trying to send and WsState is anything but WsState::Open this error is returned.
+	/// When trying to send and [WsState](crate::WsState) is anything but [WsState::Open](crate::WsState::Open) this error is returned.
 	//
 	#[ fail( display = "The connection state is not \"Open\"" ) ]
 	//
 	ConnectionNotOpen,
 
-	/// The port to which the connection is being attempted is being blocked.
-	/// This can happen upon creating the websocket. See:
-	/// [security error](https://developer.mozilla.org/en-US/docs/Web/API/WebSocket/WebSocket#Exceptions_thrown).
-	/// MDN does not mention it, but normally there can also be cross domain limitations.
+	/// Browsers will forbid making websocket connections to certain ports. See this [Stack Overflow question](https://stackoverflow.com/questions/4313403/why-do-browsers-block-some-ports/4314070).
 	///
-	#[ fail( display = "The port to which the connection is being attempted is being blocked." ) ]
+	#[ fail( display = "The port to which the connection is being attempted is not allowed." ) ]
 	//
-	SecurityError,
+	ForbiddenPort,
+
+	/// An invalid url was given to [WsStream::connect](crate::WsStream::connect), please see:
+	/// [HTML Living Standard](https://html.spec.whatwg.org/multipage/web-sockets.html#dom-websocket)
+	///
+	#[ fail( display = "An invalid url was given to the connect method: {}", _0 ) ]
+	//
+	InvalidUrl(String),
 
 	/// An invalid close code was given to a close method. For valid close codes, please see:
 	/// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/CloseEvent#Status_codes)
@@ -47,12 +51,18 @@ pub enum WsErrKind
 	//
 	InvalidCloseCode(u16),
 
-	/// The reason string given to a close method is to long, please see:
+	/// The reason string given to a close method is longer than 123 bytes, please see:
 	/// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebSocket/close)
 	///
 	#[ fail( display = "The reason string given to a close method is to long." ) ]
 	//
 	ReasonStringToLong,
+
+	/// Failed to connect to the server.
+	///
+	#[ fail( display = "Failed to connect to the server. CloseEvent: {:?}", _0 ) ]
+	//
+	ConnectionFailed(CloseEvent),
 }
 
 

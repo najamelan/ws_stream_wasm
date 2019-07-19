@@ -9,18 +9,18 @@
 //! > A convenience library for using websockets in WASM
 //!
 //! **features:**
-//! - `WsStream`  : A wrapper around [`web_sys::WebSocket`](https://docs.rs/web-sys/0.3.25/web_sys/struct.WebSocket.html).
-//! - `WsMessage` : A simple rusty representation of a WebSocket message.
-//! - `WsIo`      : A futures Sink/Stream of WsMessage. (can use the futures compat layer to get futures 01 versions).
+//! - `WsStream`: A wrapper around [`web_sys::WebSocket`](https://docs.rs/web-sys/0.3.25/web_sys/struct.WebSocket.html).
+//! - `WsMessage`: A simple rusty representation of a WebSocket message.
+//! - `WsIo`: A futures Sink/Stream of WsMessage. (can use the futures compat layer to get futures 01 versions).
 //!                 It also implements AsyncRead/AsyncWrite from futures 0.3. With the compat layer you can obtain futures
 //!                 01 versions for use with tokio codec.
+//! - `WsEvents`: `WsStream` is observable with [pharos](https://crates.io/crates/pharos) for events (mainly connection close).
 //!
 //! **NOTE:** this crate only works on WASM. If you want a server side equivalent that implements AsyncRead/AsyncWrite over
 //! WebSockets, check out [ws_stream](https://crates.io/crates/ws_stream).
 //!
 //! **missing features:**
 //! - no automatic reconnect
-//! - no events (probably I'll make it Observable with [pharos](https://crates.io/crates/pharos) one day)
 //! - not all features are thoroughly tested. Notably, I have little use for extensions and subprotocols. Tungstenite,
 //!   which I use for the server end (and for automated testing) doesn't support these, making it hard to write unit tests.
 //!
@@ -29,7 +29,9 @@
 //! - [Install](#install)
 //!   - [Dependencies](#dependencies)
 //! - [Usage](#usage)
+//!   - [Basic Events Example](basic-events-example)
 //! - [API](#api)
+//! - [References](#references)
 //! - [Contributing](#contributing)
 //!   - [Code of Conduct](#code-of-conduct)
 //! - [License](#license)
@@ -59,15 +61,55 @@
 //!
 //! There are no optional features.
 //!
+//!
 //! ## Usage
 //!
 //! Please have a look in the [examples directory of the repository](https://github.com/najamelan/ws_stream_wasm/tree/master/examples).
 //!
-//! The [integration tests](https://github.com/najamelan/ws_stream_wasm/tree/master/tests) are also useful.
+//! ### Basic events example
+//! ```rust
+//! #![ feature( async_await ) ]
+//!
+//! use
+//! {
+//!    async_runtime  :: rt                , // from crate naja_async_runtime
+//!    ws_stream_wasm :: *                 ,
+//!    pharos         :: *                 ,
+//!    wasm_bindgen   :: UnwrapThrowExt    ,
+//!    futures        :: stream::StreamExt ,
+//! };
+//!
+//! let program = async
+//! {
+//!    let (mut ws, _wsio) = WsStream::connect( "127.0.0.1:3012", None ).await
+//!
+//!       .expect_throw( "assume the connection succeeds" );
+//!
+//!    let mut evts = ws.observe_unbounded();
+//!
+//!    ws.close().await;
+//!
+//!    // Note that since WsStream::connect resolves to an opened connection, we don't see
+//!    // any Open events here.
+//!    //
+//!    assert_eq!( WsEventType::CLOSING, evts.next().await.unwrap_throw().ws_type() );
+//!    assert_eq!( WsEventType::CLOSE  , evts.next().await.unwrap_throw().ws_type() );
+//! };
+//!
+//! rt::spawn_local( program ).expect_throw( "spawn program" );
+//! ```
 //!
 //! ## API
 //!
 //! Api documentation can be found on [docs.rs](https://docs.rs/ws_stream_wasm).
+//!
+//! The [integration tests](https://github.com/najamelan/ws_stream_wasm/tree/master/tests) are also useful.
+//!
+//!
+//! ## References
+//! The reference documents for understanding websockets and how the browser handles them are:
+//! - [HTML Living Standard](https://html.spec.whatwg.org/multipage/web-sockets.html)
+//! - [RFC 6455 - The WebSocket Protocol](https://tools.ietf.org/html/rfc6455)
 //!
 //!
 //! ## Contributing
@@ -118,20 +160,20 @@
 #![ allow  ( clippy::suspicious_else_formatting               ) ]
 
 mod error           ;
+mod ws_event        ;
 mod ws_message      ;
 mod ws_io           ;
 mod ws_state        ;
 mod ws_stream       ;
-mod callback_future ;
 
 pub use
 {
-	ws_state          :: { WsState                } ,
-	callback_future   :: { future_event           } ,
-	error             :: { WsErr      , WsErrKind } ,
-	ws_message        :: { WsMessage              } ,
-	ws_io             :: { WsIo                   } ,
-	ws_stream         :: { WsStream               } ,
+	error             :: { WsErr  , WsErrKind                          } ,
+	ws_event          :: { WsEvent, CloseEvent, NextEvent, WsEventType } ,
+	ws_message        :: { WsMessage                                   } ,
+	ws_io             :: { WsIo                                        } ,
+	ws_stream         :: { WsStream                                    } ,
+	ws_state          :: { WsState                                     } ,
 };
 
 
@@ -140,17 +182,19 @@ mod import
 {
 	pub(crate) use
 	{
-		async_runtime :: { rt                                                                      } ,
-		failure       :: { Backtrace, Fail, Context as FailContext                                 } ,
-		futures       :: { channel::mpsc::unbounded, Poll                                          } ,
-		futures       :: { prelude::{ Stream, Sink, AsyncWrite, AsyncRead }, stream::{ StreamExt } } ,
-		futures       :: { ready                                                                   } ,
-		std           :: { io, cmp, collections::VecDeque, fmt, task::{ Context, Waker }           } ,
-		std           :: { rc::Rc, cell::{ RefCell }, pin::Pin, convert::{ TryFrom, TryInto }      } ,
-		log           :: { *                                                                       } ,
-		js_sys        :: { ArrayBuffer, Uint8Array                                                 } ,
-		wasm_bindgen  :: { closure::Closure, JsCast, JsValue, UnwrapThrowExt                       } ,
-		web_sys       :: { *, BinaryType, Blob, WebSocket                                          } ,
-		js_sys        :: { Array                                                                   } ,
+		async_runtime :: { rt                                                                            } ,
+		bitflags      :: { bitflags                                                                      } ,
+		failure       :: { Backtrace, Fail, Context as FailContext                                       } ,
+		futures       :: { channel::mpsc::{ Receiver, UnboundedReceiver }, Poll                          } ,
+		futures       :: { prelude::{ Stream, Sink, AsyncWrite, AsyncRead }, ready, future::ready        } ,
+		futures       :: { stream::{ StreamExt, FilterMap }, future::Ready                               } ,
+		std           :: { io, cmp, collections::VecDeque, fmt, task::{ Context, Waker }, future::Future } ,
+		std           :: { rc::Rc, cell::{ RefCell }, pin::Pin, convert::{ TryFrom, TryInto }            } ,
+		log           :: { *                                                                             } ,
+		js_sys        :: { ArrayBuffer, Uint8Array                                                       } ,
+		wasm_bindgen  :: { closure::Closure, JsCast, JsValue, UnwrapThrowExt                             } ,
+		web_sys       :: { *, BinaryType, Blob, WebSocket, CloseEvent as JsCloseEvt, DomException        } ,
+		js_sys        :: { Array                                                                         } ,
+		pharos        :: { Pharos, Observable, UnboundedObservable                                       } ,
 	};
 }

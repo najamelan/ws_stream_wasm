@@ -28,9 +28,9 @@ impl From< MessageEvent > for WsMessage
 		{
 			trace!( "JsWebSocket received binary message" );
 
-			let buf: ArrayBuffer = data.unchecked_into();
+			let buf: &ArrayBuffer = data.unchecked_ref();
 
-			let     buffy = Uint8Array::new( &buf );
+			let     buffy = Uint8Array::new( buf );
 			let mut v     = vec![ 0; buffy.length() as usize ];
 
 			buffy.copy_to( &mut v ); // FIXME: get rid of this copy
