@@ -37,13 +37,12 @@ dependencies:
       - MessageEvent
       - WebSocket
       - CloseEvent
-      - Event
       - DomException
 
 dev-dependencies:
 
   tokio                    : { version: ^0.1, default-features: false, features: [codec] }
-  wasm-logger              : ^0.1
+  # wasm-logger              : ^0.1
   console_log              : ^0.1
   console_error_panic_hook : ^0.1
   pretty_assertions        : ^0.6
@@ -54,5 +53,5 @@ dev-dependencies:
   serde                    : { version: 1.0.87, features: [ derive ] }
   bytes                    : ^0.4
   flexi_logger             : ^0.11
-  futures_codec            : { git: "https://github.com/najamelan/futures-codec" }
+  futures_codec            : ^0.2
   wasm-bindgen-test        : ^0.2
