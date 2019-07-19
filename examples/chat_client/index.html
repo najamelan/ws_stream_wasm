@@ -1,0 +1,121 @@
+<html>
+	<head>
+		<meta content="text/html;charset=utf-8" http-equiv="Content-Type"/>
+		<title>ws_stream_wasm Chat Client Example<</title>
+
+		<style>
+
+			body
+			{
+				background: dark-grey;
+				height: 100%;
+				max-height: 100%;
+				width: 100%;
+				overflow:hidden;
+				margin: 0;
+				display: grid;
+				grid-template-columns: 7fr 1fr;
+				grid-template-rows: 2fr 15fr 1fr;
+			}
+
+			#title
+			{
+				background: yellow;
+				grid-column-start: 1;
+				grid-column-end: 3;
+				grid-row-start: 1;
+				grid-row-end: 1;
+			}
+
+			#chat
+			{
+				overflow-y: scroll;
+				background: grey;
+				grid-column-start: 1;
+				grid-column-end: 2;
+				grid-row-start: 2;
+				grid-row-end: 3;
+			}
+
+			#users
+			{
+				background: brown;
+				grid-column-start: 2;
+				grid-column-end: 2;
+				grid-row-start: 2;
+				grid-row-end: 4;
+				overflow-y: scroll;
+			}
+
+			#chat_form
+			{
+				background: blue;
+				grid-column-start: 1;
+				grid-column-end: 2;
+				grid-row-start: 3;
+				grid-row-end: 4;
+				display: flex;
+			}
+
+			#chat_input
+			{
+				flex: auto;
+			}
+
+
+
+		</style>
+	</head>
+	<body>
+
+
+		<!-- Note the usage of `type=module` here as this is an ES6 module -->
+		<script type="module">
+
+			// Use ES module import syntax to import functionality from the module
+			// that we have compiled.
+			//
+			// Note that the `default` import is an initialization function which
+			// will "boot" the module and make it ready to use. Currently browsers
+			// don't support natively imported WebAssembly as an ES module, but
+			// eventually the manual initialization won't be required!
+			import { default as init } from './pkg/ws_stream_wasm_chat_client.js';
+
+			async function run()
+			{
+				// First up we need to actually load the wasm file, so we use the
+				// default export to inform it where the wasm file is located on the
+				// server, and then we wait on the returned promise to wait for the
+				// wasm to be loaded.
+				//
+				// Note that instead of a string here you can also pass in an instance
+				// of `WebAssembly.Module` which allows you to compile your own module.
+				// Also note that the promise, when resolved, yields the wasm module's
+				// exports which is the same as importing the `*_bg` module in other
+				// modes
+				await init( './pkg/ws_stream_wasm_chat_client.wasm' );
+			}
+
+			run();
+
+		</script>
+
+
+		<h1 id="title">ws_stream_wasm Chat Client Example</h1>
+
+
+		<div id="chat">&nbsp;</div>
+		<div id="users">&nbsp;</div>
+
+
+		<form id="chat_form" >
+			<textarea id="chat_input"></textarea>
+
+			<input id="chat_submit"     type = "submit" value = "Send"       />
+			<input id="chat_disconnect" type = "submit" value = "Disconnect" />
+		</form>
+
+
+
+	</body>
+</html>
