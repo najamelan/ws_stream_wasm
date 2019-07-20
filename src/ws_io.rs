@@ -10,41 +10,39 @@ use
 /// if you need an example.
 ///
 /// Created with [WsStream::connect](crate::WsStream::connect).
-///
-#[ allow( dead_code ) ] // we need to store the closure to keep it form being dropped
 //
 pub struct WsIo
 {
-	ws     : Rc< WebSocket >                                ,
+	ws     : Rc< WebSocket >                       ,
 
 	// The queue of received messages
 	//
-	queue  : Rc<RefCell< VecDeque<WsMessage> >>             ,
+	queue  : Rc<RefCell< VecDeque<WsMessage> >>    ,
 
 	// Last waker of task that wants to read incoming messages
 	// to be woken up on a new message
 	//
-	waker  : Rc<RefCell< Option<Waker>       >>             ,
+	waker  : Rc<RefCell< Option<Waker>       >>    ,
 
 
 	// A pointer to the pharos of WsStream for when we
 	// need to listen to events
 	//
-	pharos : Rc<RefCell< Pharos<WsEvent>     >>             ,
+	pharos : Rc<RefCell< Pharos<WsEvent>     >>    ,
 
 	// State information for partially read messages in
 	// AsyncRead
 	//
-	state  : ReadState                                      ,
+	state  : ReadState                             ,
 
 	// The closure that will receive the messages
 	//
-	on_mesg: Closure< dyn FnMut( MessageEvent ) + 'static > ,
+	_on_mesg: Closure< dyn FnMut( MessageEvent ) > ,
 
 	// This allows us to store a future to poll when
 	// Sink::poll_close is called
 	//
-	closer : Option< NextEvent >                            ,
+	closer : Option< NextEvent >                   ,
 }
 
 
@@ -86,13 +84,13 @@ impl WsIo
 
 		Self
 		{
-			ws      ,
-			queue   ,
-			on_mesg ,
-			state   ,
-			waker   ,
-			pharos  ,
-			closer: None,
+			ws                ,
+			queue             ,
+			state             ,
+			waker             ,
+			pharos            ,
+			_on_mesg: on_mesg ,
+			closer  : None    ,
 		}
 	}
 

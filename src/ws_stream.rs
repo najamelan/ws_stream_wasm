@@ -9,16 +9,14 @@ use
 /// Most of the methods on this type directly map to the web API. For more documentation, check the
 /// [MDN WebSocket documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebSocket/WebSocket).
 //
-#[ allow( dead_code ) ] // we need to store the closures to keep it form being dropped
-//
 pub struct WsStream
 {
-	ws    : Rc<WebSocket>                             ,
-	pharos: Rc<RefCell< Pharos<WsEvent> >>            ,
+	ws       : Rc<WebSocket>                      ,
+	pharos   : Rc<RefCell< Pharos<WsEvent> >>     ,
 
-	on_open : Closure< dyn FnMut() + 'static > ,
-	on_error: Closure< dyn FnMut() + 'static > ,
-	on_close: Closure< dyn FnMut( JsCloseEvt ) + 'static > ,
+	_on_open : Closure< dyn FnMut() >             ,
+	_on_error: Closure< dyn FnMut() >             ,
+	_on_close: Closure< dyn FnMut( JsCloseEvt ) > ,
 }
 
 
@@ -176,11 +174,11 @@ impl WsStream
 		((
 			Self
 			{
-				ws      : ws.clone() ,
-				pharos               ,
-				on_open              ,
-				on_error             ,
-				on_close             ,
+				pharos                ,
+				ws       : ws.clone() ,
+				_on_open : on_open    ,
+				_on_error: on_error   ,
+				_on_close: on_close   ,
 			},
 
 			WsIo::new( ws, ph4 )
