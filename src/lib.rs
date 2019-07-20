@@ -120,6 +120,8 @@
 //! reformatted to fit the project coding style or to improve the implementation. Please discuss what you want to
 //! see modified before filing a pull request if you don't want to be doing work that might be rejected.
 //!
+//! Please file PR's against the `dev` branch, don't forget to update the changelog and the documentation.
+//!
 //! ### Testing
 //!
 //! For testing we need backend servers to echo data back to the tests. These are in the `ws_stream` crate.
