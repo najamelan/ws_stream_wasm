@@ -6,7 +6,6 @@ package:
   edition    : '2018'
   description: An example for using websockets in rust WASM.
   repository : https::/github.com/najamelan/async_runtime
-  license    : Unlicence
 
 
 lib:
@@ -17,9 +16,13 @@ lib:
 
 dependencies:
 
-  naja_async_runtime: { version: ^0.1, default-features: false }
+  naja_async_runtime: { version: ^0.2, default-features: false }
   ws_stream_wasm    : ^0.1
   wasm-bindgen      : ^0.2
+  futures_codec     : { git: "https://github.com/najamelan/futures-codec" }
+  futures-preview   : { version: ^0.3.0-alpha.17, features: [io-compat, compat] }
+  console_log              : ^0.1
+  log                     : ^0.4
 
   web-sys:
 

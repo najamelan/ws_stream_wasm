@@ -1,11 +1,20 @@
 # Auto-generated from "Cargo.yml"
 [dependencies]
+console_log = "^0.1"
+log = "^0.4"
 wasm-bindgen = "^0.2"
+ws_stream_wasm = "^0.1"
 
-[dependencies.async_runtime]
+[dependencies.futures-preview]
+features = ["io-compat", "compat"]
+version = "^0.3.0-alpha.17"
+
+[dependencies.futures_codec]
+git = "https://github.com/najamelan/futures-codec"
+
+[dependencies.naja_async_runtime]
 default-features = false
-package = "naja_async_runtime"
-version = "^0.1"
+version = "^0.2"
 
 [dependencies.web-sys]
 features = ["console", "Document", "Element", "HtmlElement", "Node", "Window"]
@@ -17,9 +26,8 @@ path = "src/entrypoint.rs"
 
 [package]
 authors = ["Naja Melan <najamelan@autistici.org>"]
-description = "An example for using async_runtime in wasm."
+description = "An example for using websockets in rust WASM."
 edition = "2018"
-license = "Unlicence"
 name = "ws_stream_wasm_chat_client"
-repository = "https::/github.com/najamelan/ws_stream_wasm"
+repository = "https::/github.com/najamelan/async_runtime"
 version = "0.1.0"

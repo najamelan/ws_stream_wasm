@@ -5,6 +5,12 @@
 
 		<style>
 
+			p
+			{
+				margin:0;
+				padding: .1rem;
+			}
+
 			body
 			{
 				background: dark-grey;
@@ -93,7 +99,7 @@
 				// Also note that the promise, when resolved, yields the wasm module's
 				// exports which is the same as importing the `*_bg` module in other
 				// modes
-				await init( './pkg/ws_stream_wasm_chat_client.wasm' );
+				await init( './pkg/ws_stream_wasm_chat_client_bg.wasm' );
 			}
 
 			run();
