@@ -59,8 +59,8 @@ pub fn main() -> Result<(), JsValue>
 		let (out, msgs) = framed.split();
 
 		let send    = document.get_element_by_id( "chat_submit" ).expect( "find chat_submit" );
-		let form    = document.get_element_by_id( "chat_form" ).expect( "find chat_form" );
-		let on_send = EHandler::new( &form, "reset", true );
+		let form    = document.get_element_by_id( "chat_form"   ).expect( "find chat_form" );
+		let on_send = EHandler::new( &form, "submit", false );
 
 		rt::spawn_local( handle_msgs( msgs         ) ).expect( "spawn msgs" );
 		rt::spawn_local( handle_send( on_send, out ) ).expect( "spawn send" );
@@ -153,8 +153,8 @@ async fn handle_msgs( mut stream: impl Stream<Item=Result<Wire, Error>> + Unpin 
 
 async fn handle_send
 (
-	mut on_clicks: impl Stream<Item=()> + Unpin,
-	mut out      : impl Sink<Wire, Error=Error> + Unpin
+	mut submits: impl Stream< Item=Event        > + Unpin ,
+	mut out    : impl Sink  < Wire, Error=Error > + Unpin ,
 )
 {
 	let window   = web_sys::window  ().expect_throw( "no global `window` exists"              );
@@ -165,13 +165,13 @@ async fn handle_send
 	let textarea: &HtmlTextAreaElement = textarea.unchecked_ref();
 
 
-	while on_clicks.next().await.is_some()
+	while let Some( evt ) = submits.next().await
 	{
-		debug!( "click detected" );
+		evt.prevent_default();
 
 		let text = textarea.value().trim().to_string() + "\n";
-		// textarea.set_text_content( None );
-		//
+		textarea.set_value( "" );
+		let _ = textarea.focus();
 
 		if text == "\n" { continue; }
 
@@ -208,7 +208,7 @@ async fn handle_send
 
 pub struct EHandler
 {
-	receiver: mpsc::UnboundedReceiver<()>,
+	receiver: mpsc::UnboundedReceiver<Event>,
 
 	// Automatically removed from the DOM on drop!
 	//
@@ -218,22 +218,22 @@ pub struct EHandler
 
 impl EHandler
 {
-	pub fn new( target: &EventTarget, event: &'static str, prevent_default: bool ) -> Self
+	pub fn new( target: &EventTarget, event: &'static str, passive: bool ) -> Self
 	{
 		debug!( "set onclick handler" );
 
 		let (sender, receiver) = mpsc::unbounded();
-		let options = match prevent_default
+		let options = match passive
 		{
-			true  => EventListenerOptions::enable_prevent_default(),
-			false => EventListenerOptions::default(),
+			false => EventListenerOptions::enable_prevent_default(),
+			true  => EventListenerOptions::default(),
 		};
 
 		// Attach an event listener
 		//
-		let _listener = EventListener::new_with_options( &target, event, options, move |_|
+		let _listener = EventListener::new_with_options( &target, event, options, move |event|
 		{
-			sender.unbounded_send(()).unwrap_throw();
+			sender.unbounded_send(event.clone()).unwrap_throw();
 		});
 
 		Self
@@ -248,7 +248,7 @@ impl EHandler
 
 impl Stream for EHandler
 {
-	type Item = ();
+	type Item = Event;
 
 	fn poll_next(mut self: Pin<&mut Self>, cx: &mut Context) -> Poll<Option<Self::Item>>
 	{
