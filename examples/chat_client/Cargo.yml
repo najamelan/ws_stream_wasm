@@ -16,13 +16,19 @@ lib:
 
 dependencies:
 
-  naja_async_runtime: { version: ^0.2, default-features: false }
-  ws_stream_wasm    : ^0.1
-  wasm-bindgen      : ^0.2
-  futures_codec     : { git: "https://github.com/najamelan/futures-codec" }
-  futures-preview   : { version: ^0.3.0-alpha.17, features: [io-compat, compat] }
-  console_log              : ^0.1
+  console_error_panic_hook: ^0.1
+  chat_format             : { path: ../../../ws_stream/examples/chat_format }
+  naja_async_runtime      : { version: ^0.2, default-features: false }
+  ws_stream_wasm          : ^0.1
+  wasm-bindgen            : ^0.2
+  futures_codec           : ^0.2
+  futures-preview         : { version: ^0.3.0-alpha.17, features: [io-compat, compat] }
   log                     : ^0.4
+  gloo-events             : { git: "https://github.com/rustwasm/gloo" }
+  wasm-logger             : ^0.1
+  regex                   : ^1
+  js-sys                  : ^0.3
+
 
   web-sys:
 
@@ -36,4 +42,6 @@ dependencies:
       HtmlElement ,
       Node        ,
       Window      ,
+      HtmlTextAreaElement,
+      CssStyleDeclaration,
     ]
