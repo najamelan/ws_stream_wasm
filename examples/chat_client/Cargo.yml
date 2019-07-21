@@ -36,12 +36,14 @@ dependencies:
 
     features :
     [
-      console     ,
-      Document    ,
-      Element     ,
-      HtmlElement ,
-      Node        ,
-      Window      ,
-      HtmlTextAreaElement,
-      CssStyleDeclaration,
+      console             ,
+      CssStyleDeclaration ,
+      Document            ,
+      Element             ,
+      HtmlElement         ,
+      HtmlFormElement     ,
+      HtmlTextAreaElement ,
+      KeyboardEvent       ,
+      Node                ,
+      Window              ,
     ]

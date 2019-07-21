@@ -1,23 +1,34 @@
 #![ feature( async_await ) ]
 #![ allow( unused_imports, unused_variables ) ]
 
-use
+mod e_handler;
+mod color    ;
+
+
+
+mod import
 {
-	chat_format    :: { futures_serde_cbor::{ Codec, Error }, Wire, ServerMsg, ClientMsg } ,
-	async_runtime  :: { *                                                                } ,
-	web_sys        :: { *, console::log_1 as dbg                                         } ,
-	ws_stream_wasm :: { *                                                                } ,
-	futures_codec  :: { *                                                                } ,
-	futures        :: { prelude::*, stream::SplitStream                                  } ,
-	futures        :: { channel::mpsc, ready                                             } ,
-	log            :: { *                                                                } ,
-	web_sys        :: {                                                                  } ,
-	wasm_bindgen   :: { prelude::*, JsCast                                               } ,
-	gloo_events    :: { *                                                                } ,
-	std            :: { task::*, pin::Pin, collections::HashMap, panic                   } ,
-	regex          :: { Regex                                                            } ,
-	js_sys         :: { Math                                                             } ,
-};
+	pub(crate) use
+	{
+		chat_format    :: { futures_serde_cbor::{ Codec, Error }, Wire, ServerMsg, ClientMsg } ,
+		async_runtime  :: { *                                                                } ,
+		web_sys        :: { *, console::log_1 as dbg                                         } ,
+		ws_stream_wasm :: { *                                                                } ,
+		futures_codec  :: { *                                                                } ,
+		futures        :: { prelude::*, stream::SplitStream                                  } ,
+		futures        :: { channel::mpsc, ready                                             } ,
+		log            :: { *                                                                } ,
+		web_sys        :: { *                                                                } ,
+		wasm_bindgen   :: { prelude::*, JsCast                                               } ,
+		gloo_events    :: { *                                                                } ,
+		std            :: { task::*, pin::Pin, collections::HashMap, panic                   } ,
+		regex          :: { Regex                                                            } ,
+		js_sys         :: { Math                                                             } ,
+	};
+}
+
+use crate::{ import::*, e_handler::*, color::* };
+
 
 
 const URL: &str = "ws://127.0.0.1:3412";
@@ -41,9 +52,7 @@ pub fn main() -> Result<(), JsValue>
 
 	let program = async
 	{
-		let window   = web_sys::window  ().expect( "no global `window` exists"        );
-		let document = window  .document().expect( "should have a document on window" );
-		let chat     = document.get_element_by_id( "chat" ).expect( "find chat"       );
+		let chat = document().get_element_by_id( "chat" ).expect( "find chat"       );
 
 		let (ws, wsio) = match WsStream::connect( URL, None ).await
 		{
@@ -58,12 +67,16 @@ pub fn main() -> Result<(), JsValue>
 		let framed      = Framed::new( wsio, Codec::new() );
 		let (out, msgs) = framed.split();
 
-		let send    = document.get_element_by_id( "chat_submit" ).expect( "find chat_submit" );
-		let form    = document.get_element_by_id( "chat_form"   ).expect( "find chat_form" );
-		let on_send = EHandler::new( &form, "submit", false );
+		let send    = document().get_element_by_id( "chat_submit" ).expect_throw( "find chat_submit" );
+		let form    = document().get_element_by_id( "chat_form"   ).expect_throw( "find chat_form"   );
+		let tarea   = document().get_element_by_id( "chat_input"  ).expect_throw( "find chat_input"  );
 
-		rt::spawn_local( handle_msgs( msgs         ) ).expect( "spawn msgs" );
-		rt::spawn_local( handle_send( on_send, out ) ).expect( "spawn send" );
+		let on_send  = EHandler::new( &form , "submit"  , false );
+		let on_enter = EHandler::new( &tarea, "keypress", false );
+
+		rt::spawn_local( on_msg   ( msgs          ) ).expect( "spawn on_msg"    );
+		rt::spawn_local( on_submit( on_send , out ) ).expect( "spawn on_submit" );
+		rt::spawn_local( on_key   ( on_enter      ) ).expect( "spawn on_key"    );
 	};
 
 	rt::spawn_local( program ).expect( "spawn program" );
@@ -101,12 +114,10 @@ fn append_line( document: &Document, chat: &Element, line: &str, nick: &str, col
 }
 
 
-async fn handle_msgs( mut stream: impl Stream<Item=Result<Wire, Error>> + Unpin )
+async fn on_msg( mut stream: impl Stream<Item=Result<Wire, Error>> + Unpin )
 {
-	let window   = web_sys::window  ().expect_throw( "no global `window` exists"        );
-	let document = window  .document().expect_throw( "should have a document on window" );
-	let chat     = document.get_element_by_id( "chat" ).expect_throw( "find chat"       );
-	let re       = Regex::new( r"^#(\w{8})(.*)$" );
+	let chat = document().get_element_by_id( "chat" ).expect_throw( "find chat"       );
+	let re   = Regex::new( r"^#(\w{8})(.*)$" );
 
 	let mut colors: HashMap<usize, Color> = HashMap::new();
 
@@ -136,37 +147,37 @@ async fn handle_msgs( mut stream: impl Stream<Item=Result<Wire, Error>> + Unpin 
 			{
 				if ! colors.contains_key( &sid ) { colors.insert( sid, Color::random().light() ); }
 
-				append_line( &document, &chat, &txt, &nick, colors.get( &sid ).unwrap(), false );
+				append_line( &document(), &chat, &txt, &nick, colors.get( &sid ).unwrap(), false );
 			}
 
 
 			ServerMsg::ServerMsg(txt) =>
 			{
-				append_line( &document, &chat, &txt, "Server", colors.get( &0 ).unwrap(), true );
+				append_line( &document(), &chat, &txt, "Server", colors.get( &0 ).unwrap(), true );
 			}
 
 			_ => {}
 		}
 	}
-}
+   }
 
 
-async fn handle_send
+async fn on_submit
 (
 	mut submits: impl Stream< Item=Event        > + Unpin ,
 	mut out    : impl Sink  < Wire, Error=Error > + Unpin ,
 )
 {
-	let window   = web_sys::window  ().expect_throw( "no global `window` exists"              );
-	let document = window  .document().expect_throw( "should have a document on window"       );
-	let chat     = document.get_element_by_id( "chat" ).expect_throw( "find chat"       );
+	let chat     = document().get_element_by_id( "chat" ).expect_throw( "find chat"       );
 	let nickre   = Regex::new(r"^/nick (\w{1,15})").unwrap();
-	let textarea = document.get_element_by_id( "chat_input" ).expect_throw( "find chat_input" );
+	let textarea = document().get_element_by_id( "chat_input" ).expect_throw( "find chat_input" );
 	let textarea: &HtmlTextAreaElement = textarea.unchecked_ref();
 
 
 	while let Some( evt ) = submits.next().await
 	{
+		debug!( "on_submit" );
+
 		evt.prevent_default();
 
 		let text = textarea.value().trim().to_string() + "\n";
@@ -206,148 +217,39 @@ async fn handle_send
 
 
 
-pub struct EHandler
+
+// When the user presses the Enter key in the textarea we submit, rather than adding a new line
+// for newline, the user can use shift+Enter.
+//
+// We use the click effect on the Send button, because form.submit() wont let our on_submit handler run.
+//
+async fn on_key
+(
+	mut keys: impl Stream< Item=Event > + Unpin ,
+)
 {
-	receiver: mpsc::UnboundedReceiver<Event>,
-
-	// Automatically removed from the DOM on drop!
-	//
-	_listener: EventListener,
-}
+	let send: HtmlElement = document().get_element_by_id( "chat_submit" ).expect_throw( "find chat_submit" ).unchecked_into();
 
 
-impl EHandler
-{
-	pub fn new( target: &EventTarget, event: &'static str, passive: bool ) -> Self
+	while let Some( evt ) = keys.next().await
 	{
-		debug!( "set onclick handler" );
+		let evt: KeyboardEvent = evt.unchecked_into();
 
-		let (sender, receiver) = mpsc::unbounded();
-		let options = match passive
+		if  evt.code() == "Enter"  &&  !evt.shift_key()
 		{
-			false => EventListenerOptions::enable_prevent_default(),
-			true  => EventListenerOptions::default(),
-		};
-
-		// Attach an event listener
-		//
-		let _listener = EventListener::new_with_options( &target, event, options, move |event|
-		{
-			sender.unbounded_send(event.clone()).unwrap_throw();
-		});
-
-		Self
-		{
-			receiver,
-			_listener,
+			send.click();
+			evt.prevent_default();
 		}
-	}
+	};
 }
 
 
 
-impl Stream for EHandler
+fn document() -> Document
 {
-	type Item = Event;
+	let window = web_sys::window().expect_throw( "no global `window` exists");
 
-	fn poll_next(mut self: Pin<&mut Self>, cx: &mut Context) -> Poll<Option<Self::Item>>
-	{
-		Pin::new( &mut self.receiver ).poll_next(cx)
-	}
+	window.document().expect_throw( "should have a document on window" )
 }
-
-
-
-pub struct Color
-{
-	r: u8,
-	g: u8,
-	b: u8,
-	a: u8,
-}
-
-
-impl Color
-{
-	pub fn new( r: u8, g: u8, b: u8, a: u8 ) -> Self
-	{
-		Self{ r, g, b, a }
-	}
-
-	pub fn random() -> Self
-	{
-		Self
-		{
-			r: ( Math::random() * 255_f64 ) as u8,
-			g: ( Math::random() * 255_f64 ) as u8,
-			b: ( Math::random() * 255_f64 ) as u8,
-			a: ( Math::random() * 255_f64 ) as u8,
-		}
-	}
-
-
-	// If this color is darker than half luminosity, it will be inverted
-	//
-	pub fn light( self ) -> Self
-	{
-		if self.is_dark() { self.invert() }
-		else { self }
-	}
-
-
-	// If this color is lighter than half luminosity, it will be inverted
-	//
-	pub fn dark( self ) -> Self
-	{
-		if self.is_light() { self.invert() }
-		else { self }
-	}
-
-
-	/// Invert color.
-	//
-	pub fn invert( mut self ) -> Self
-	{
-		self.r = 255 - self.r;
-		self.g = 255 - self.g;
-		self.b = 255 - self.b;
-		self.a = 255 - self.a;
-
-		self
-	}
-
-
-	// True if this color is lighter than half luminosity.
-	//
-	pub fn is_light( &self ) -> bool
-	{
-		self.r as u16 + self.g as u16 + self.b as u16 > 378 // 128 * 3
-	}
-
-
-	/// True if this color is darker than half luminosity.
-	//
-	pub fn is_dark( &self ) -> bool
-	{
-		!self.is_light()
-	}
-
-
-	// output a css string format: "#rrggbb"
-	//
-	pub fn to_css( &self ) -> String
-	{
-		format!( "#{:2x}{:2x}{:2x}", self.r, self.g, self.b )
-	}
-
-
-	// output a css string format: "rgba( rrr, ggg, bbb, aaa )"
-	//
-	pub fn to_cssa( &self ) -> String
-	{
-		format!( "rgba({},{},{},{})", self.r, self.g, self.b, self.a )
-	}
-}
-
 
 

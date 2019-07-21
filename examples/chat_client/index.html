@@ -115,7 +115,11 @@
 		<div id="users">&nbsp;</div>
 
 
-		<form id="chat_form" >
+
+		<!-- if we don't put the javascript link, it will still submit when programatorially triggering
+		click on the button... -->
+
+		<form id="chat_form" action="javascript:void(0);" >
 			<textarea id="chat_input"></textarea>
 
 			<input id="chat_submit"     type = "submit" value = "Send"       />
