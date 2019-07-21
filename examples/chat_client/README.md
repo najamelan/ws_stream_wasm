@@ -29,3 +29,13 @@ cargo run --example chat_server --release
 ## Usage
 
 Now you can open the `index.html` from this crate in several web browser tabs and chat away.
+
+
+## TODO
+- stop auto scroll if the user scrolls up
+- make enter work as a way to send the message, and refocus chat input after send.
+- show connected users on the right
+- show available commands on startup
+- show timestamp of messages
+- nicks must be unique, non-empty
+- gui

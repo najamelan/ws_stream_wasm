@@ -3,20 +3,20 @@
 
 use
 {
-	chat_format    :: { futures_serde_cbor::{ Codec, Error }, ChatMessage, Command } ,
-	async_runtime  :: { *                                                          } ,
-	web_sys        :: { *, console::log_1 as dbg                                   } ,
-	ws_stream_wasm :: { *                                                          } ,
-	futures_codec  :: { *                                                          } ,
-	futures        :: { prelude::*, stream::SplitStream                            } ,
-	futures        :: { channel::mpsc, ready                                       } ,
-	log            :: { *                                                          } ,
-	web_sys        :: {                                                            } ,
-	wasm_bindgen   :: { prelude::*, JsCast                                         } ,
-	gloo_events    :: { *                                                          } ,
-	std            :: { task::*, pin::Pin, collections::HashMap, panic             } ,
-	regex          :: { Regex                                                      } ,
-	js_sys         :: { Math                                                       } ,
+	chat_format    :: { futures_serde_cbor::{ Codec, Error }, Wire, ServerMsg, ClientMsg } ,
+	async_runtime  :: { *                                                                } ,
+	web_sys        :: { *, console::log_1 as dbg                                         } ,
+	ws_stream_wasm :: { *                                                                } ,
+	futures_codec  :: { *                                                                } ,
+	futures        :: { prelude::*, stream::SplitStream                                  } ,
+	futures        :: { channel::mpsc, ready                                             } ,
+	log            :: { *                                                                } ,
+	web_sys        :: {                                                                  } ,
+	wasm_bindgen   :: { prelude::*, JsCast                                               } ,
+	gloo_events    :: { *                                                                } ,
+	std            :: { task::*, pin::Pin, collections::HashMap, panic                   } ,
+	regex          :: { Regex                                                            } ,
+	js_sys         :: { Math                                                             } ,
 };
 
 
@@ -31,10 +31,7 @@ pub fn main() -> Result<(), JsValue>
 {
 	panic::set_hook(Box::new(console_error_panic_hook::hook));
 
-	wasm_logger::init(
-	    wasm_logger::Config::new(Level::Debug)
-	        .message_on_new_line()
-	);
+	wasm_logger::init( wasm_logger::Config::new(Level::Debug).message_on_new_line() );
 
 	// Since there is no threads in wasm for the moment, this is optional if you include async_runtime
 	// with `default-dependencies = false`, the local pool will be the default. However this might
@@ -46,7 +43,6 @@ pub fn main() -> Result<(), JsValue>
 	{
 		let window   = web_sys::window  ().expect( "no global `window` exists"        );
 		let document = window  .document().expect( "should have a document on window" );
-		let _body    = document.body    ().expect( "document should have a body"      );
 		let chat     = document.get_element_by_id( "chat" ).expect( "find chat"       );
 
 		let (ws, wsio) = match WsStream::connect( URL, None ).await
@@ -105,7 +101,7 @@ fn append_line( document: &Document, chat: &Element, line: &str, nick: &str, col
 }
 
 
-async fn handle_msgs( mut stream: impl Stream<Item=Result<ChatMessage, Error>> + Unpin )
+async fn handle_msgs( mut stream: impl Stream<Item=Result<Wire, Error>> + Unpin )
 {
 	let window   = web_sys::window  ().expect_throw( "no global `window` exists"        );
 	let document = window  .document().expect_throw( "should have a document on window" );
@@ -121,23 +117,32 @@ async fn handle_msgs( mut stream: impl Stream<Item=Result<ChatMessage, Error>> +
 
 	while let Some( msg ) = stream.next().await
 	{
-		let msg: ChatMessage = msg.expect_throw( "get msg" );
+		// TODO: handle io errors
+		//
+		let msg = match msg
+		{
+			Ok( Wire::Server( msg ) ) => msg,
+			_                         => continue,
+		};
+
+
 
 		debug!( "received message" );
 
 
-		match msg.cmd
+		match msg
 		{
-			Command::Message       =>
+			ServerMsg::ChatMsg{ nick, sid, txt } =>
 			{
-				let sid = msg.sid.unwrap();
 				if ! colors.contains_key( &sid ) { colors.insert( sid, Color::random().light() ); }
-				append_line( &document, &chat, &msg.txt.unwrap(), &msg.nick.unwrap(), colors.get( &sid ).unwrap(), false );
+
+				append_line( &document, &chat, &txt, &nick, colors.get( &sid ).unwrap(), false );
 			}
 
-			Command::ServerMessage =>
+
+			ServerMsg::ServerMsg(txt) =>
 			{
-				append_line( &document, &chat, &msg.txt.unwrap(), &msg.nick.unwrap(), colors.get( &0 ).unwrap(), true );
+				append_line( &document, &chat, &txt, "Server", colors.get( &0 ).unwrap(), true );
 			}
 
 			_ => {}
@@ -149,7 +154,7 @@ async fn handle_msgs( mut stream: impl Stream<Item=Result<ChatMessage, Error>> +
 async fn handle_send
 (
 	mut on_clicks: impl Stream<Item=()> + Unpin,
-	mut out      : impl Sink<ChatMessage, Error=Error> + Unpin
+	mut out      : impl Sink<Wire, Error=Error> + Unpin
 )
 {
 	let window   = web_sys::window  ().expect_throw( "no global `window` exists"              );
@@ -172,17 +177,13 @@ async fn handle_send
 
 		let msg;
 
+		// if this is a /nick somename message
+		//
 		if let Some( cap ) = nickre.captures( &text )
 		{
 			debug!( "handle set nick: {:#?}", &text );
 
-			msg = ChatMessage
-			{
-				cmd : Command::SetNick           ,
-				txt : Some( cap[1].to_string() ) ,
-				nick: None                       ,
-				sid : None                       ,
-			};
+			msg = ClientMsg::SetNick( cap[1].to_string() );
 		}
 
 
@@ -190,18 +191,12 @@ async fn handle_send
 		{
 			debug!( "handle send: {:#?}", &text );
 
-			msg = ChatMessage
-			{
-				cmd : Command::Message,
-				txt : Some( text )    ,
-				nick: None            ,
-				sid : None            ,
-			};
+			msg = ClientMsg::ChatMsg( text );
 		}
 
 
 
-		match out.send( msg ).await
+		match out.send( Wire::Client( msg ) ).await
 		{
 			Ok(()) => {}
 			Err(e) => { error!( "{}", e ); }
