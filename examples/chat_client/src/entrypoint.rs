@@ -1,8 +1,9 @@
 #![ feature( async_await ) ]
 #![ allow( unused_imports, unused_variables ) ]
 
-mod e_handler;
-mod color    ;
+pub(crate) mod e_handler ;
+pub(crate) mod color     ;
+pub(crate) mod user_list ;
 
 
 
@@ -21,13 +22,13 @@ mod import
 		web_sys        :: { *                                                                } ,
 		wasm_bindgen   :: { prelude::*, JsCast                                               } ,
 		gloo_events    :: { *                                                                } ,
-		std            :: { task::*, pin::Pin, collections::HashMap, panic                   } ,
+		std            :: { task::*, pin::Pin, collections::HashMap, panic, rc::Rc           } ,
 		regex          :: { Regex                                                            } ,
 		js_sys         :: { Math                                                             } ,
 	};
 }
 
-use crate::{ import::*, e_handler::*, color::* };
+use crate::{ import::*, e_handler::*, color::*, user_list::* };
 
 
 
@@ -85,11 +86,11 @@ pub fn main() -> Result<(), JsValue>
 }
 
 
-fn append_line( document: &Document, chat: &Element, line: &str, nick: &str, color: &Color, color_all: bool )
+fn append_line( chat: &Element, line: &str, nick: &str, color: &Color, color_all: bool )
 {
-	let p: HtmlElement = document.create_element( "p"    ).expect( "Failed to create div" ).unchecked_into();
-	let s: HtmlElement = document.create_element( "span" ).expect( "Failed to create div" ).unchecked_into();
-	let t: HtmlElement = document.create_element( "span" ).expect( "Failed to create div" ).unchecked_into();
+	let p: HtmlElement = document().create_element( "p"    ).expect( "create p"    ).unchecked_into();
+	let s: HtmlElement = document().create_element( "span" ).expect( "create span" ).unchecked_into();
+	let t: HtmlElement = document().create_element( "span" ).expect( "create span" ).unchecked_into();
 
 	debug!( "setting color to: {}", color.to_css() );
 
@@ -116,8 +117,9 @@ fn append_line( document: &Document, chat: &Element, line: &str, nick: &str, col
 
 async fn on_msg( mut stream: impl Stream<Item=Result<Wire, Error>> + Unpin )
 {
-	let chat = document().get_element_by_id( "chat" ).expect_throw( "find chat"       );
-	let re   = Regex::new( r"^#(\w{8})(.*)$" );
+	let chat       = document().get_element_by_id( "chat" ).expect_throw( "find chat"       );
+	let re         = Regex::new( r"^#(\w{8})(.*)$" );
+	let mut u_list = UserList::new();
 
 	let mut colors: HashMap<usize, Color> = HashMap::new();
 
@@ -145,18 +147,50 @@ async fn on_msg( mut stream: impl Stream<Item=Result<Wire, Error>> + Unpin )
 		{
 			ServerMsg::ChatMsg{ nick, sid, txt } =>
 			{
-				if ! colors.contains_key( &sid ) { colors.insert( sid, Color::random().light() ); }
+				let color = colors.entry( sid ).or_insert( Color::random().light() );
 
-				append_line( &document(), &chat, &txt, &nick, colors.get( &sid ).unwrap(), false );
+				append_line( &chat, &txt, &nick, color, false );
 			}
 
 
 			ServerMsg::ServerMsg(txt) =>
 			{
-				append_line( &document(), &chat, &txt, "Server", colors.get( &0 ).unwrap(), true );
+				append_line( &chat, &txt, "Server", colors.get( &0 ).unwrap(), true );
 			}
 
-			_ => {}
+
+			ServerMsg::Welcome{ users, txt } =>
+			{
+				users.into_iter().for_each( |(s,n)| u_list.insert(s,n) );
+
+				let udiv = document().get_element_by_id( "users" ).expect_throw( "find users elem" );
+				u_list.render( udiv.unchecked_ref() );
+
+				append_line( &chat, &txt, "Server", colors.get( &0 ).unwrap(), true );
+			}
+
+
+			ServerMsg::NickChanged{ old, new, sid } =>
+			{
+				append_line( &chat, &format!( "{} has changed names => {}.", &old, &new ), "Server", colors.get( &0 ).unwrap(), true );
+				u_list.insert( sid, new );
+			}
+
+
+			ServerMsg::UserJoined{ nick, sid } =>
+			{
+				append_line( &chat, &format!( "We welcome a new user, {}!", &nick ), "Server", colors.get( &0 ).unwrap(), true );
+				u_list.insert( sid, nick );
+			}
+
+
+			ServerMsg::UserLeft{ nick, sid } =>
+			{
+				u_list.remove( sid );
+				append_line( &chat, &format!( "Sadly, {} has left us.", &nick ), "Server", colors.get( &0 ).unwrap(), true );
+			}
+
+			// _ => {}
 		}
 	}
    }
@@ -245,7 +279,7 @@ async fn on_key
 
 
 
-fn document() -> Document
+pub fn document() -> Document
 {
 	let window = web_sys::window().expect_throw( "no global `window` exists");
 
