@@ -11,20 +11,20 @@ mod import
 {
 	pub(crate) use
 	{
-		chat_format    :: { futures_serde_cbor::{ Codec, Error }, Wire, ServerMsg, ClientMsg } ,
-		async_runtime  :: { *                                                                } ,
-		web_sys        :: { *, console::log_1 as dbg                                         } ,
-		ws_stream_wasm :: { *                                                                } ,
-		futures_codec  :: { *                                                                } ,
-		futures        :: { prelude::*, stream::SplitStream                                  } ,
-		futures        :: { channel::mpsc, ready                                             } ,
-		log            :: { *                                                                } ,
-		web_sys        :: { *                                                                } ,
-		wasm_bindgen   :: { prelude::*, JsCast                                               } ,
-		gloo_events    :: { *                                                                } ,
-		std            :: { task::*, pin::Pin, collections::HashMap, panic, rc::Rc           } ,
-		regex          :: { Regex                                                            } ,
-		js_sys         :: { Math                                                             } ,
+		chat_format    :: { futures_serde_cbor::{ Codec, Error }, ServerMsg, ClientMsg } ,
+		async_runtime  :: { *                                                          } ,
+		web_sys        :: { *, console::log_1 as dbg                                   } ,
+		ws_stream_wasm :: { *                                                          } ,
+		futures_codec  :: { *                                                          } ,
+		futures        :: { prelude::*, stream::SplitStream                            } ,
+		futures        :: { channel::mpsc, ready                                       } ,
+		log            :: { *                                                          } ,
+		web_sys        :: { *                                                          } ,
+		wasm_bindgen   :: { prelude::*, JsCast                                         } ,
+		gloo_events    :: { *                                                          } ,
+		std            :: { task::*, pin::Pin, collections::HashMap, panic, rc::Rc     } ,
+		regex          :: { Regex                                                      } ,
+		js_sys         :: { Math                                                       } ,
 	};
 }
 
@@ -115,7 +115,7 @@ fn append_line( chat: &Element, line: &str, nick: &str, color: &Color, color_all
 }
 
 
-async fn on_msg( mut stream: impl Stream<Item=Result<Wire, Error>> + Unpin )
+async fn on_msg( mut stream: impl Stream<Item=Result<ServerMsg, Error>> + Unpin )
 {
 	let chat       = document().get_element_by_id( "chat" ).expect_throw( "find chat"       );
 	let re         = Regex::new( r"^#(\w{8})(.*)$" );
@@ -134,8 +134,8 @@ async fn on_msg( mut stream: impl Stream<Item=Result<Wire, Error>> + Unpin )
 		//
 		let msg = match msg
 		{
-			Ok( Wire::Server( msg ) ) => msg,
-			_                         => continue,
+			Ok( msg ) => msg,
+			_         => continue,
 		};
 
 
@@ -198,8 +198,8 @@ async fn on_msg( mut stream: impl Stream<Item=Result<Wire, Error>> + Unpin )
 
 async fn on_submit
 (
-	mut submits: impl Stream< Item=Event        > + Unpin ,
-	mut out    : impl Sink  < Wire, Error=Error > + Unpin ,
+	mut submits: impl Stream< Item=Event             > + Unpin ,
+	mut out    : impl Sink  < ClientMsg, Error=Error > + Unpin ,
 )
 {
 	let chat     = document().get_element_by_id( "chat" ).expect_throw( "find chat"       );
@@ -241,7 +241,7 @@ async fn on_submit
 
 
 
-		match out.send( Wire::Client( msg ) ).await
+		match out.send( msg ).await
 		{
 			Ok(()) => {}
 			Err(e) => { error!( "{}", e ); }
