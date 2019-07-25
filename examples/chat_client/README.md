@@ -32,7 +32,5 @@ Now you can open the `index.html` from this crate in several web browser tabs an
 
 
 ## TODO
-- show available commands on startup
-- show timestamp of messages
 - nicks must be unique, non-empty
 - gui

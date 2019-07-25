@@ -11,20 +11,20 @@ mod import
 {
 	pub(crate) use
 	{
-		chat_format    :: { futures_serde_cbor::{ Codec, Error }, ServerMsg, ClientMsg } ,
-		async_runtime  :: { *                                                          } ,
-		web_sys        :: { *, console::log_1 as dbg                                   } ,
-		ws_stream_wasm :: { *                                                          } ,
-		futures_codec  :: { *                                                          } ,
-		futures        :: { prelude::*, stream::SplitStream                            } ,
-		futures        :: { channel::mpsc, ready                                       } ,
-		log            :: { *                                                          } ,
-		web_sys        :: { *                                                          } ,
-		wasm_bindgen   :: { prelude::*, JsCast                                         } ,
-		gloo_events    :: { *                                                          } ,
-		std            :: { task::*, pin::Pin, collections::HashMap, panic, rc::Rc     } ,
-		regex          :: { Regex                                                      } ,
-		js_sys         :: { Math                                                       } ,
+		chat_format    :: { futures_serde_cbor::{ Codec, Error }, ServerMsg, ClientMsg               } ,
+		async_runtime  :: { *                                                                        } ,
+		web_sys        :: { *, console::log_1 as dbg                                                 } ,
+		ws_stream_wasm :: { *                                                                        } ,
+		futures_codec  :: { *                                                                        } ,
+		futures        :: { prelude::*, stream::SplitStream                                          } ,
+		futures        :: { channel::mpsc, ready                                                     } ,
+		log            :: { *                                                                        } ,
+		web_sys        :: { *                                                                        } ,
+		wasm_bindgen   :: { prelude::*, JsCast                                                       } ,
+		gloo_events    :: { *                                                                        } ,
+		std            :: { task::*, pin::Pin, collections::HashMap, panic, rc::Rc, convert::TryInto } ,
+		regex          :: { Regex                                                                    } ,
+		js_sys         :: { Date, Math                                                               } ,
 	};
 }
 
@@ -94,29 +94,37 @@ pub fn main() -> Result<(), JsValue>
 }
 
 
-fn append_line( chat: &Element, line: &str, nick: &str, color: &Color, color_all: bool )
+fn append_line( chat: &Element, time: f64, nick: &str, line: &str, color: &Color, color_all: bool )
 {
 	let p: HtmlElement = document().create_element( "p"    ).expect( "create p"    ).unchecked_into();
-	let s: HtmlElement = document().create_element( "span" ).expect( "create span" ).unchecked_into();
+	let n: HtmlElement = document().create_element( "span" ).expect( "create span" ).unchecked_into();
+	let m: HtmlElement = document().create_element( "span" ).expect( "create span" ).unchecked_into();
 	let t: HtmlElement = document().create_element( "span" ).expect( "create span" ).unchecked_into();
 
 	debug!( "setting color to: {}", color.to_css() );
 
-	s.style().set_property( "color", &color.to_css() ).expect_throw( "set color" );
+	n.style().set_property( "color", &color.to_css() ).expect_throw( "set color" );
 
 	if color_all
 	{
-		t.style().set_property( "color", &color.to_css() ).expect_throw( "set color" );
+		m.style().set_property( "color", &color.to_css() ).expect_throw( "set color" );
 	}
 
+	// Js needs milliseconds, where the server sends seconds
+	//
+	let time = Date::new( &( time * 1000 as f64 ).into() );
 
-	s.set_inner_text( &( nick.to_string() + ": " ) );
-	t.set_inner_text( line );
-	s.set_class_name( "nick" );
-	t.set_class_name( "message_text" );
+	n.set_inner_text( &format!( "{}: ", nick )                                                                     );
+	m.set_inner_text( line                                                                                         );
+	t.set_inner_text( &format!( "{:02}:{:02}:{:02} - ", time.get_hours(), time.get_minutes(), time.get_seconds() ) );
 
-	p.append_child( &s ).expect( "Coundn't append child" );
+	n.set_class_name( "nick"         );
+	m.set_class_name( "message_text" );
+	t.set_class_name( "time"         );
+
 	p.append_child( &t ).expect( "Coundn't append child" );
+	p.append_child( &n ).expect( "Coundn't append child" );
+	p.append_child( &m ).expect( "Coundn't append child" );
 
 	// order is important here, we need to measure the scroll before adding the item
 	//
@@ -168,54 +176,54 @@ async fn on_msg( mut stream: impl Stream<Item=Result<ServerMsg, Error>> + Unpin 
 
 		match msg
 		{
-			ServerMsg::ChatMsg{ nick, sid, txt } =>
+			ServerMsg::ChatMsg{ time, nick, sid, txt } =>
 			{
 				let color = colors.entry( sid ).or_insert( Color::random().light() );
 
-				append_line( &chat, &txt, &nick, color, false );
+				append_line( &chat, time as f64, &nick, &txt, color, false );
 			}
 
 
-			ServerMsg::ServerMsg(txt) =>
+			ServerMsg::ServerMsg{ time, txt } =>
 			{
-				append_line( &chat, &txt, "Server", colors.get( &0 ).unwrap(), true );
+				append_line( &chat, time as f64, "Server", &txt, colors.get( &0 ).unwrap(), true );
 			}
 
 
-			ServerMsg::Welcome{ users, txt } =>
+			ServerMsg::Welcome{ time, users, txt } =>
 			{
 				users.into_iter().for_each( |(s,n)| u_list.insert(s,n) );
 
 				let udiv = document().get_element_by_id( "users" ).expect_throw( "find users elem" );
 				u_list.render( udiv.unchecked_ref() );
 
-				append_line( &chat, &txt, "Server", colors.get( &0 ).unwrap(), true );
+				append_line( &chat, time as f64, "Server", &txt, colors.get( &0 ).unwrap(), true );
 
 
 				// Client Welcome message
 				//
-				append_line( &chat, HELP, "ws_stream_wasm Client", colors.get( &0 ).unwrap(), true );
+				append_line( &chat, time as f64, "ws_stream_wasm Client", HELP, colors.get( &0 ).unwrap(), true );
 			}
 
 
-			ServerMsg::NickChanged{ old, new, sid } =>
+			ServerMsg::NickChanged{ time, old, new, sid } =>
 			{
-				append_line( &chat, &format!( "{} has changed names => {}.", &old, &new ), "Server", colors.get( &0 ).unwrap(), true );
+				append_line( &chat, time as f64, "Server", &format!( "{} has changed names => {}.", &old, &new ), colors.get( &0 ).unwrap(), true );
 				u_list.insert( sid, new );
 			}
 
 
-			ServerMsg::UserJoined{ nick, sid } =>
+			ServerMsg::UserJoined{ time, nick, sid } =>
 			{
-				append_line( &chat, &format!( "We welcome a new user, {}!", &nick ), "Server", colors.get( &0 ).unwrap(), true );
+				append_line( &chat, time as f64, "Server", &format!( "We welcome a new user, {}!", &nick ), colors.get( &0 ).unwrap(), true );
 				u_list.insert( sid, nick );
 			}
 
 
-			ServerMsg::UserLeft{ nick, sid } =>
+			ServerMsg::UserLeft{ time, nick, sid } =>
 			{
 				u_list.remove( sid );
-				append_line( &chat, &format!( "Sadly, {} has left us.", &nick ), "Server", colors.get( &0 ).unwrap(), true );
+				append_line( &chat, time as f64, "Server", &format!( "Sadly, {} has left us.", &nick ), colors.get( &0 ).unwrap(), true );
 			}
 
 			// _ => {}
@@ -273,7 +281,7 @@ async fn on_submit
 		{
 			debug!( "handle /help: {:#?}", &text );
 
-			append_line( &chat, HELP, "ws_stream_wasm Client", &Color::random().light(), true );
+			append_line( &chat, Date::now(), "ws_stream_wasm Client", HELP, &Color::random().light(), true );
 
 			return;
 		}
