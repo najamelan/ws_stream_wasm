@@ -32,7 +32,11 @@ use crate::{ import::*, e_handler::*, color::*, user_list::* };
 
 
 
-const URL: &str = "ws://127.0.0.1:3412";
+const URL : &str = "ws://127.0.0.1:3412";
+
+const HELP: &str = "Available commands:
+/nick NEWNAME # change nick
+/help # Print available commands";
 
 
 // Called when the wasm module is instantiated
@@ -53,7 +57,7 @@ pub fn main() -> Result<(), JsValue>
 
 	let program = async
 	{
-		let chat = document().get_element_by_id( "chat" ).expect( "find chat"       );
+		let chat = document().get_element_by_id( "chat" ).expect( "find chat" );
 
 		let (ws, wsio) = match WsStream::connect( URL, None ).await
 		{
@@ -182,6 +186,11 @@ async fn on_msg( mut stream: impl Stream<Item=Result<ServerMsg, Error>> + Unpin 
 				u_list.render( udiv.unchecked_ref() );
 
 				append_line( &chat, &txt, "Server", colors.get( &0 ).unwrap(), true );
+
+
+				// Client Welcome message
+				//
+				append_line( &chat, HELP, "ws_stream_wasm Client", colors.get( &0 ).unwrap(), true );
 			}
 
 
@@ -217,8 +226,14 @@ async fn on_submit
 	mut out    : impl Sink  < ClientMsg, Error=Error > + Unpin ,
 )
 {
-	let chat     = document().get_element_by_id( "chat" ).expect_throw( "find chat"       );
+	let chat     = document().get_element_by_id( "chat" ).expect_throw( "find chat" );
+
 	let nickre   = Regex::new(r"^/nick (\w{1,15})").unwrap();
+
+	// Note that we always add a newline below, so we have to match it.
+	//
+	let helpre   = Regex::new(r"^/help\n$").unwrap();
+
 	let textarea = document().get_element_by_id( "chat_input" ).expect_throw( "find chat_input" );
 	let textarea: &HtmlTextAreaElement = textarea.unchecked_ref();
 
@@ -237,6 +252,7 @@ async fn on_submit
 
 		let msg;
 
+
 		// if this is a /nick somename message
 		//
 		if let Some( cap ) = nickre.captures( &text )
@@ -244,6 +260,18 @@ async fn on_submit
 			debug!( "handle set nick: {:#?}", &text );
 
 			msg = ClientMsg::SetNick( cap[1].to_string() );
+		}
+
+
+		// if this is a /help message
+		//
+		else if let Some( cap ) = helpre.captures( &text )
+		{
+			debug!( "handle /help: {:#?}", &text );
+
+			append_line( &chat, HELP, "ws_stream_wasm Client", &Color::random().light(), true );
+
+			return;
 		}
 
 
