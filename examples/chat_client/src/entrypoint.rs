@@ -109,9 +109,24 @@ fn append_line( chat: &Element, line: &str, nick: &str, color: &Color, color_all
 
 	p.append_child( &s ).expect( "Coundn't append child" );
 	p.append_child( &t ).expect( "Coundn't append child" );
+
+	// order is important here, we need to measure the scroll before adding the item
+	//
+	let max_scroll = chat.scroll_height() - chat.client_height();
 	chat.append_child( &p ).expect( "Coundn't append child" );
 
-	p.scroll_into_view();
+	debug!( "max_scroll: {}, scroll_top: {}", max_scroll, chat.scroll_top() );
+
+
+	// Check whether we are scolled to the bottom. If so, we autoscroll new messages
+	// into vies. If the user has scrolled up, we don't.
+	//
+	// We keep a margin of up to 2 pixels, because sometimes the two numbers don't align exactly.
+	//
+	if ( chat.scroll_top() - max_scroll ).abs() < 3
+	{
+		p.scroll_into_view();
+	}
 }
 
 
