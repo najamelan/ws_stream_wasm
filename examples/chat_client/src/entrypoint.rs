@@ -47,6 +47,10 @@ pub fn main() -> Result<(), JsValue>
 {
 	panic::set_hook(Box::new(console_error_panic_hook::hook));
 
+	// Let's only log output when in debug mode
+	//
+	#[ cfg( debug_assertions ) ]
+	//
 	wasm_logger::init( wasm_logger::Config::new(Level::Debug).message_on_new_line() );
 
 	// Since there is no threads in wasm for the moment, this is optional if you include async_runtime
