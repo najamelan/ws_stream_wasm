@@ -32,5 +32,8 @@ Now you can open the `index.html` from this crate in several web browser tabs an
 
 
 ## TODO
-- nicks must be unique, non-empty
+- show connect screen with nick and address and make it so that the server does not send an announcement with ip
+- reread all code an cleanup
+- document as example
 - gui
+- blog post?

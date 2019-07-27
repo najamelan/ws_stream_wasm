@@ -35,7 +35,7 @@ use crate::{ import::*, e_handler::*, color::*, user_list::* };
 const URL : &str = "ws://127.0.0.1:3412";
 
 const HELP: &str = "Available commands:
-/nick NEWNAME # change nick
+/nick NEWNAME # change nick (must be between 1 and 15 word characters)
 /help # Print available commands";
 
 
@@ -149,7 +149,6 @@ fn append_line( chat: &Element, time: f64, nick: &str, line: &str, color: &Color
 async fn on_msg( mut stream: impl Stream<Item=Result<ServerMsg, Error>> + Unpin )
 {
 	let chat       = document().get_element_by_id( "chat" ).expect_throw( "find chat"       );
-	let re         = Regex::new( r"^#(\w{8})(.*)$" );
 	let mut u_list = UserList::new();
 
 	let mut colors: HashMap<usize, Color> = HashMap::new();
@@ -213,6 +212,24 @@ async fn on_msg( mut stream: impl Stream<Item=Result<ServerMsg, Error>> + Unpin 
 			}
 
 
+			ServerMsg::NickUnchanged{ time, .. } =>
+			{
+				append_line( &chat, time as f64, "Server", "Error: You specified your old nick instead of your new one, it's unchanged.", colors.get( &0 ).unwrap(), true );
+			}
+
+
+			ServerMsg::NickInUse{ time, nick, .. } =>
+			{
+				append_line( &chat, time as f64, "Server", &format!( "Error: The nick is already in use: '{}'.", &nick ), colors.get( &0 ).unwrap(), true );
+			}
+
+
+			ServerMsg::NickInvalid{ time, nick, .. } =>
+			{
+				append_line( &chat, time as f64, "Server", &format!( "Error: The nick you specify must be between 1 and 15 word characters, was invalid: '{}'.", &nick ), colors.get( &0 ).unwrap(), true );
+			}
+
+
 			ServerMsg::UserJoined{ time, nick, sid } =>
 			{
 				append_line( &chat, time as f64, "Server", &format!( "We welcome a new user, {}!", &nick ), colors.get( &0 ).unwrap(), true );
@@ -229,7 +246,7 @@ async fn on_msg( mut stream: impl Stream<Item=Result<ServerMsg, Error>> + Unpin 
 			// _ => {}
 		}
 	}
-   }
+}
 
 
 async fn on_submit
@@ -240,7 +257,7 @@ async fn on_submit
 {
 	let chat     = document().get_element_by_id( "chat" ).expect_throw( "find chat" );
 
-	let nickre   = Regex::new(r"^/nick (\w{1,15})").unwrap();
+	let nickre   = Regex::new( r"^/nick (\w{1,15})" ).unwrap();
 
 	// Note that we always add a newline below, so we have to match it.
 	//
