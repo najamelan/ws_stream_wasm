@@ -50,12 +50,6 @@ pub fn main() -> Result<(), JsValue>
 	//
 	wasm_logger::init( wasm_logger::Config::new(Level::Debug).message_on_new_line() );
 
-	// Since there is no threads in wasm for the moment, this is optional if you include async_runtime
-	// with `default-dependencies = false`, the local pool will be the default. However this might
-	// change in the future.
-	//
-	rt::init( RtConfig::Local ).expect( "Set default executor" );
-
 	let program = async
 	{
 		let chat  = get_id( "chat"         );
@@ -454,11 +448,18 @@ fn validate_connect_form() -> Result< (String, String), ChatErr >
 
 
 
-async fn on_cresets( _evts: impl Stream< Item=Event > + Unpin )
+async fn on_cresets( mut evts: impl Stream< Item=Event > + Unpin )
 {
-	let cnick: HtmlInputElement = get_id( "connect_nick" ).unchecked_into();
+	while let Some( evt ) = evts.next().await
+	{
+		evt.prevent_default();
 
-	cnick.set_value( random_name() );
+		let cnick: HtmlInputElement = get_id( "connect_nick" ).unchecked_into();
+		let curl : HtmlInputElement = get_id( "connect_url"  ).unchecked_into();
+
+		cnick.set_value( random_name()         );
+		curl .set_value( "ws://127.0.0.1:3412" );
+	}
 }
 
 

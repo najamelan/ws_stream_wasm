@@ -15,7 +15,7 @@ impl EHandler
 {
 	pub fn new( target: &EventTarget, event: &'static str, passive: bool ) -> Self
 	{
-		debug!( "set event handler" );
+		// debug!( "set event handler" );
 
 		let (sender, receiver) = mpsc::unbounded();
 		let options = match passive
