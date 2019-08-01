@@ -56,7 +56,6 @@
 
 			#chat_form
 			{
-				background: blue;
 				grid-column-start: 1;
 				grid-column-end: 2;
 				grid-row-start: 3;
@@ -67,6 +66,54 @@
 			#chat_input
 			{
 				flex: auto;
+			}
+
+			#connect_form
+			{
+				margin: 0;
+				background: gray;
+				grid-column-start: 1;
+				grid-column-end: 3;
+				grid-row-start: 2;
+				grid-row-end: 4;
+				display: flex;
+				justify-content: center;
+				align-items: center;
+			}
+
+			#connect_form_content
+			{
+				margin: 0 auto;
+				border: black 1px solid;
+				max-width: 40rem;
+				padding: 2rem;
+			}
+
+			#connect_form_content label
+			{
+				display: block;
+				margin-bottom: 10px;
+			}
+
+			#connect_form_content label > span
+			{
+				width: 15rem;
+				font-weight: bold;
+				padding-top: .5rem;
+				padding-right: .3rem;
+				float: left;
+			}
+
+			#connect_form_content input[type="text"]
+			{
+				width: 24rem;
+			}
+
+			#connect_error
+			{
+				color       : red ;
+				font-weight : bold;
+				display     : none;
 			}
 
 
@@ -116,7 +163,7 @@
 
 
 
-		<!-- if we don't put the javascript link, it will still submit when programatorially triggering
+		<!-- if we don't put the javascript link, it will still submit when programatorically triggering
 		click on the button... -->
 
 		<form id="chat_form" action="javascript:void(0);" >
@@ -126,6 +173,32 @@
 			<input id="chat_disconnect" type = "submit" value = "Disconnect" />
 		</form>
 
+
+		<form id="connect_form" action="javascript:void(0);" >
+
+			<div id="connect_form_content">
+
+				<p id="connect_error"></p>
+
+				<label for="connect_nick">
+					<span>Nickname <span class="required">*</span></span>
+					<input type="text" id="connect_nick" name="connect_nick" value="" />
+				</label>
+
+				<label for="connect_url">
+					<span>Url <span class="required">*</span></span>
+					<input type="text" id="connect_url" name="connect_url" value="ws://127.0.0.1:3412" />
+				</label>
+
+				<label>
+					<span></span>
+					<input id="conn_submit" type = "submit" value = "Connect"        />
+					<input id="conn_reset"  type = "reset"  value = "Reset Defaults" />
+				</label>
+
+			</div>
+
+		</form>
 
 
 	</body>

@@ -32,8 +32,8 @@ Now you can open the `index.html` from this crate in several web browser tabs an
 
 
 ## TODO
-- show connect screen with nick and address and make it so that the server does not send an announcement with ip
-- reread all code an cleanup
+- disconnect button
+- reread all code and cleanup
 - document as example
 - gui
 - blog post?

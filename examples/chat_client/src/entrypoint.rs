@@ -11,7 +11,7 @@ mod import
 {
 	pub(crate) use
 	{
-		chat_format    :: { futures_serde_cbor::{ Codec, Error }, ServerMsg, ClientMsg               } ,
+		chat_format    :: { futures_serde_cbor::{ Codec, Error }, ServerMsg, ClientMsg, ChatErr      } ,
 		async_runtime  :: { *                                                                        } ,
 		web_sys        :: { *, console::log_1 as dbg                                                 } ,
 		ws_stream_wasm :: { *                                                                        } ,
@@ -30,9 +30,6 @@ mod import
 
 use crate::{ import::*, e_handler::*, color::*, user_list::* };
 
-
-
-const URL : &str = "ws://127.0.0.1:3412";
 
 const HELP: &str = "Available commands:
 /nick NEWNAME # change nick (must be between 1 and 15 word characters)
@@ -61,31 +58,21 @@ pub fn main() -> Result<(), JsValue>
 
 	let program = async
 	{
-		let chat = document().get_element_by_id( "chat" ).expect( "find chat" );
+		let chat  = get_id( "chat"         );
+		let cform = get_id( "connect_form" );
+		let tarea = get_id( "chat_input"   );
 
-		let (ws, wsio) = match WsStream::connect( URL, None ).await
-		{
-			Ok(conn) => conn,
-			Err(e)   =>
-			{
-				error!( "{}", e );
-				return;
-			}
-		};
+		let cnick: HtmlInputElement = get_id( "connect_nick" ).unchecked_into();
+		cnick.set_value( random_name() );
 
-		let framed      = Framed::new( wsio, Codec::new() );
-		let (out, msgs) = framed.split();
+		let on_enter   = EHandler::new( &tarea, "keypress", false );
+		let on_csubmit = EHandler::new( &cform, "submit"  , false );
+		let on_creset  = EHandler::new( &cform, "reset"   , false );
 
-		let send    = document().get_element_by_id( "chat_submit" ).expect_throw( "find chat_submit" );
-		let form    = document().get_element_by_id( "chat_form"   ).expect_throw( "find chat_form"   );
-		let tarea   = document().get_element_by_id( "chat_input"  ).expect_throw( "find chat_input"  );
+		rt::spawn_local( on_key     ( on_enter   ) ).expect( "spawn on_key"    );
+		rt::spawn_local( on_cresets ( on_creset  ) ).expect( "spawn on_key"    );
 
-		let on_send  = EHandler::new( &form , "submit"  , false );
-		let on_enter = EHandler::new( &tarea, "keypress", false );
-
-		rt::spawn_local( on_msg   ( msgs          ) ).expect( "spawn on_msg"    );
-		rt::spawn_local( on_submit( on_send , out ) ).expect( "spawn on_submit" );
-		rt::spawn_local( on_key   ( on_enter      ) ).expect( "spawn on_key"    );
+		on_connect ( on_csubmit ).await;
 	};
 
 	rt::spawn_local( program ).expect( "spawn program" );
@@ -96,10 +83,10 @@ pub fn main() -> Result<(), JsValue>
 
 fn append_line( chat: &Element, time: f64, nick: &str, line: &str, color: &Color, color_all: bool )
 {
-	let p: HtmlElement = document().create_element( "p"    ).expect( "create p"    ).unchecked_into();
-	let n: HtmlElement = document().create_element( "span" ).expect( "create span" ).unchecked_into();
-	let m: HtmlElement = document().create_element( "span" ).expect( "create span" ).unchecked_into();
-	let t: HtmlElement = document().create_element( "span" ).expect( "create span" ).unchecked_into();
+	let p: HtmlElement = document().create_element( "p"    ).expect_throw( "create p"    ).unchecked_into();
+	let n: HtmlElement = document().create_element( "span" ).expect_throw( "create span" ).unchecked_into();
+	let m: HtmlElement = document().create_element( "span" ).expect_throw( "create span" ).unchecked_into();
+	let t: HtmlElement = document().create_element( "span" ).expect_throw( "create span" ).unchecked_into();
 
 	debug!( "setting color to: {}", color.to_css() );
 
@@ -148,7 +135,7 @@ fn append_line( chat: &Element, time: f64, nick: &str, line: &str, color: &Color
 
 async fn on_msg( mut stream: impl Stream<Item=Result<ServerMsg, Error>> + Unpin )
 {
-	let chat       = document().get_element_by_id( "chat" ).expect_throw( "find chat"       );
+	let chat       = get_id( "chat" );
 	let mut u_list = UserList::new();
 
 	let mut colors: HashMap<usize, Color> = HashMap::new();
@@ -193,7 +180,7 @@ async fn on_msg( mut stream: impl Stream<Item=Result<ServerMsg, Error>> + Unpin 
 			{
 				users.into_iter().for_each( |(s,n)| u_list.insert(s,n) );
 
-				let udiv = document().get_element_by_id( "users" ).expect_throw( "find users elem" );
+				let udiv = get_id( "users" );
 				u_list.render( udiv.unchecked_ref() );
 
 				append_line( &chat, time as f64, "Server", &txt, colors.get( &0 ).unwrap(), true );
@@ -243,7 +230,7 @@ async fn on_msg( mut stream: impl Stream<Item=Result<ServerMsg, Error>> + Unpin 
 				append_line( &chat, time as f64, "Server", &format!( "Sadly, {} has left us.", &nick ), colors.get( &0 ).unwrap(), true );
 			}
 
-			// _ => {}
+			_ => {}
 		}
 	}
 }
@@ -255,7 +242,7 @@ async fn on_submit
 	mut out    : impl Sink  < ClientMsg, Error=Error > + Unpin ,
 )
 {
-	let chat     = document().get_element_by_id( "chat" ).expect_throw( "find chat" );
+	let chat     = get_id( "chat" );
 
 	let nickre   = Regex::new( r"^/nick (\w{1,15})" ).unwrap();
 
@@ -263,7 +250,7 @@ async fn on_submit
 	//
 	let helpre   = Regex::new(r"^/help\n$").unwrap();
 
-	let textarea = document().get_element_by_id( "chat_input" ).expect_throw( "find chat_input" );
+	let textarea = get_id( "chat_input" );
 	let textarea: &HtmlTextAreaElement = textarea.unchecked_ref();
 
 
@@ -312,7 +299,6 @@ async fn on_submit
 		}
 
 
-
 		match out.send( msg ).await
 		{
 			Ok(()) => {}
@@ -334,7 +320,7 @@ async fn on_key
 	mut keys: impl Stream< Item=Event > + Unpin ,
 )
 {
-	let send: HtmlElement = document().get_element_by_id( "chat_submit" ).expect_throw( "find chat_submit" ).unchecked_into();
+	let send: HtmlElement = get_id( "chat_submit" ).unchecked_into();
 
 
 	while let Some( evt ) = keys.next().await
@@ -351,11 +337,187 @@ async fn on_key
 
 
 
+async fn on_connect( mut evts: impl Stream< Item=Event > + Unpin )
+{
+	while let Some(_evt) = evts.next().await
+	{
+		// validate form
+		//
+		let (nick, url) = match validate_connect_form()
+		{
+			Ok(ok) => ok,
+
+			Err( e ) =>
+			{
+				// report error to the user
+				// continue loop
+				//
+				unreachable!()
+			}
+		};
+
+		let (ws, wsio) = match WsStream::connect( url, None ).await
+		{
+			Ok(conn) => conn,
+
+			Err(e)   =>
+			{
+				// report error to the user
+				//
+				error!( "{}", e );
+				continue;
+			}
+		};
+
+		let framed              = Framed::new( wsio, Codec::new() );
+		let (mut out, mut msgs) = framed.split();
+
+		let form    = get_id( "chat_form" );
+		let on_send = EHandler::new( &form, "submit", false );
+
+
+		// hide the connect form
+		//
+		let cform: HtmlElement = get_id( "connect_form" ).unchecked_into();
+
+
+		// Ask the server to join
+		//
+		match out.send( ClientMsg::Join( nick ) ).await
+		{
+			Ok(()) => {}
+			Err(e) => { error!( "{}", e ); }
+		};
+
+
+		// Error handling
+		//
+		let cerror: HtmlElement = get_id( "connect_error" ).unchecked_into();
+
+
+		if let Some(response) = msgs.next().await
+		{
+			match response
+			{
+				Ok( ServerMsg::JoinSuccess ) =>
+				{
+					cform.style().set_property( "display", "none" ).expect_throw( "set cform display none" );
+
+					rt::spawn_local( on_msg   ( msgs          ) ).expect( "spawn on_msg"    );
+					rt::spawn_local( on_submit( on_send , out ) ).expect( "spawn on_submit" );
+				}
+
+				// Show an error message on the connect form and let the user try again
+				//
+				Ok( ServerMsg::NickInUse{ .. } ) =>
+				{
+					cerror.set_inner_text( "The nick name is already in use. Please choose another." );
+					cerror.style().set_property( "display", "block" ).expect_throw( "set display block on cerror" );
+
+					continue;
+				}
+
+				Ok( ServerMsg::NickInvalid{ .. } ) =>
+				{
+					cerror.set_inner_text( "The nick name is invalid. It must be between 1 and 15 word characters." );
+					cerror.style().set_property( "display", "block" ).expect_throw( "set display block on cerror" );
+
+					continue;
+
+				}
+
+				// cbor decoding error
+				//
+				Err(_) =>
+				{
+
+				}
+
+				_ => {  }
+			}
+		}
+	}
+}
+
+
+
+fn validate_connect_form() -> Result< (String, String), ChatErr >
+{
+	let nick_field: HtmlInputElement = get_id( "connect_nick" ).unchecked_into();
+	let url_field : HtmlInputElement = get_id( "connect_url"  ).unchecked_into();
+
+	let nick = nick_field.value();
+	let url  = url_field .value();
+
+	Ok((nick, url))
+}
+
+
+
+async fn on_cresets( _evts: impl Stream< Item=Event > + Unpin )
+{
+	let cnick: HtmlInputElement = get_id( "connect_nick" ).unchecked_into();
+
+	cnick.set_value( random_name() );
+}
+
+
+
 pub fn document() -> Document
 {
 	let window = web_sys::window().expect_throw( "no global `window` exists");
 
 	window.document().expect_throw( "should have a document on window" )
 }
+
+
+
+// Return a random name
+//
+pub fn random_name() -> &'static str
+{
+	// I wanted to use the crate scottish_names to generate a random username, but
+	// it uses the rand crate which doesn't support wasm for now, so we're just using
+	// a small sample.
+	//
+	let list = vec!
+	[
+		  "Elena"
+		, "Arya"
+		, "Nora"
+		, "Amaya"
+		, "Noor"
+		, "Ebony"
+		, "Inaaya"
+		, "Nuala"
+		, "Hailie"
+		, "Hafsa"
+		, "Iqra"
+		, "Aleeza"
+		, "Emme"
+		, "Teya"
+		, "Susheela"
+		, "Pippa"
+		, "Kobi"
+		, "Orin"
+		, "Azaan"
+		, "Rhuaridh"
+		, "Salah"
+		, "Aoun"
+	];
+
+	// pick one
+	//
+	list[ Math::floor( Math::random() * list.len() as f64 ) as usize ]
+}
+
+
+fn get_id( id: &str ) -> Element
+{
+	document().get_element_by_id( id ).expect_throw( &format!( "find {}", id ) )
+}
+
+
+
 
 

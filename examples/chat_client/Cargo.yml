@@ -43,6 +43,7 @@ dependencies:
       HtmlDivElement      ,
       HtmlElement         ,
       HtmlFormElement     ,
+      HtmlInputElement    ,
       HtmlParagraphElement,
       HtmlTextAreaElement ,
       KeyboardEvent       ,

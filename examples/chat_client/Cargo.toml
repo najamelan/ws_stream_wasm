@@ -24,7 +24,7 @@ default-features = false
 version = "^0.2"
 
 [dependencies.web-sys]
-features = ["console", "CssStyleDeclaration", "Document", "Element", "HtmlDivElement", "HtmlElement", "HtmlFormElement", "HtmlParagraphElement", "HtmlTextAreaElement", "KeyboardEvent", "Node", "Window"]
+features = ["console", "CssStyleDeclaration", "Document", "Element", "HtmlDivElement", "HtmlElement", "HtmlFormElement", "HtmlInputElement", "HtmlParagraphElement", "HtmlTextAreaElement", "KeyboardEvent", "Node", "Window"]
 version = "^0.3"
 
 [lib]
