@@ -1,7 +1,7 @@
 package:
 
   name          : ws_stream_wasm
-  version       : 0.1.0
+  version       : 0.2.0
   edition       : '2018'
   authors       : [ Naja Melan <najamelan@autistici.org> ]
   description   : A convenience library for using websockets in WASM

@@ -27,6 +27,7 @@
 //! ## Table of Contents
 //!
 //! - [Install](#install)
+//!   - [Upgrade](#upgrade)
 //!   - [Dependencies](#dependencies)
 //! - [Usage](#usage)
 //!   - [Basic Events Example](basic-events-example)
@@ -54,6 +55,10 @@
 //!
 //!    ws_stream_wasm = "^0.1"
 //! ```
+//!
+//! ### Upgrade
+//!
+//! Please check out the [changelog](https://github.com/najamelan/ws_wasm_stream/blob/master/CHANGELOG.md) when upgrading.
 //!
 //! ### Dependencies
 //!
