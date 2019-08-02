@@ -18,8 +18,8 @@ dependencies:
 
   console_error_panic_hook: ^0.1
   chat_format             : { path: ../../../ws_stream/examples/chat_format }
-  naja_async_runtime      : { version: ^0.2, default-features: false }
-  ws_stream_wasm          : ^0.1
+  naja_async_runtime      : { version: ^0.3, default-features: false }
+  ws_stream_wasm          : { path: ../../ }
   wasm-bindgen            : ^0.2
   futures_codec           : ^0.2
   futures-preview         : { version: ^0.3.0-alpha.17, features: [io-compat, compat] }

@@ -1,5 +1,5 @@
 #![ feature( async_await ) ]
-#![ allow( unused_imports, unused_variables ) ]
+#![ allow( unused_imports ) ]
 
 pub(crate) mod e_handler ;
 pub(crate) mod color     ;
@@ -52,21 +52,20 @@ pub fn main() -> Result<(), JsValue>
 
 	let program = async
 	{
-		let chat  = get_id( "chat"         );
 		let cform = get_id( "connect_form" );
 		let tarea = get_id( "chat_input"   );
 
 		let cnick: HtmlInputElement = get_id( "connect_nick" ).unchecked_into();
 		cnick.set_value( random_name() );
 
-		let on_enter   = EHandler::new( &tarea, "keypress", false );
-		let on_csubmit = EHandler::new( &cform, "submit"  , false );
-		let on_creset  = EHandler::new( &cform, "reset"   , false );
+		let enter_evts   = EHandler::new( &tarea, "keypress", false );
+		let csubmit_evts = EHandler::new( &cform, "submit"  , false );
+		let creset_evts  = EHandler::new( &cform, "reset"   , false );
 
-		rt::spawn_local( on_key     ( on_enter   ) ).expect( "spawn on_key"    );
-		rt::spawn_local( on_cresets ( on_creset  ) ).expect( "spawn on_key"    );
+		rt::spawn_local( on_key       ( enter_evts  ) ).expect( "spawn on_key"    );
 
-		on_connect ( on_csubmit ).await;
+		rt::spawn_local( on_cresets   ( creset_evts ) ).expect( "spawn on_key"    );
+		on_connect( csubmit_evts ).await;
 	};
 
 	rt::spawn_local( program ).expect( "spawn program" );
@@ -81,8 +80,6 @@ fn append_line( chat: &Element, time: f64, nick: &str, line: &str, color: &Color
 	let n: HtmlElement = document().create_element( "span" ).expect_throw( "create span" ).unchecked_into();
 	let m: HtmlElement = document().create_element( "span" ).expect_throw( "create span" ).unchecked_into();
 	let t: HtmlElement = document().create_element( "span" ).expect_throw( "create span" ).unchecked_into();
-
-	debug!( "setting color to: {}", color.to_css() );
 
 	n.style().set_property( "color", &color.to_css() ).expect_throw( "set color" );
 
@@ -111,9 +108,6 @@ fn append_line( chat: &Element, time: f64, nick: &str, line: &str, color: &Color
 	//
 	let max_scroll = chat.scroll_height() - chat.client_height();
 	chat.append_child( &p ).expect( "Coundn't append child" );
-
-	debug!( "max_scroll: {}, scroll_top: {}", max_scroll, chat.scroll_top() );
-
 
 	// Check whether we are scolled to the bottom. If so, we autoscroll new messages
 	// into vies. If the user has scrolled up, we don't.
@@ -275,7 +269,7 @@ async fn on_submit
 
 		// if this is a /help message
 		//
-		else if let Some( cap ) = helpre.captures( &text )
+		else if helpre.is_match( &text )
 		{
 			debug!( "handle /help: {:#?}", &text );
 
@@ -299,6 +293,8 @@ async fn on_submit
 			Err(e) => { error!( "{}", e ); }
 		};
 	};
+
+	debug!( "leaving on_msg" );
 }
 
 
@@ -341,7 +337,7 @@ async fn on_connect( mut evts: impl Stream< Item=Event > + Unpin )
 		{
 			Ok(ok) => ok,
 
-			Err( e ) =>
+			Err( _ ) =>
 			{
 				// report error to the user
 				// continue loop
@@ -397,9 +393,17 @@ async fn on_connect( mut evts: impl Stream< Item=Event > + Unpin )
 				{
 					cform.style().set_property( "display", "none" ).expect_throw( "set cform display none" );
 
-					rt::spawn_local( on_msg   ( msgs          ) ).expect( "spawn on_msg"    );
-					rt::spawn_local( on_submit( on_send , out ) ).expect( "spawn on_submit" );
-				}
+					let chat       = get_id( "chat_form"    );
+					let reset_evts = EHandler::new( &chat , "reset"   , false );
+
+					rt::spawn_local( on_msg       ( msgs          ) ).expect( "spawn on_msg"        );
+					rt::spawn_local( on_submit    ( on_send , out ) ).expect( "spawn on_submit"     );
+
+					on_disconnect( reset_evts ).await;
+					ws.close().await.expect_throw( "close ws" );
+
+					debug!( "connection closed by disconnect" );
+	  			}
 
 				// Show an error message on the connect form and let the user try again
 				//
@@ -459,6 +463,29 @@ async fn on_cresets( mut evts: impl Stream< Item=Event > + Unpin )
 
 		cnick.set_value( random_name()         );
 		curl .set_value( "ws://127.0.0.1:3412" );
+	}
+}
+
+
+
+async fn on_disconnect( mut evts: impl Stream< Item=Event > + Unpin )
+{
+	while evts.next().await.is_some()
+	{
+		debug!( "on_disconnect" );
+
+		// show the connect form
+		//
+		let cform: HtmlElement = get_id( "connect_form" ).unchecked_into();
+		let chat : HtmlElement = get_id( "chat"         ).unchecked_into();
+
+		cform.style().set_property( "display", "flex" ).expect_throw( "set cform display none" );
+		chat.set_inner_html( "" );
+
+		let udiv = get_id( "users" );
+		udiv.set_inner_html( "" );
+
+		break;
 	}
 }
 

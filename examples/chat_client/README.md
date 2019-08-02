@@ -33,6 +33,7 @@ Now you can open the `index.html` from this crate in several web browser tabs an
 
 ## TODO
 - disconnect button
+- server side disconnect
 - reread all code and cleanup
 - document as example
 - gui

@@ -91,7 +91,7 @@ impl UserList
 			// TODO: Get rid of clone
 			// existing users know if they are in the dom, so we don't call render on them.
 			//
-			.and_modify( |e| e.change_nick( nick.clone() ) )
+			.and_modify( |usr| usr.change_nick( nick.clone() ) )
 
 			.or_insert_with ( ||
 			{
