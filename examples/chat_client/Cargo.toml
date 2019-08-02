@@ -1,0 +1,42 @@
+# Auto-generated from "Cargo.yml"
+[dependencies]
+console_error_panic_hook = "^0.1"
+futures_codec = "^0.2"
+js-sys = "^0.3"
+log = "^0.4"
+regex = "^1"
+wasm-bindgen = "^0.2"
+wasm-logger = "^0.1"
+
+[dependencies.chat_format]
+git = "https://github.com/najamelan/ws_stream"
+
+[dependencies.futures-preview]
+features = ["io-compat", "compat"]
+version = "^0.3.0-alpha.17"
+
+[dependencies.gloo-events]
+git = "https://github.com/rustwasm/gloo"
+
+[dependencies.naja_async_runtime]
+default-features = false
+version = "^0.3"
+
+[dependencies.web-sys]
+features = ["console", "CssStyleDeclaration", "Document", "Element", "HtmlDivElement", "HtmlElement", "HtmlFormElement", "HtmlInputElement", "HtmlParagraphElement", "HtmlTextAreaElement", "KeyboardEvent", "Node", "Window"]
+version = "^0.3"
+
+[dependencies.ws_stream_wasm]
+path = "../../"
+
+[lib]
+crate-type = ["cdylib"]
+path = "src/entrypoint.rs"
+
+[package]
+authors = ["Naja Melan <najamelan@autistici.org>"]
+description = "An example for using websockets in rust WASM."
+edition = "2018"
+name = "ws_stream_wasm_chat_client"
+repository = "https::/github.com/najamelan/async_runtime"
+version = "0.1.0"

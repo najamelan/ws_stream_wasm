@@ -9,16 +9,12 @@ pharos = "^0.2"
 features = ["io-compat", "compat"]
 version = "^0.3.0-alpha.17"
 
-[dependencies.futures_01]
-package = "futures"
-version = "^0.1"
-
 [dependencies.js-sys]
 version = "^0.3"
 
 [dependencies.naja_async_runtime]
 default-features = false
-version = "^0.2"
+version = "^0.3"
 
 [dependencies.wasm-bindgen]
 version = "^0.2"
@@ -39,6 +35,10 @@ rand_xoshiro = "^0.1"
 serde_cbor = "0.9.0"
 tokio-serde-cbor = "0.3.1"
 wasm-bindgen-test = "^0.2"
+
+[dev-dependencies.futures_01]
+package = "futures"
+version = "^0.1"
 
 [dev-dependencies.serde]
 features = ["derive"]
@@ -61,4 +61,4 @@ license = "Unlicense"
 name = "ws_stream_wasm"
 readme = "README.md"
 repository = "https://github.com/najamelan/ws_stream_wasm"
-version = "0.1.0"
+version = "0.2.0"

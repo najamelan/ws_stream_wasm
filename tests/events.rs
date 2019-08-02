@@ -40,7 +40,7 @@ pub fn close_events() -> impl Future01<Item = (), Error = JsValue>
 
 		let mut evts = ws.observe_unbounded();
 
-		ws.close().await;
+		ws.close().await.expect_throw( "close ws" );
 
 		assert_eq!( WsEventType::CLOSING, evts.next().await.unwrap_throw().ws_type() );
 		assert_eq!( WsEventType::CLOSE  , evts.next().await.unwrap_throw().ws_type() );

@@ -1,0 +1,205 @@
+<html>
+	<head>
+		<meta content="text/html;charset=utf-8" http-equiv="Content-Type"/>
+		<title>ws_stream_wasm Chat Client Example<</title>
+
+		<style>
+
+			p
+			{
+				margin:0;
+				padding: .1rem;
+			}
+
+			body
+			{
+				background: dark-grey;
+				height: 100%;
+				max-height: 100%;
+				width: 100%;
+				overflow:hidden;
+				margin: 0;
+				display: grid;
+				grid-template-columns: 5fr 1fr;
+				grid-template-rows: 2fr 15fr 1fr;
+			}
+
+			#title
+			{
+				background: yellow;
+				grid-column-start: 1;
+				grid-column-end: 3;
+				grid-row-start: 1;
+				grid-row-end: 1;
+			}
+
+			#chat
+			{
+				overflow-y: scroll;
+				background: #111118;
+				color: white;
+				grid-column-start: 1;
+				grid-column-end: 2;
+				grid-row-start: 2;
+				grid-row-end: 3;
+			}
+
+			#users
+			{
+				background: brown;
+				grid-column-start: 2;
+				grid-column-end: 2;
+				grid-row-start: 2;
+				grid-row-end: 4;
+				overflow-y: scroll;
+			}
+
+			#chat_form
+			{
+				grid-column-start: 1;
+				grid-column-end: 2;
+				grid-row-start: 3;
+				grid-row-end: 4;
+				display: flex;
+			}
+
+			#chat_input
+			{
+				flex: auto;
+			}
+
+			#connect_form
+			{
+				margin: 0;
+				background: gray;
+				grid-column-start: 1;
+				grid-column-end: 3;
+				grid-row-start: 2;
+				grid-row-end: 4;
+				display: flex;
+				justify-content: center;
+				align-items: center;
+			}
+
+			#connect_form_content
+			{
+				margin: 0 auto;
+				border: black 1px solid;
+				max-width: 40rem;
+				padding: 2rem;
+			}
+
+			#connect_form_content label
+			{
+				display: block;
+				margin-bottom: 10px;
+			}
+
+			#connect_form_content label > span
+			{
+				width: 15rem;
+				font-weight: bold;
+				padding-top: .5rem;
+				padding-right: .3rem;
+				float: left;
+			}
+
+			#connect_form_content input[type="text"]
+			{
+				width: 24rem;
+			}
+
+			#connect_error
+			{
+				color       : red ;
+				font-weight : bold;
+				display     : none;
+			}
+
+
+
+		</style>
+	</head>
+	<body>
+
+
+		<!-- Note the usage of `type=module` here as this is an ES6 module -->
+		<script type="module">
+
+			// Use ES module import syntax to import functionality from the module
+			// that we have compiled.
+			//
+			// Note that the `default` import is an initialization function which
+			// will "boot" the module and make it ready to use. Currently browsers
+			// don't support natively imported WebAssembly as an ES module, but
+			// eventually the manual initialization won't be required!
+			import { default as init } from './pkg/ws_stream_wasm_chat_client.js';
+
+			async function run()
+			{
+				// First up we need to actually load the wasm file, so we use the
+				// default export to inform it where the wasm file is located on the
+				// server, and then we wait on the returned promise to wait for the
+				// wasm to be loaded.
+				//
+				// Note that instead of a string here you can also pass in an instance
+				// of `WebAssembly.Module` which allows you to compile your own module.
+				// Also note that the promise, when resolved, yields the wasm module's
+				// exports which is the same as importing the `*_bg` module in other
+				// modes
+				await init( './pkg/ws_stream_wasm_chat_client_bg.wasm' );
+			}
+
+			run();
+
+		</script>
+
+
+		<h1 id="title">ws_stream_wasm Chat Client Example</h1>
+
+
+		<div id="chat"></div>
+		<div id="users"></div>
+
+
+
+		<!-- if we don't put the javascript link, it will still submit when programatorically triggering
+		click on the button... -->
+
+		<form id="chat_form" action="javascript:void(0);" >
+			<textarea id="chat_input"></textarea>
+
+			<input id="chat_submit"     type = "submit" value = "Send"       />
+			<input id="chat_disconnect" type = "reset"  value = "Disconnect" />
+		</form>
+
+
+		<form id="connect_form" action="javascript:void(0);" >
+
+			<div id="connect_form_content">
+
+				<p id="connect_error"></p>
+
+				<label for="connect_nick">
+					<span>Nickname <span class="required">*</span></span>
+					<input type="text" id="connect_nick" name="connect_nick" value="" />
+				</label>
+
+				<label for="connect_url">
+					<span>Url <span class="required">*</span></span>
+					<input type="text" id="connect_url" name="connect_url" value="ws://127.0.0.1:3412" />
+				</label>
+
+				<label>
+					<span></span>
+					<input id="conn_submit" type = "submit" value = "Connect" />
+					<input id="conn_reset"  type = "reset"  value = "Reset"   />
+				</label>
+
+			</div>
+
+		</form>
+
+
+	</body>
+</html>

@@ -27,6 +27,7 @@
 //! ## Table of Contents
 //!
 //! - [Install](#install)
+//!   - [Upgrade](#upgrade)
 //!   - [Dependencies](#dependencies)
 //! - [Usage](#usage)
 //!   - [Basic Events Example](basic-events-example)
@@ -54,6 +55,10 @@
 //!
 //!    ws_stream_wasm = "^0.1"
 //! ```
+//!
+//! ### Upgrade
+//!
+//! Please check out the [changelog](https://github.com/najamelan/ws_wasm_stream/blob/master/CHANGELOG.md) when upgrading.
 //!
 //! ### Dependencies
 //!
@@ -119,6 +124,8 @@
 //! Pull Requests are welcome on github. By commiting pull requests, you accept that your code might be modified and
 //! reformatted to fit the project coding style or to improve the implementation. Please discuss what you want to
 //! see modified before filing a pull request if you don't want to be doing work that might be rejected.
+//!
+//! Please file PR's against the `dev` branch, don't forget to update the changelog and the documentation.
 //!
 //! ### Testing
 //!
@@ -197,4 +204,21 @@ mod import
 		js_sys        :: { Array                                                                         } ,
 		pharos        :: { Pharos, Observable, UnboundedObservable                                       } ,
 	};
+}
+
+
+use import::*;
+
+/// Helper function to reduce code bloat
+//
+pub (crate) fn notify( pharos: Rc<RefCell<Pharos<WsEvent>>>, evt: WsEvent )
+{
+	let notify = async move
+	{
+		let mut pharos = pharos.borrow_mut();
+
+		pharos.notify( &evt ).await;
+	};
+
+	rt::spawn_local( notify ).expect_throw( "spawn notify closing" );
 }

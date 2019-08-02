@@ -1,0 +1,52 @@
+package:
+
+  name       : ws_stream_wasm_chat_client
+  version    : 0.1.0
+  authors    : [ Naja Melan <najamelan@autistici.org> ]
+  edition    : '2018'
+  description: An example for using websockets in rust WASM.
+  repository : https::/github.com/najamelan/async_runtime
+
+
+lib:
+
+  crate-type : [ cdylib ]
+  path       : src/entrypoint.rs
+
+
+dependencies:
+
+  console_error_panic_hook: ^0.1
+  chat_format             : { git: "https://github.com/najamelan/ws_stream" }
+  naja_async_runtime      : { version: ^0.3, default-features: false }
+  ws_stream_wasm          : { path: ../../ }
+  wasm-bindgen            : ^0.2
+  futures_codec           : ^0.2
+  futures-preview         : { version: ^0.3.0-alpha.17, features: [io-compat, compat] }
+  log                     : ^0.4
+  gloo-events             : { git: "https://github.com/rustwasm/gloo" }
+  wasm-logger             : ^0.1
+  regex                   : ^1
+  js-sys                  : ^0.3
+
+
+  web-sys:
+
+    version  : ^0.3
+
+    features :
+    [
+      console             ,
+      CssStyleDeclaration ,
+      Document            ,
+      Element             ,
+      HtmlDivElement      ,
+      HtmlElement         ,
+      HtmlFormElement     ,
+      HtmlInputElement    ,
+      HtmlParagraphElement,
+      HtmlTextAreaElement ,
+      KeyboardEvent       ,
+      Node                ,
+      Window              ,
+    ]

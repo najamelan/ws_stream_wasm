@@ -27,9 +27,10 @@ WebSockets, check out [ws_stream](https://crates.io/crates/ws_stream).
 ## Table of Contents
 
 - [Install](#install)
+  - [Upgrade](#upgrade)
   - [Dependencies](#dependencies)
 - [Usage](#usage)
-- [API](#api)
+  - [API](#api)
 - [References](#references)
 - [Contributing](#contributing)
   - [Code of Conduct](#code-of-conduct)
@@ -53,6 +54,10 @@ With raw Cargo.toml
 
    ws_stream_wasm = "^0.1"
 ```
+
+### Upgrade
+
+Please check out the [changelog](https://github.com/najamelan/ws_wasm_stream/blob/master/CHANGELOG.md) when upgrading.
 
 ### Dependencies
 
@@ -117,6 +122,7 @@ This repository accepts contributions. Ideas, questions, feature requests and bu
 
 Pull Requests are welcome on github. By commiting pull requests, you accept that your code might be modified and reformatted to fit the project coding style or to improve the implementation. Please discuss what you want to see modified before filing a pull request if you don't want to be doing work that might be rejected.
 
+Please file PR's against the `dev` branch, don't forget to update the changelog and the documentation.
 
 ### Testing
 
