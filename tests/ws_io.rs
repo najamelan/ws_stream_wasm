@@ -18,11 +18,15 @@ wasm_bindgen_test_configure!(run_in_browser);
 use
 {
 	futures_01            :: Future as Future01,
+	async_runtime         :: * ,
 	futures::prelude      :: * ,
+	futures::sink         :: * ,
+	futures::io           :: * ,
 	wasm_bindgen::prelude :: * ,
 	wasm_bindgen_test     :: * ,
 	ws_stream_wasm        :: * ,
 	log                   :: * ,
+	pharos                :: * ,
 };
 
 
@@ -131,7 +135,7 @@ fn send_after_close() -> impl Future01<Item = (), Error = JsValue>
 	{
 		let (ws, mut wsio) = WsStream::connect( URL, None ).await.expect_throw( "Could not create websocket" );
 
-		ws.close().await;
+		ws.close().await.expect_throw( "close ws" );
 
 		let res = wsio.send( WsMessage::Text("Hello from browser".into() ) ).await;
 
@@ -141,6 +145,115 @@ fn send_after_close() -> impl Future01<Item = (), Error = JsValue>
 
 	}.boxed_local().compat()
 }
+
+
+
+// Verify closing that when closing from WsStream, WsIo next() returns none.
+//
+#[ wasm_bindgen_test(async) ]
+//
+pub fn close_from_wsstream() -> impl Future01<Item = (), Error = JsValue>
+{
+	let _ = console_log::init_with_level( Level::Trace );
+
+	info!( "starting test: close_from_wsstream" );
+
+	async
+	{
+		let (ws, mut wsio) = WsStream::connect( URL, None ).await.expect_throw( "Could not create websocket" );
+
+		ws.close().await.expect_throw( "close ws" );
+
+		assert!( wsio.next().await.is_none() );
+
+		Ok(())
+
+	}.boxed_local().compat()
+}
+
+
+
+// Verify that closing wakes up a task pending on poll_next()
+//
+#[ wasm_bindgen_test(async) ]
+//
+pub fn close_from_wsstream_while_pending() -> impl Future01<Item = (), Error = JsValue>
+{
+	let _ = console_log::init_with_level( Level::Trace );
+
+	info!( "starting test: close_from_wsstream_while_pending" );
+
+	async
+	{
+		let (ws, mut wsio) = WsStream::connect( URL, None ).await.expect_throw( "Could not create websocket" );
+
+		rt::spawn_local( async move { ws.close().await.expect_throw( "close ws" ); } ).expect_throw( "spawn close" );
+
+		// if we don't wake up the task, this will hang
+		//
+		assert!( wsio.next().await.is_none() );
+
+		Ok(())
+
+	}.boxed_local().compat()
+}
+
+
+
+// Verify that closing wakes up a task pending on poll_next()
+//
+#[ wasm_bindgen_test(async) ]
+//
+pub fn close_event_from_sink() -> impl Future01<Item = (), Error = JsValue>
+{
+	let _ = console_log::init_with_level( Level::Trace );
+
+	info!( "starting test: close_event_from_sink" );
+
+	async
+	{
+		let (mut ws, mut wsio) = WsStream::connect( URL, None ).await.expect_throw( "Could not create websocket" );
+
+		let mut evts = ws.observe_unbounded();
+
+		SinkExt::close( &mut wsio ).await.expect_throw( "close ws" );
+
+		assert_eq!( WsEventType::CLOSING, evts.next().await.unwrap_throw().ws_type() );
+		assert_eq!( WsEventType::CLOSE  , evts.next().await.unwrap_throw().ws_type() );
+
+		Ok(())
+
+	}.boxed_local().compat()
+}
+
+
+
+// Verify that closing wakes up a task pending on poll_next()
+//
+#[ wasm_bindgen_test(async) ]
+//
+pub fn close_event_from_async_write() -> impl Future01<Item = (), Error = JsValue>
+{
+	let _ = console_log::init_with_level( Level::Trace );
+
+	info!( "starting test: close_event_from_async_write" );
+
+	async
+	{
+		let (mut ws, mut wsio) = WsStream::connect( URL, None ).await.expect_throw( "Could not create websocket" );
+
+		let mut evts = ws.observe_unbounded();
+
+		AsyncWriteExt::close( &mut wsio ).await.expect_throw( "close ws" );
+
+		assert_eq!( WsEventType::CLOSING, evts.next().await.unwrap_throw().ws_type() );
+		assert_eq!( WsEventType::CLOSE  , evts.next().await.unwrap_throw().ws_type() );
+
+		Ok(())
+
+	}.boxed_local().compat()
+}
+
 
 
 // Verify Debug impl.

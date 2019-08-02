@@ -1,6 +1,6 @@
 use
 {
-	crate :: { import::*, WsErr, WsErrKind, WsState, WsIo, WsEvent, CloseEvent, NextEvent, WsEventType },
+	crate :: { import::*, WsErr, WsErrKind, WsState, WsIo, WsEvent, CloseEvent, NextEvent, WsEventType, notify },
 };
 
 
@@ -76,7 +76,7 @@ impl WsStream
 		//
 		let ws = match res
 		{
-			Ok(ws) => ws,
+			Ok(ws) => Rc::new( ws ),
 
 			Err(e) =>
 			{
@@ -107,7 +107,10 @@ impl WsStream
 		{
 			trace!( "websocket open event" );
 
-			rt::block_on( ph1.borrow_mut().notify( &WsEvent::Open ) );
+			// notify observers
+			//
+			notify( ph1.clone(), WsEvent::Open )
+
 
 		}) as Box< dyn FnMut() > );
 
@@ -116,7 +119,10 @@ impl WsStream
 		{
 			trace!( "websocket error event" );
 
-			rt::block_on( ph2.borrow_mut().notify( &WsEvent::Error ) );
+			// notify observers
+			//
+			notify( ph2.clone(), WsEvent::Error )
+
 
 		}) as Box< dyn FnMut() > );
 
@@ -125,14 +131,15 @@ impl WsStream
 		{
 			trace!( "websocket close event" );
 
-			let e = CloseEvent
+			let c = WsEvent::Close( CloseEvent
 			{
 				code     : evt.code()     ,
 				reason   : evt.reason()   ,
 				was_clean: evt.was_clean(),
-			};
+			});
 
-			rt::block_on( ph3.borrow_mut().notify( &WsEvent::Close(e) ));
+			notify( ph3.clone(), c )
+
 
 		}) as Box< dyn FnMut( JsCloseEvt ) > );
 
@@ -168,7 +175,6 @@ impl WsStream
 		//
 		ws.set_binary_type( BinaryType::Arraybuffer );
 
-		let ws = Rc::new( ws );
 
 		Ok
 		((
@@ -190,18 +196,28 @@ impl WsStream
 	/// Close the socket. The future will resolve once the socket's state has become `WsState::CLOSED`.
 	/// See: [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebSocket/close)
 	//
-	pub async fn close( &self ) -> CloseEvent
+	pub async fn close( &self ) -> Result< CloseEvent, WsErr >
 	{
-		// This can not throw normally, because the only errors the api
-		// can return is if we use a code or a reason string, which we don't.
-		// See [mdn](https://developer.mozilla.org/en-US/docs/Web/API/WebSocket/close#Exceptions_thrown).
-		//
-		self.ws.close().unwrap_throw();
+		match self.ready_state()
+		{
+			WsState::Closed  => return Err( WsErrKind::ConnectionNotOpen.into() ),
+			WsState::Closing => {}
+
+			_ =>
+			{
+				// This can not throw normally, because the only errors the api
+				// can return is if we use a code or a reason string, which we don't.
+				// See [mdn](https://developer.mozilla.org/en-US/docs/Web/API/WebSocket/close#Exceptions_thrown).
+				//
+				self.ws.close().unwrap_throw();
 
 
-		// Notify Observers
-		//
-		rt::block_on( self.pharos.borrow_mut().notify( &WsEvent::Closing ) );
+				// Notify Observers
+				//
+				notify( self.pharos.clone(), WsEvent::Closing )
+			}
+		}
+
 
 		let evts = NextEvent::new( self.pharos.borrow_mut().observe_unbounded(), WsEventType::CLOSE );
 
@@ -213,7 +229,7 @@ impl WsStream
 		let ce = evts.await.expect_throw( "receive a close event" );
 		trace!( "WebSocket connection closed!" );
 
-		if let WsEvent::Close(e) = ce { e              }
+		if let WsEvent::Close(e) = ce { Ok( e )        }
 		else                          { unreachable!() }
 	}
 
@@ -225,32 +241,40 @@ impl WsStream
 	//
 	pub async fn close_code( &self, code: u16  ) -> Result<CloseEvent, WsErr>
 	{
-		match self.ws.close_with_code( code )
+		match self.ready_state()
 		{
-			Ok(_) =>
+			WsState::Closed  => return Err( WsErrKind::ConnectionNotOpen.into() ),
+			WsState::Closing => {}
+
+			_ =>
 			{
-				// Notify Observers
-				//
-				rt::block_on( self.pharos.borrow_mut().notify( &WsEvent::Closing ) );
+				match self.ws.close_with_code( code )
+				{
+					// Notify Observers
+					//
+					Ok(_) => notify( self.pharos.clone(), WsEvent::Closing ),
 
-				let evts = NextEvent::new( self.pharos.borrow_mut().observe_unbounded(), WsEventType::CLOSE );
 
-				let ce = evts.await.expect_throw( "receive a close event" );
-				trace!( "WebSocket connection closed!" );
+					Err(_) =>
+					{
+						let e = WsErr::from( WsErrKind::InvalidCloseCode( code ) );
 
-				if let WsEvent::Close(e) = ce { Ok(e)          }
-				else                          { unreachable!() }
-			}
+						error!( "{}", e );
 
-			Err(_) =>
-			{
-				let e = WsErr::from( WsErrKind::InvalidCloseCode( code ) );
-
-				error!( "{}", e );
-
-				Err( e )
+						return Err( e );
+					}
+				}
 			}
 		}
+
+
+		let evts = NextEvent::new( self.pharos.borrow_mut().observe_unbounded(), WsEventType::CLOSE );
+
+		let ce = evts.await.expect_throw( "receive a close event" );
+		trace!( "WebSocket connection closed!" );
+
+		if let WsEvent::Close(e) = ce { Ok(e)          }
+		else                          { unreachable!() }
 	}
 
 
@@ -260,42 +284,49 @@ impl WsStream
 	//
 	pub async fn close_reason( &self, code: u16, reason: impl AsRef<str>  ) -> Result<CloseEvent, WsErr>
 	{
-		if reason.as_ref().len() > 123
+		match self.ready_state()
 		{
-			let e = WsErr::from( WsErrKind::ReasonStringToLong );
+			WsState::Closed  => return Err( WsErrKind::ConnectionNotOpen.into() ),
+			WsState::Closing => {}
 
-			error!( "{}", e );
+			_ =>
+			{
+				if reason.as_ref().len() > 123
+				{
+					let e = WsErr::from( WsErrKind::ReasonStringToLong );
 
-			return Err( e );
+					error!( "{}", e );
+
+					return Err( e );
+				}
+
+
+				match self.ws.close_with_code_and_reason( code, reason.as_ref() )
+				{
+					// Notify Observers
+					//
+					Ok(_) => notify( self.pharos.clone(), WsEvent::Closing ),
+
+
+					Err(_) =>
+					{
+						let e = WsErr::from( WsErrKind::InvalidCloseCode( code ) );
+
+						error!( "{}", e );
+
+						return Err( e )
+					}
+				}
+			}
 		}
 
+		let evts = NextEvent::new( self.pharos.borrow_mut().observe_unbounded(), WsEventType::CLOSE );
 
-		match self.ws.close_with_code_and_reason( code, reason.as_ref() )
-		{
-			Ok(_) =>
-			{
-				// Notify Observers
-				//
-				rt::block_on( self.pharos.borrow_mut().notify( &WsEvent::Closing ) );
+		let ce = evts.await.expect_throw( "receive a close event" );
+		trace!( "WebSocket connection closed!" );
 
-				let evts = NextEvent::new( self.pharos.borrow_mut().observe_unbounded(), WsEventType::CLOSE );
-
-				let ce = evts.await.expect_throw( "receive a close event" );
-				trace!( "WebSocket connection closed!" );
-
-				if let WsEvent::Close(e) = ce { Ok(e)          }
-				else                          { unreachable!() }
-			}
-
-			Err(_) =>
-			{
-				let e = WsErr::from( WsErrKind::InvalidCloseCode( code ) );
-
-				error!( "{}", e );
-
-				Err( e )
-			}
-		}
+		if let WsEvent::Close(e) = ce { Ok(e)          }
+		else                          { unreachable!() }
 	}
 
 
@@ -415,3 +446,5 @@ impl Drop for WsStream
 		self.ws.set_onerror( None );
 	}
 }
+
+

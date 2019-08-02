@@ -1,6 +1,6 @@
 use
 {
-	crate :: { import::*, WsErr, WsErrKind, WsMessage, WsState, WsEvent, NextEvent, WsEventType },
+	crate :: { import::*, WsErr, WsErrKind, WsMessage, WsState, WsEvent, NextEvent, WsEventType, notify },
 };
 
 
@@ -13,37 +13,41 @@ use
 //
 pub struct WsIo
 {
-	ws     : Rc< WebSocket >                       ,
+	ws: Rc< WebSocket >,
 
 	// The queue of received messages
 	//
-	queue  : Rc<RefCell< VecDeque<WsMessage> >>    ,
+	queue: Rc<RefCell< VecDeque<WsMessage> >>,
 
 	// Last waker of task that wants to read incoming messages
 	// to be woken up on a new message
 	//
-	waker  : Rc<RefCell< Option<Waker>       >>    ,
+	waker: Rc<RefCell< Option<Waker> >>,
 
+	// Last waker of task that wants to write to the Sink
+	//
+	sink_waker: Rc<RefCell< Option<Waker> >>,
 
 	// A pointer to the pharos of WsStream for when we
 	// need to listen to events
 	//
-	pharos : Rc<RefCell< Pharos<WsEvent>     >>    ,
+	pharos: Rc<RefCell< Pharos<WsEvent> >>,
 
 	// State information for partially read messages in
 	// AsyncRead
 	//
-	state  : ReadState                             ,
+	state: ReadState,
 
 	// The closure that will receive the messages
 	//
-	_on_mesg: Closure< dyn FnMut( MessageEvent ) > ,
+	_on_mesg: Closure< dyn FnMut( MessageEvent ) >,
 
 	// This allows us to store a future to poll when
 	// Sink::poll_close is called
 	//
-	closer : Option< NextEvent >                   ,
+	closer: Option< NextEvent >,
 }
+
 
 
 impl WsIo
@@ -52,7 +56,8 @@ impl WsIo
 	//
 	pub fn new( ws: Rc<WebSocket>, pharos : Rc<RefCell< Pharos<WsEvent> >> ) -> Self
 	{
-		let waker: Rc<RefCell<Option<Waker>>> = Rc::new( RefCell::new( None ));
+		let waker     : Rc<RefCell<Option<Waker>>> = Rc::new( RefCell::new( None ));
+		let sink_waker: Rc<RefCell<Option<Waker>>> = Rc::new( RefCell::new( None ));
 
 		let state = ReadState::PendingChunk;
 		let queue = Rc::new( RefCell::new( VecDeque::new() ) );
@@ -82,15 +87,49 @@ impl WsIo
 		ws.set_onmessage  ( Some( on_mesg.as_ref().unchecked_ref() ) );
 
 
+		// When the connection closes, we need to verify if there are any tasks
+		// waiting on poll_next. We need to wake them up.
+		//
+		let ph    = pharos.clone();
+		let wake  = waker.clone();
+		let swake = sink_waker.clone();
+
+		let wake_on_close = async move
+		{
+			let rx;
+
+			// Scope to avoid borrowing across await point.
+			//
+			{
+				rx = ph.borrow_mut().observe_unbounded();
+			}
+
+			NextEvent::new( rx, WsEventType::CLOSE ).await;
+
+			if let Some(w) = &*wake.borrow()
+			{
+				w.wake_by_ref();
+			}
+
+			if let Some(w) = &*swake.borrow()
+			{
+				w.wake_by_ref();
+			}
+		};
+
+		rt::spawn_local( wake_on_close ).expect_throw( "spawn wake_on_close" );
+
+
 		Self
 		{
 			ws                ,
 			queue             ,
 			state             ,
 			waker             ,
+			sink_waker        ,
 			pharos            ,
-			_on_mesg: on_mesg ,
 			closer  : None    ,
+			_on_mesg: on_mesg ,
 		}
 	}
 
@@ -139,18 +178,27 @@ impl fmt::Debug for WsIo
 impl Drop for WsIo
 {
 	// We don't block here, just tell the browser to close the connection and move on.
-	// TODO: is this necessary or would it be closed automatically when we drop the WebSocket
-	// object? Note that there is also the WsStream which holds a clone.
 	//
 	fn drop( &mut self )
 	{
 		trace!( "Drop WsIo" );
 
-		// This can't fail
-		//
-		self.ws.close_with_code( 1000 ).expect( "WsIo::drop - close ws socket" );
+		match self.ready_state()
+		{
+			WsState::Closing | WsState::Closed => {}
 
-		rt::block_on( self.pharos.borrow_mut().notify( &WsEvent::Closing ) );
+			_ =>
+			{
+				// This can't fail
+				//
+				self.ws.close_with_code( 1000 ).expect( "WsIo::drop - close ws socket" );
+
+
+				// Notify Observers
+				//
+				notify( self.pharos.clone(), WsEvent::Closing )
+			}
+		}
 
 		self.ws.set_onmessage( None );
 	}
@@ -192,8 +240,6 @@ impl Stream for WsIo
 
 
 
-
-
 impl Sink<WsMessage> for WsIo
 {
 	type Error = WsErr;
@@ -201,13 +247,19 @@ impl Sink<WsMessage> for WsIo
 
 	// Web API does not really seem to let us check for readiness, other than the connection state.
 	//
-	fn poll_ready( self: Pin<&mut Self>, _: &mut Context ) -> Poll<Result<(), Self::Error>>
+	fn poll_ready( mut self: Pin<&mut Self>, cx: &mut Context ) -> Poll<Result<(), Self::Error>>
 	{
 		trace!( "Sink<WsMessage> for WsIo: poll_ready" );
 
 		match self.ready_state()
 		{
-			WsState::Connecting => Poll::Pending        ,
+			WsState::Connecting =>
+			{
+				*self.sink_waker.borrow_mut() = Some( cx.waker().clone() );
+
+				Poll::Pending
+			}
+
 			WsState::Open       => Poll::Ready( Ok(()) ),
 			_                   => Poll::Ready( Err( WsErrKind::ConnectionNotOpen.into() )),
 		}
@@ -267,6 +319,8 @@ impl Sink<WsMessage> for WsIo
 		let state = self.ready_state();
 
 
+		// First close the inner connection
+		//
 		if state == WsState::Connecting
 		|| state == WsState::Open
 		{
@@ -274,12 +328,12 @@ impl Sink<WsMessage> for WsIo
 			//
 			self.ws.close().unwrap_throw();
 
-			// notify observers
-			//
-			rt::block_on( self.pharos.borrow_mut().notify( &WsEvent::Closing ) );
+			notify( self.pharos.clone(), WsEvent::Closing );
 		}
 
 
+		// Check whether it's closed
+		//
 		match state
 		{
 			WsState::Closed =>
@@ -307,8 +361,6 @@ impl Sink<WsMessage> for WsIo
 		}
 	}
 }
-
-
 
 
 
@@ -401,19 +453,11 @@ impl AsyncRead for WsIo
 					let end = cmp::min( *chunk_start + buf.len(), chunk.len() );
 					let len = end - *chunk_start;
 
-					buf[..len].copy_from_slice( &chunk[*chunk_start..end] );
+					buf[..len].copy_from_slice( &chunk[ *chunk_start..end ] );
 
 
-					if chunk.len() == end
-					{
-						self.state = ReadState::PendingChunk;
-					}
-
-					else
-					{
-						*chunk_start = end;
-					}
-
+					if chunk.len() == end { self.state = ReadState::PendingChunk }
+					else                  { *chunk_start = end                   }
 
 					return Poll::Ready( Ok(len) );
 				}
@@ -446,7 +490,6 @@ impl AsyncRead for WsIo
 						Poll::Pending =>
 						{
 							trace!( "poll_read: return Pending" );
-
 							return Poll::Pending;
 						}
 					}

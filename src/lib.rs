@@ -200,3 +200,20 @@ mod import
 		pharos        :: { Pharos, Observable, UnboundedObservable                                       } ,
 	};
 }
+
+
+use import::*;
+
+/// Helper function to reduce code bloat
+//
+pub (crate) fn notify( pharos: Rc<RefCell<Pharos<WsEvent>>>, evt: WsEvent )
+{
+	let notify = async move
+	{
+		let mut pharos = pharos.borrow_mut();
+
+		pharos.notify( &evt ).await;
+	};
+
+	rt::spawn_local( notify ).expect_throw( "spawn notify closing" );
+}

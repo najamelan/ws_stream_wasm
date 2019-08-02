@@ -18,7 +18,7 @@ dependencies:
 
   bitflags                : ^1
   pharos                  : ^0.2
-  naja_async_runtime      : { version: ^0.2, default-features: false }
+  naja_async_runtime      : { version: ^0.3, default-features: false }
   failure                 : ^0.1
   futures-preview         : { version: ^0.3.0-alpha.17, features: [io-compat, compat] }
   log                     : ^0.4

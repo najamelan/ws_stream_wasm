@@ -195,7 +195,7 @@ pub fn state() -> impl Future01<Item = (), Error = JsValue>
 		assert_eq!( WsState::Closing, ws  .ready_state() );
 		assert_eq!( WsState::Closing, wsio.ready_state() );
 
-		ws.close().await;
+		ws.close().await.expect_throw( "close ws" );
 
 		assert_eq!( WsState::Closed, ws  .ready_state() );
 		assert_eq!( WsState::Closed, wsio.ready_state() );
@@ -313,6 +313,33 @@ pub fn protocols_server_accept_none() -> impl Future01<Item = (), Error = JsValu
 
 // Verify close_code method.
 //
+#[ wasm_bindgen_test(async) ]
+//
+pub fn close_twice() -> impl Future01<Item = (), Error = JsValue>
+{
+	let _ = console_log::init_with_level( Level::Trace );
+
+	info!( "starting test: close_twice" );
+
+	async
+	{
+		let (ws, _wsio) = WsStream::connect( URL, None ).await.expect_throw( "Could not create websocket" );
+
+		let res = ws.close().await;
+
+		assert!( res.is_ok() );
+
+		assert_eq!( ws.close       ()                         .await.unwrap_err().kind(), &WsErrKind::ConnectionNotOpen );
+		assert_eq!( ws.close_code  ( 1000                    ).await.unwrap_err().kind(), &WsErrKind::ConnectionNotOpen );
+		assert_eq!( ws.close_reason( 1000, "Normal shutdown" ).await.unwrap_err().kind(), &WsErrKind::ConnectionNotOpen );
+
+		Ok(())
+
+	}.boxed_local().compat()
+}
+
+
+
 #[ wasm_bindgen_test(async) ]
 //
 pub fn close_code_valid() -> impl Future01<Item = (), Error = JsValue>
