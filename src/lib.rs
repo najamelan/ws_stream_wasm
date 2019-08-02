@@ -58,7 +58,7 @@
 //!
 //! ### Upgrade
 //!
-//! Please check out the [changelog](https://github.com/najamelan/ws_wasm_stream/blob/master/CHANGELOG.md) when upgrading.
+//! Please check out the [changelog](https://github.com/najamelan/ws_stream_wasm/blob/master/CHANGELOG.md) when upgrading.
 //!
 //! ### Dependencies
 //!
