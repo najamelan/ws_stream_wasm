@@ -46,14 +46,14 @@
 //! ```yaml
 //! dependencies:
 //!
-//!   ws_stream_wasm: ^0.1
+//!   ws_stream_wasm: ^0.2
 //! ```
 //!
 //! With raw Cargo.toml
 //! ```toml
 //! [dependencies]
 //!
-//!    ws_stream_wasm = "^0.1"
+//!    ws_stream_wasm = "^0.2"
 //! ```
 //!
 //! ### Upgrade
