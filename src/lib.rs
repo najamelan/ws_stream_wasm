@@ -161,7 +161,6 @@
 //! [Unlicence](https://unlicense.org/)
 //
 #![ doc    ( html_root_url = "https://docs.rs/ws_stream_wasm" ) ]
-#![ feature( async_await                                      ) ]
 #![ deny   ( missing_docs                                     ) ]
 #![ forbid ( unsafe_code                                      ) ]
 #![ allow  ( clippy::suspicious_else_formatting               ) ]

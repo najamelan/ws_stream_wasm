@@ -150,11 +150,9 @@ impl WsStream
 
 
 
-		// Listen to the events to figure out whether the connection opens
-		// successfully. We don't want to deal with the error event. Either
-		// a close event happens, in which case we want to recover the CloseEvent
-		// to return it to the user, or an Open event happens in which case we are
-		// happy campers.
+		// Listen to the events to figure out whether the connection opens successfully. We don't want to deal with
+		// the error event. Either a close event happens, in which case we want to recover the CloseEvent to return it
+		// to the user, or an Open event happens in which case we are happy campers.
 		//
 		let evts = NextEvent::new( pharos.borrow_mut().observe_unbounded(), WsEventType::CLOSE | WsEventType::OPEN );
 
@@ -205,8 +203,8 @@ impl WsStream
 
 			_ =>
 			{
-				// This can not throw normally, because the only errors the api
-				// can return is if we use a code or a reason string, which we don't.
+				// This can not throw normally, because the only errors the api can return is if we use a code or
+				// a reason string, which we don't.
 				// See [mdn](https://developer.mozilla.org/en-US/docs/Web/API/WebSocket/close#Exceptions_thrown).
 				//
 				self.ws.close().unwrap_throw();
@@ -222,9 +220,8 @@ impl WsStream
 		let evts = NextEvent::new( self.pharos.borrow_mut().observe_unbounded(), WsEventType::CLOSE );
 
 
-		// We promised the user a CloseEvent, so we don't have much choice but to unwrap this.
-		// In any case, the stream will never end and this will hang if the browser fails to
-		// send a close event.
+		// We promised the user a CloseEvent, so we don't have much choice but to unwrap this. In any case, the stream will
+		// never end and this will hang if the browser fails to send a close event.
 		//
 		let ce = evts.await.expect_throw( "receive a close event" );
 		trace!( "WebSocket connection closed!" );

@@ -19,8 +19,7 @@ pub struct WsIo
 	//
 	queue: Rc<RefCell< VecDeque<WsMessage> >>,
 
-	// Last waker of task that wants to read incoming messages
-	// to be woken up on a new message
+	// Last waker of task that wants to read incoming messages to be woken up on a new message
 	//
 	waker: Rc<RefCell< Option<Waker> >>,
 
@@ -28,13 +27,11 @@ pub struct WsIo
 	//
 	sink_waker: Rc<RefCell< Option<Waker> >>,
 
-	// A pointer to the pharos of WsStream for when we
-	// need to listen to events
+	// A pointer to the pharos of WsStream for when we need to listen to events
 	//
 	pharos: Rc<RefCell< Pharos<WsEvent> >>,
 
-	// State information for partially read messages in
-	// AsyncRead
+	// State information for partially read messages in AsyncRead
 	//
 	state: ReadState,
 
@@ -42,8 +39,7 @@ pub struct WsIo
 	//
 	_on_mesg: Closure< dyn FnMut( MessageEvent ) >,
 
-	// This allows us to store a future to poll when
-	// Sink::poll_close is called
+	// This allows us to store a future to poll when Sink::poll_close is called
 	//
 	closer: Option< NextEvent >,
 }
@@ -227,14 +223,14 @@ impl Stream for WsIo
 
 			match self.ready_state()
 			{
-				WsState::Open | WsState::Connecting => Poll::Pending        ,
-				_                                   => Poll::Ready  ( None ),
+				WsState::Open | WsState::Connecting => Poll::Pending ,
+				_                                   => None.into()   ,
 			}
 		}
 
 		// As long as there is things in the queue, just keep reading
 		//
-		else { Poll::Ready( self.queue.borrow_mut().pop_front() ) }
+		else { self.queue.borrow_mut().pop_front().into() }
 	}
 }
 
@@ -260,8 +256,8 @@ impl Sink<WsMessage> for WsIo
 				Poll::Pending
 			}
 
-			WsState::Open       => Poll::Ready( Ok(()) ),
-			_                   => Poll::Ready( Err( WsErrKind::ConnectionNotOpen.into() )),
+			WsState::Open => Ok(()).into(),
+			_             => Err( WsErrKind::ConnectionNotOpen.into() ).into(),
 		}
 	}
 
@@ -303,7 +299,7 @@ impl Sink<WsMessage> for WsIo
 	{
 		trace!( "Sink<WsMessage> for WsIo: poll_flush" );
 
-		Poll::Ready( Ok(()) )
+		Ok(()).into()
 	}
 
 
@@ -339,7 +335,7 @@ impl Sink<WsMessage> for WsIo
 			WsState::Closed =>
 			{
 				trace!( "WebSocket connection closed!" );
-				Poll::Ready( Ok(()) )
+				Ok(()).into()
 			}
 
 			_ =>
@@ -356,7 +352,7 @@ impl Sink<WsMessage> for WsIo
 
 				let _ = ready!( Pin::new( &mut self.closer.as_mut().unwrap() ).poll(cx) );
 
-				Poll::Ready( Ok(()) )
+				Ok(()).into()
 			}
 		}
 	}
@@ -378,7 +374,7 @@ impl AsyncWrite for WsIo
 
 				match self.start_send( WsMessage::Binary( buf.into() ) )
 				{
-					Ok (_) => { return Poll::Ready( Ok(n) ); }
+					Ok (_) => { return Ok(n).into(); }
 					Err(e) =>
 					{
 						match e.kind()
@@ -422,7 +418,7 @@ impl AsyncWrite for WsIo
 
 		// WsIo poll_close is infallible
 		//
-		Poll::Ready( Ok(()) )
+		Ok(()).into()
 	}
 }
 
@@ -459,7 +455,7 @@ impl AsyncRead for WsIo
 					if chunk.len() == end { self.state = ReadState::PendingChunk }
 					else                  { *chunk_start = end                   }
 
-					return Poll::Ready( Ok(len) );
+					return Ok(len).into();
 				}
 
 
@@ -482,7 +478,7 @@ impl AsyncRead for WsIo
 						Poll::Ready( None ) =>
 						{
 							trace!( "poll_read: stream has ended" );
-							return Poll::Ready( Ok(0) );
+							return Ok(0).into();
 						}
 
 						// No chunk yet, save the task to be woken up

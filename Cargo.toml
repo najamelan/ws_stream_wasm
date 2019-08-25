@@ -7,7 +7,7 @@ pharos = "^0.2"
 
 [dependencies.futures-preview]
 features = ["io-compat", "compat"]
-version = "^0.3.0-alpha.17"
+version = "^0.3.0-alpha"
 
 [dependencies.js-sys]
 version = "^0.3"

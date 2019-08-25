@@ -175,7 +175,7 @@ impl NextEvent
 					WsEvent::Closing  if filter.contains( WsEventType::CLOSING ) => ready( Some( evt ) ),
 					WsEvent::Close(_) if filter.contains( WsEventType::CLOSE   ) => ready( Some( evt ) ),
 					WsEvent::Error    if filter.contains( WsEventType::ERROR   ) => ready( Some( evt ) ),
-					_                                                             => ready( None        ),
+					_                                                            => ready( None        ),
 				}
 			}))
 		}
