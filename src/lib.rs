@@ -5,10 +5,11 @@
 //!
 
 
-#![ doc    ( html_root_url = "https://docs.rs/ws_stream_wasm" ) ]
-#![ deny   ( missing_docs                                     ) ]
-#![ forbid ( unsafe_code                                      ) ]
-#![ allow  ( clippy::suspicious_else_formatting               ) ]
+#![ doc    ( html_root_url = "https://docs.rs/ws_stream_wasm"            ) ]
+#![ deny   ( missing_docs                                                ) ]
+#![ forbid ( unsafe_code                                                 ) ]
+#![ allow  ( clippy::suspicious_else_formatting, clippy::needless_return ) ]
+
 
 
 #![ warn

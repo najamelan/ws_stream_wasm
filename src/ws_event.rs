@@ -145,6 +145,8 @@ bitflags!
 /// rt::spawn_local( program ).expect_throw( "spawn program " );
 /// ```
 //
+#[ allow( clippy::type_complexity ) ]
+//
 pub struct NextEvent
 {
 	rx: FilterMap<UnboundedReceiver<WsEvent>, Ready<Option<WsEvent>>, Box<dyn FnMut(WsEvent)->Ready<Option<WsEvent>>> >
