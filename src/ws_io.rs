@@ -63,6 +63,8 @@ impl WsIo
 
 		// Send the incoming ws messages to the WsStream object
 		//
+		#[ allow( trivial_casts ) ]
+		//
 		let on_mesg = Closure::wrap( Box::new( move |msg_evt: MessageEvent|
 		{
 			trace!( "WsStream: message received!" );
@@ -163,7 +165,7 @@ impl WsIo
 
 impl fmt::Debug for WsIo
 {
-	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result
+	fn fmt( &self, f: &mut fmt::Formatter<'_> ) -> fmt::Result
 	{
 		write!( f, "WsIo for connection: {}", self.ws.url() )
 	}
@@ -209,7 +211,7 @@ impl Stream for WsIo
 	// Currently requires an unfortunate copy from Js memory to Wasm memory. Hopefully one
 	// day we will be able to receive the MessageEvt directly in Wasm.
 	//
-	fn poll_next( mut self: Pin<&mut Self>, cx: &mut Context ) -> Poll<Option< Self::Item >>
+	fn poll_next( mut self: Pin<&mut Self>, cx: &mut Context<'_> ) -> Poll<Option< Self::Item >>
 	{
 		trace!( "WsIo as Stream gets polled" );
 
@@ -243,7 +245,7 @@ impl Sink<WsMessage> for WsIo
 
 	// Web API does not really seem to let us check for readiness, other than the connection state.
 	//
-	fn poll_ready( mut self: Pin<&mut Self>, cx: &mut Context ) -> Poll<Result<(), Self::Error>>
+	fn poll_ready( mut self: Pin<&mut Self>, cx: &mut Context<'_> ) -> Poll<Result<(), Self::Error>>
 	{
 		trace!( "Sink<WsMessage> for WsIo: poll_ready" );
 
@@ -295,7 +297,7 @@ impl Sink<WsMessage> for WsIo
 
 
 
-	fn poll_flush( self: Pin<&mut Self>, _: &mut Context ) -> Poll<Result<(), Self::Error>>
+	fn poll_flush( self: Pin<&mut Self>, _: &mut Context<'_> ) -> Poll<Result<(), Self::Error>>
 	{
 		trace!( "Sink<WsMessage> for WsIo: poll_flush" );
 
@@ -308,7 +310,7 @@ impl Sink<WsMessage> for WsIo
 	//       this can be done by creating a custom future. If we are going to implement
 	//       events with pharos, that's probably a good time to re-evaluate this.
 	//
-	fn poll_close( mut self: Pin<&mut Self>, cx: &mut Context ) -> Poll<Result<(), Self::Error>>
+	fn poll_close( mut self: Pin<&mut Self>, cx: &mut Context<'_> ) -> Poll<Result<(), Self::Error>>
 	{
 		trace!( "Sink<WsMessage> for WsIo: poll_close" );
 
@@ -362,7 +364,7 @@ impl Sink<WsMessage> for WsIo
 
 impl AsyncWrite for WsIo
 {
-	fn poll_write( mut self: Pin<&mut Self>, cx: &mut Context, buf: &[u8] ) -> Poll<Result<usize, io::Error>>
+	fn poll_write( mut self: Pin<&mut Self>, cx: &mut Context<'_>, buf: &[u8] ) -> Poll<Result<usize, io::Error>>
 	{
 		let res = ready!( self.as_mut().poll_ready( cx ) );
 
@@ -406,13 +408,13 @@ impl AsyncWrite for WsIo
 
 
 
-	fn poll_flush( self: Pin<&mut Self>, _cx: &mut Context ) -> Poll<Result<(), io::Error>>
+	fn poll_flush( self: Pin<&mut Self>, _cx: &mut Context<'_> ) -> Poll<Result<(), io::Error>>
 	{
 		Poll::Ready( Ok(()) )
 	}
 
 
-	fn poll_close( self: Pin<&mut Self>, cx: &mut Context ) -> Poll<Result<(), io::Error>>
+	fn poll_close( self: Pin<&mut Self>, cx: &mut Context<'_> ) -> Poll<Result<(), io::Error>>
 	{
 		let _ = ready!( < Self as Sink<WsMessage> >::poll_close( self, cx ) );
 
@@ -436,7 +438,7 @@ enum ReadState
 
 impl AsyncRead for WsIo
 {
-	fn poll_read( mut self: Pin<&mut Self>, cx: &mut Context, buf: &mut [u8] ) -> Poll< Result<usize, io::Error> >
+	fn poll_read( mut self: Pin<&mut Self>, cx: &mut Context<'_>, buf: &mut [u8] ) -> Poll< Result<usize, io::Error> >
 	{
 		trace!( "WsIo - AsyncRead: poll_read called" );
 

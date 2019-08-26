@@ -102,6 +102,9 @@ impl WsStream
 
 
 		// Setup our event listeners
+		// TODO: figure out a way to avoid the trivial cast.
+		//
+		#[ allow( trivial_casts ) ]
 		//
 		let on_open = Closure::wrap( Box::new( move ||
 		{
@@ -115,6 +118,8 @@ impl WsStream
 		}) as Box< dyn FnMut() > );
 
 
+		#[ allow( trivial_casts ) ]
+		//
 		let on_error = Closure::wrap( Box::new( move ||
 		{
 			trace!( "websocket error event" );
@@ -127,6 +132,8 @@ impl WsStream
 		}) as Box< dyn FnMut() > );
 
 
+		#[ allow( trivial_casts ) ]
+		//
 		let on_close = Closure::wrap( Box::new( move |evt: JsCloseEvt|
 		{
 			trace!( "websocket close event" );
@@ -400,7 +407,7 @@ impl WsStream
 
 impl fmt::Debug for WsStream
 {
-	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result
+	fn fmt( &self, f: &mut fmt::Formatter<'_> ) -> fmt::Result
 	{
 		write!( f, "WsStream for connection: {}", self.url() )
 	}

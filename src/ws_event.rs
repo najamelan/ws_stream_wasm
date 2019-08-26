@@ -195,3 +195,13 @@ impl Future for NextEvent
 	}
 }
 
+
+
+impl fmt::Debug for NextEvent
+{
+	fn fmt( &self, f: &mut fmt::Formatter<'_> ) -> fmt::Result
+	{
+		write!( f, "ws_stream_wasm::NextEvent" )
+	}
+}
+

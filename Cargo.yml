@@ -1,7 +1,17 @@
 package:
 
-  name          : ws_stream_wasm
+  # When releasing to crates.io:
+  #
+  # - Update CHANGELOG.md.
+  # - Update version numbers in Cargo.yml, Cargo.toml, install section of readme.
+  # - verify CI result
+  # - test dependent crates
+  # - cargo publish
+  # - merge dev branch into master
+  # - create git tag
+  #
   version       : 0.2.1
+  name          : ws_stream_wasm
   edition       : '2018'
   authors       : [ Naja Melan <najamelan@autistici.org> ]
   description   : A convenience library for using websockets in WASM
@@ -12,6 +22,17 @@ package:
   readme        : README.md
   keywords      : [ wasm, websocket, tokio, stream, async ]
   categories    : [ api-bindings, wasm, web-programming, "web-programming::websocket" ]
+
+  metadata:
+    docs.rs:
+      all-features: true
+
+
+features:
+
+  # only used internally, don't use
+  #
+  external_doc: []
 
 
 dependencies:

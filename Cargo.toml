@@ -49,6 +49,9 @@ default-features = false
 features = ["codec"]
 version = "^0.1"
 
+[features]
+external_doc = []
+
 [package]
 authors = ["Naja Melan <najamelan@autistici.org>"]
 categories = ["api-bindings", "wasm", "web-programming", "web-programming::websocket"]
@@ -62,3 +65,7 @@ name = "ws_stream_wasm"
 readme = "README.md"
 repository = "https://github.com/najamelan/ws_stream_wasm"
 version = "0.2.1"
+
+[package.metadata]
+[package.metadata."docs.rs"]
+all-features = true
