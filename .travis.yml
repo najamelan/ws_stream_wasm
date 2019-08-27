@@ -17,6 +17,7 @@ cache:
 # and remove wasm-pack binary to avoid the installer asking confirmation for overwriting it.
 #
 before_cache:
+  - rm -rf /home/travis/.cargo/git
   - rm -rf /home/travis/.cargo/registry
   - rm -rf /home/travis/.cargo/bin/wasm-pack
 
