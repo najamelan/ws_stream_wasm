@@ -84,3 +84,10 @@ profile:
 
     codegen-units: 1
     # debug        : true
+
+
+patch:
+
+  crates-io:
+
+    futures_codec : { git: "https://github.com/matthunz/futures-codec.git" }

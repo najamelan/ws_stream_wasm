@@ -64,3 +64,12 @@ version = "0.2.1"
 [package.metadata]
 [package.metadata."docs.rs"]
 all-features = true
+
+[patch]
+[patch.crates-io]
+[patch.crates-io.futures_codec]
+git = "https://github.com/matthunz/futures-codec.git"
+
+[profile]
+[profile.release]
+codegen-units = 1
