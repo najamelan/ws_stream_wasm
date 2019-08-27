@@ -115,7 +115,7 @@ impl WsIo
 			}
 		};
 
-		rt::spawn_local( wake_on_close ).expect_throw( "spawn wake_on_close" );
+		spawn_local( wake_on_close );
 
 
 		Self

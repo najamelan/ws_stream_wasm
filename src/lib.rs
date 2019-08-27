@@ -52,20 +52,20 @@ mod import
 {
 	pub(crate) use
 	{
-		async_runtime :: { rt                                                                            } ,
-		bitflags      :: { bitflags                                                                      } ,
-		failure       :: { Backtrace, Fail, Context as FailContext                                       } ,
-		futures       :: { channel::mpsc::{ Receiver, UnboundedReceiver }, Poll                          } ,
-		futures       :: { prelude::{ Stream, Sink, AsyncWrite, AsyncRead }, ready, future::ready        } ,
-		futures       :: { stream::{ StreamExt, FilterMap }, future::Ready                               } ,
-		std           :: { io, cmp, collections::VecDeque, fmt, task::{ Context, Waker }, future::Future } ,
-		std           :: { rc::Rc, cell::{ RefCell }, pin::Pin, convert::{ TryFrom, TryInto }            } ,
-		log           :: { *                                                                             } ,
-		js_sys        :: { ArrayBuffer, Uint8Array                                                       } ,
-		wasm_bindgen  :: { closure::Closure, JsCast, JsValue, UnwrapThrowExt                             } ,
-		web_sys       :: { *, BinaryType, Blob, WebSocket, CloseEvent as JsCloseEvt, DomException        } ,
-		js_sys        :: { Array                                                                         } ,
-		pharos        :: { Pharos, Observable, UnboundedObservable                                       } ,
+		bitflags             :: { bitflags                                                                      } ,
+		failure              :: { Backtrace, Fail, Context as FailContext                                       } ,
+		futures              :: { channel::mpsc::{ Receiver, UnboundedReceiver }, Poll                          } ,
+		futures              :: { prelude::{ Stream, Sink, AsyncWrite, AsyncRead }, ready, future::ready        } ,
+		futures              :: { stream::{ StreamExt, FilterMap }, future::Ready                               } ,
+		std                  :: { io, cmp, collections::VecDeque, fmt, task::{ Context, Waker }, future::Future } ,
+		std                  :: { rc::Rc, cell::{ RefCell }, pin::Pin, convert::{ TryFrom, TryInto }            } ,
+		log                  :: { *                                                                             } ,
+		js_sys               :: { ArrayBuffer, Uint8Array                                                       } ,
+		wasm_bindgen         :: { closure::Closure, JsCast, JsValue, UnwrapThrowExt                             } ,
+		web_sys              :: { *, BinaryType, Blob, WebSocket, CloseEvent as JsCloseEvt, DomException        } ,
+		js_sys               :: { Array                                                                         } ,
+		pharos               :: { Pharos, Observable, UnboundedObservable                                       } ,
+		wasm_bindgen_futures :: { futures_0_3::spawn_local                                                      } ,
 	};
 }
 
@@ -83,5 +83,5 @@ pub(crate) fn notify( pharos: Rc<RefCell<Pharos<WsEvent>>>, evt: WsEvent )
 		pharos.notify( &evt ).await;
 	};
 
-	rt::spawn_local( notify ).expect_throw( "spawn notify closing" );
+	spawn_local( notify );
 }

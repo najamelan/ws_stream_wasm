@@ -17,8 +17,8 @@ wasm_bindgen_test_configure!(run_in_browser);
 //
 use
 {
-	futures_01            :: Future as Future01,
-	async_runtime         :: * ,
+	futures_01            :: Future as Future01       ,
+	wasm_bindgen_futures  :: futures_0_3::spawn_local ,
 	futures::prelude      :: * ,
 	futures::sink         :: * ,
 	futures::io           :: * ,
@@ -187,7 +187,7 @@ pub fn close_from_wsstream_while_pending() -> impl Future01<Item = (), Error = J
 	{
 		let (ws, mut wsio) = WsStream::connect( URL, None ).await.expect_throw( "Could not create websocket" );
 
-		rt::spawn_local( async move { ws.close().await.expect_throw( "close ws" ); } ).expect_throw( "spawn close" );
+		spawn_local( async move { ws.close().await.expect_throw( "close ws" ); } );
 
 		// if we don't wake up the task, this will hang
 		//
