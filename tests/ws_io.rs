@@ -1,4 +1,4 @@
-#![ feature( async_await, trait_alias )]
+#![ feature( trait_alias )]
 wasm_bindgen_test_configure!(run_in_browser);
 
 

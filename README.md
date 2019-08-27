@@ -74,8 +74,6 @@ The [integration tests](https://github.com/najamelan/ws_stream_wasm/tree/master/
 
 ### Basic events example
 ```rust
-#![ feature( async_await ) ]
-
 use
 {
    async_runtime  :: rt                , // from crate naja_async_runtime
