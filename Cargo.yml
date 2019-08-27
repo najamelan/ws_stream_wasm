@@ -75,3 +75,12 @@ dev-dependencies:
   futures_codec            : ^0.2
   wasm-bindgen-test        : ^0.2
   futures_01               : { version: ^0.1, package: futures }
+
+
+
+profile:
+
+  release:
+
+    codegen-units: 1
+    # debug        : true
