@@ -61,14 +61,14 @@ pub fn connect_wrong_port() -> impl Future01<Item = (), Error = JsValue>
 		assert_eq!
 		(
 			&WsErrKind::ConnectionFailed
-			(
-				CloseEvent
+			{
+				event: CloseEvent
 				{
 					was_clean: false,
 					code     : 1006 ,
 					reason   : "".to_string(),
 				}
-			),
+			},
 			err.kind()
 		);
 
@@ -128,14 +128,14 @@ pub fn connect_wrong_wss() -> impl Future01<Item = (), Error = JsValue>
 		assert_eq!
 		(
 			&WsErrKind::ConnectionFailed
-			(
-				CloseEvent
+			{
+				event: CloseEvent
 				{
 					was_clean: false,
 					code     : 1006 ,
 					reason   : "".to_string(),
 				}
-			),
+			},
 			err.kind()
 		);
 
@@ -164,7 +164,7 @@ pub fn connect_wrong_scheme() -> impl Future01<Item = (), Error = JsValue>
 
 		let err = err.unwrap_err();
 
-		assert_eq!( &WsErrKind::InvalidUrl( "http://127.0.0.1:3212/".to_string() ), err.kind() );
+		assert_eq!( &WsErrKind::InvalidUrl{ supplied: "http://127.0.0.1:3212/".to_string() }, err.kind() );
 
 		Ok(())
 
@@ -378,7 +378,7 @@ pub fn close_code_invalid() -> impl Future01<Item = (), Error = JsValue>
 
 		let res = ws.close_code( 500 ).await;
 
-		assert_eq!( &WsErrKind::InvalidCloseCode(500), res.unwrap_err().kind() );
+		assert_eq!( &WsErrKind::InvalidCloseCode{ supplied: 500 }, res.unwrap_err().kind() );
 
 		Ok(())
 
@@ -426,7 +426,7 @@ pub fn close_reason_invalid_code() -> impl Future01<Item = (), Error = JsValue>
 
 		let res = ws.close_reason( 500, "Normal Shutdown" ).await;
 
-		assert_eq!( &WsErrKind::InvalidCloseCode(500), res.unwrap_err().kind() );
+		assert_eq!( &WsErrKind::InvalidCloseCode{ supplied: 500 }, res.unwrap_err().kind() );
 
 		Ok(())
 

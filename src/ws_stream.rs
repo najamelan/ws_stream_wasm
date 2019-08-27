@@ -1,7 +1,4 @@
-use
-{
-	crate :: { import::*, WsErr, WsErrKind, WsState, WsIo, WsEvent, CloseEvent, NextEvent, WsEventType, notify },
-};
+use crate::{ import::*, WsErr, WsErrKind, WsState, WsIo, WsEvent, CloseEvent, NextEvent, WsEventType, notify };
 
 
 /// The meta data related to a websocket.
@@ -84,9 +81,15 @@ impl WsStream
 
 				match de.code()
 				{
-					DomException::SECURITY_ERR => return Err( WsErrKind::ForbiddenPort.into()                         ),
-					DomException::SYNTAX_ERR   => return Err( WsErrKind::InvalidUrl( url.as_ref().to_string()).into() ),
-					_                          => unreachable!(),
+					DomException::SECURITY_ERR => return Err( WsErrKind::ForbiddenPort.into() ),
+
+
+					DomException::SYNTAX_ERR =>
+
+						return Err( WsErrKind::InvalidUrl{ supplied: url.as_ref().to_string() }.into() ),
+
+
+					_ => unreachable!(),
 				};
 			}
 		};
@@ -170,7 +173,7 @@ impl WsStream
 		{
 			trace!( "WebSocket connection closed!" );
 
-			return Err( WsErrKind::ConnectionFailed(evt).into() )
+			return Err( WsErrKind::ConnectionFailed{ event: evt }.into() )
 		}
 
 
@@ -261,7 +264,7 @@ impl WsStream
 
 					Err(_) =>
 					{
-						let e = WsErr::from( WsErrKind::InvalidCloseCode( code ) );
+						let e = WsErr::from( WsErrKind::InvalidCloseCode{ supplied: code } );
 
 						error!( "{}", e );
 
@@ -314,7 +317,7 @@ impl WsStream
 
 					Err(_) =>
 					{
-						let e = WsErr::from( WsErrKind::InvalidCloseCode( code ) );
+						let e = WsErr::from( WsErrKind::InvalidCloseCode{ supplied: code } );
 
 						error!( "{}", e );
 

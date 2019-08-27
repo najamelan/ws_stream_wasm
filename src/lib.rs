@@ -11,7 +11,6 @@
 #![ allow  ( clippy::suspicious_else_formatting, clippy::needless_return ) ]
 
 
-
 #![ warn
 (
 	missing_debug_implementations ,
@@ -29,16 +28,16 @@
 
 
 
-mod error           ;
-mod ws_event        ;
-mod ws_message      ;
-mod ws_io           ;
-mod ws_state        ;
-mod ws_stream       ;
+pub mod error       ;
+    mod ws_event    ;
+    mod ws_message  ;
+    mod ws_io       ;
+    mod ws_state    ;
+    mod ws_stream   ;
 
 pub use
 {
-	error             :: { WsErr  , WsErrKind                          } ,
+	error             :: { Error as WsErr, ErrorKind as WsErrKind      } ,
 	ws_event          :: { WsEvent, CloseEvent, NextEvent, WsEventType } ,
 	ws_message        :: { WsMessage                                   } ,
 	ws_io             :: { WsIo                                        } ,
@@ -53,12 +52,12 @@ mod import
 	pub(crate) use
 	{
 		bitflags             :: { bitflags                                                                      } ,
-		failure              :: { Backtrace, Fail, Context as FailContext                                       } ,
 		futures              :: { channel::mpsc::{ Receiver, UnboundedReceiver }, Poll                          } ,
 		futures              :: { prelude::{ Stream, Sink, AsyncWrite, AsyncRead }, ready, future::ready        } ,
 		futures              :: { stream::{ StreamExt, FilterMap }, future::Ready                               } ,
 		std                  :: { io, cmp, collections::VecDeque, fmt, task::{ Context, Waker }, future::Future } ,
 		std                  :: { rc::Rc, cell::{ RefCell }, pin::Pin, convert::{ TryFrom, TryInto }            } ,
+		std                  :: { error::Error as ErrorTrait                                                    } ,
 		log                  :: { *                                                                             } ,
 		js_sys               :: { ArrayBuffer, Uint8Array                                                       } ,
 		wasm_bindgen         :: { closure::Closure, JsCast, JsValue, UnwrapThrowExt                             } ,

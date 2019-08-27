@@ -39,7 +39,6 @@ dependencies:
 
   bitflags                : ^1
   pharos                  : ^0.2
-  failure                 : ^0.1
   futures-preview         : { version: ^0.3.0-alpha, features: [io-compat, compat] }
   log                     : ^0.4
   js-sys                  : ^0.3

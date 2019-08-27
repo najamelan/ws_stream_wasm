@@ -1,5 +1,7 @@
 # Changelog
 
+## 0.3.0 - 2019-08-26
+
 ## 0.2.1 - 2019-08-02
 
   - Fix incorrect link to changelog in readme
