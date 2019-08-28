@@ -113,22 +113,21 @@ bitflags!
 	}
 }
 
-
+// TODO find a way for this doctest to work
 
 /// Future that resolves to the next WsEvent filtered to the type(s) you want.
 ///
 /// ## Examples
 ///
 /// Get the next close event:
-/// ```rust
-/// #![ feature( async_await ) ]
+/// ```rust, ignore
 ///
 /// use
 /// {
-///    async_runtime  :: rt             , // from crate naja_async_runtime
-///    ws_stream_wasm :: *              ,
-///    pharos         :: *              ,
-///    wasm_bindgen   :: UnwrapThrowExt ,
+///    ws_stream_wasm       :: *                        ,
+///    pharos               :: *                        ,
+///    wasm_bindgen         :: UnwrapThrowExt           ,
+///    wasm_bindgen_futures :: futures_0_3::spawn_local ,
 /// };
 ///
 /// let program = async
@@ -142,7 +141,7 @@ bitflags!
 ///    NextEvent::new( ws.observe_unbounded(), WsEventType::CLOSE ).await;
 /// };
 ///
-/// rt::spawn_local( program ).expect_throw( "spawn program " );
+/// spawn_local( program );
 /// ```
 //
 #[ allow( clippy::type_complexity ) ]
