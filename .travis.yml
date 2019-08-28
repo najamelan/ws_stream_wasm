@@ -22,10 +22,6 @@ before_cache:
   - rm -rf /home/travis/.cargo/bin/wasm-pack
 
 
-addons:
-  firefox: latest
-  chrome : stable
-
 install:
   - curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
 
@@ -39,7 +35,8 @@ script:
   - cargo run --example echo_tt --release -- "127.0.0.1:3312"  &
   - cd ..
   - wasm-pack test  --firefox --headless
-  - wasm-pack test  --chrome  --headless
+  # chrome just won't work on travis
+  # - wasm-pack test  --chrome  --headless
   - wasm-pack test  --firefox --headless --release
-  - wasm-pack test  --chrome  --headless --release
+  # - wasm-pack test  --chrome  --headless --release
 
