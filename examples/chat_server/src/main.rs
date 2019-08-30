@@ -3,23 +3,25 @@
 //
 #![ feature( async_closure ) ]
 
+// mod error;
+// use error::*;
 
 use
 {
-	chat_format   :: { futures_serde_cbor::Codec, ClientMsg, ServerMsg            } ,
-	chrono        :: { Utc                                                        } ,
-	log           :: { *                                                          } ,
-	regex         :: { Regex                                                      } ,
-	ws_stream     :: { *                                                          } ,
-	std           :: { env, collections::HashMap, net::SocketAddr                 } ,
-	std::sync     :: { Arc, atomic::{ AtomicUsize, Ordering }                     } ,
-	locks::rwlock :: { RwLock, read::FutureReadable, write::FutureWriteable       } ,
-	futures_codec :: { Framed                                                     } ,
-	futures       :: { select, sink::SinkExt, future::{ FutureExt, TryFutureExt } } ,
-	warp          :: { Filter                                                     } ,
-	once_cell     :: { sync::OnceCell                                             } ,
-	pin_utils     :: { pin_mut                                                    } ,
-	// rand          :: { thread_rng, Rng, distributions::Alphanumeric          } ,
+	chat_format        :: { ClientMsg, ServerMsg                                       } ,
+	futures_cbor_codec :: { Codec                                                      } ,
+	chrono             :: { Utc                                                        } ,
+	log                :: { *                                                          } ,
+	regex              :: { Regex                                                      } ,
+	ws_stream          :: { *                                                          } ,
+	std                :: { env, collections::HashMap, net::SocketAddr                 } ,
+	std::sync          :: { Arc, atomic::{ AtomicUsize, Ordering }                     } ,
+	locks::rwlock      :: { RwLock, read::FutureReadable, write::FutureWriteable       } ,
+	futures_codec      :: { Framed                                                     } ,
+	futures            :: { select, sink::SinkExt, future::{ FutureExt, TryFutureExt } } ,
+	warp               :: { Filter                                                     } ,
+	once_cell          :: { sync::OnceCell                                             } ,
+	pin_utils          :: { pin_mut                                                    } ,
 
 	futures ::
 	{

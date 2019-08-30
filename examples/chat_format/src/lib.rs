@@ -1,19 +1,4 @@
-pub mod futures_serde_cbor;
-pub mod error;
-
-pub use error::*;
-
-mod import
-{
-	pub(crate) use
-	{
-		serde   :: { Serialize, Deserialize                  } ,
-		failure :: { Backtrace, Fail, Context as FailContext } ,
-		std     :: { fmt                                     } ,
-	};
-}
-
-use import::*;
+use serde::{ Serialize, Deserialize };
 
 
 /// Wire format for communication between the server and clients
@@ -22,9 +7,9 @@ use import::*;
 //
 pub enum ClientMsg
 {
-	ChatMsg(String),
-	SetNick(String),
-	Join   (String),
+	ChatMsg( String ),
+	SetNick( String ),
+	Join   ( String ),
 }
 
 

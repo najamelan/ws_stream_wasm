@@ -10,18 +10,19 @@ mod import
 {
 	pub(crate) use
 	{
-		chat_format          :: { futures_serde_cbor::{ Codec, Error }, ServerMsg, ClientMsg, ChatErr   } ,
+		chat_format          :: { ServerMsg, ClientMsg                                                  } ,
 		async_runtime        :: { *                                                                     } ,
 		web_sys              :: { *, console::log_1 as dbg                                              } ,
 		ws_stream_wasm       :: { *                                                                     } ,
 		futures_codec        :: { *                                                                     } ,
+		futures_cbor_codec   :: { Codec, Error as CodecError                                            } ,
 		futures              :: { prelude::*, stream::SplitStream, select, ready                        } ,
 		futures              :: { channel::{ mpsc::{ unbounded, UnboundedReceiver, UnboundedSender } }  } ,
 		log                  :: { *                                                                     } ,
 		web_sys              :: { *                                                                     } ,
 		wasm_bindgen         :: { prelude::*, JsCast                                                    } ,
 		gloo_events          :: { *                                                                     } ,
-		std                  :: { rc::Rc, convert::TryInto, cell::RefCell                               } ,
+		std                  :: { rc::Rc, convert::TryInto, cell::RefCell, io                           } ,
 		std                  :: { task::*, pin::Pin, collections::HashMap, panic                        } ,
 		regex                :: { Regex                                                                 } ,
 		js_sys               :: { Date, Math                                                            } ,
@@ -132,7 +133,7 @@ fn append_line( chat: &Element, time: f64, nick: &str, line: &str, color: &Color
 }
 
 
-async fn on_msg( mut stream: impl Stream<Item=Result<ServerMsg, Error>> + Unpin )
+async fn on_msg( mut stream: impl Stream<Item=Result<ServerMsg, CodecError>> + Unpin )
 {
 	let chat       = get_id( "chat" );
 	let mut u_list = UserList::new();
@@ -243,8 +244,8 @@ async fn on_msg( mut stream: impl Stream<Item=Result<ServerMsg, Error>> + Unpin 
 
 async fn on_submit
 (
-	mut submits: impl Stream< Item=Event             > + Unpin ,
-	mut out    : impl Sink  < ClientMsg, Error=Error > + Unpin ,
+	mut submits: impl Stream< Item=Event                  > + Unpin ,
+	mut out    : impl Sink  < ClientMsg, Error=CodecError > + Unpin ,
 )
 {
 	let chat     = get_id( "chat" );
@@ -310,13 +311,13 @@ async fn on_submit
 
 			Err(e) =>
 			{
-				if let chat_format::futures_serde_cbor::Error::Io(err) = e
+				match e
 				{
-					match err.kind()
+					// We lost the connection to the server
+					//
+					CodecError::Io(err) => match err.kind()
 					{
-						// We lost the connection to the server
-						//
-						std::io::ErrorKind::NotConnected =>
+						io::ErrorKind::NotConnected =>
 						{
 							error!( "The connection to the server was lost" );
 
@@ -325,16 +326,11 @@ async fn on_submit
 							show_connect_form();
 						}
 
-						_ =>
-						{
-							error!( "{}", &err );
-						}
-					}
-				}
+						_ => error!( "{}", &err ),
 
-				else
-				{
-					error!( "{}", &e );
+					},
+
+					_ => error!( "{}", &e ),
 				}
 			}
 		};
@@ -497,7 +493,7 @@ async fn on_connect( mut evts: impl Stream< Item=Event > + Unpin, mut disconnect
 
 
 
-fn validate_connect_form() -> Result< (String, String), ChatErr >
+fn validate_connect_form() -> Result< (String, String), () >
 {
 	let nick_field: HtmlInputElement = get_id( "connect_nick" ).unchecked_into();
 	let url_field : HtmlInputElement = get_id( "connect_url"  ).unchecked_into();
