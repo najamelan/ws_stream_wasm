@@ -28,6 +28,10 @@ git = "https://github.com/rustwasm/gloo"
 default-features = false
 version = "^0.3"
 
+[dependencies.wasm-bindgen-futures]
+features = ["futures_0_3"]
+version = "^0.3"
+
 [dependencies.web-sys]
 features = ["console", "CssStyleDeclaration", "Document", "Element", "HtmlDivElement", "HtmlElement", "HtmlFormElement", "HtmlInputElement", "HtmlParagraphElement", "HtmlTextAreaElement", "KeyboardEvent", "Node", "Window"]
 version = "^0.3"

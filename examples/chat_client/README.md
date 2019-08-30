@@ -1,11 +1,14 @@
 # Ws_stream_wasm chat client example
 
 Demonstration of `ws_stream_wasm` working in WASM. This example shows a rather realistic (error handling, security, basic features) chat client that communicates with a chat server over websockets. The communication with the server happens with
-a custom enum, serialized with a cbor codec (for futures-codec, not tokio), over AsyncRead/AsyncWrite 0.3.
+a custom enum, serialized with a cbor codec (for futures-codec), over AsyncRead/AsyncWrite 0.3.
 
 What ws_stream_wasm adds here is that we just frame the connection with a codec instead of manually serializing our
 data structure, creating a websocket message with `web_sys`, and deal with all the potential errors on the connection
 by hand.
+
+In the future I shall rewrite this chat program using the thespis actor library showing how the design can be a lot more
+convenient when using actors.
 
 ## Install
 

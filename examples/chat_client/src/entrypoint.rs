@@ -10,21 +10,23 @@ mod import
 {
 	pub(crate) use
 	{
-		chat_format    :: { futures_serde_cbor::{ Codec, Error }, ServerMsg, ClientMsg, ChatErr                     } ,
-		async_runtime  :: { *                                                                                       } ,
-		web_sys        :: { *, console::log_1 as dbg                                                                } ,
-		ws_stream_wasm :: { *                                                                                       } ,
-		futures_codec  :: { *                                                                                       } ,
-		futures        :: { prelude::*, stream::SplitStream, select                                                 } ,
-		futures        :: { channel::{ mpsc::{ unbounded, UnboundedReceiver, UnboundedSender } }, ready             } ,
-		log            :: { *                                                                                       } ,
-		web_sys        :: { *                                                                                       } ,
-		wasm_bindgen   :: { prelude::*, JsCast                                                                      } ,
-		gloo_events    :: { *                                                                                       } ,
-		std            :: { task::*, pin::Pin, collections::HashMap, panic, rc::Rc, convert::TryInto, cell::RefCell } ,
-		regex          :: { Regex                                                                                   } ,
-		js_sys         :: { Date, Math                                                                              } ,
-		pin_utils      :: { pin_mut                                                                                 } ,
+		chat_format          :: { futures_serde_cbor::{ Codec, Error }, ServerMsg, ClientMsg, ChatErr   } ,
+		async_runtime        :: { *                                                                     } ,
+		web_sys              :: { *, console::log_1 as dbg                                              } ,
+		ws_stream_wasm       :: { *                                                                     } ,
+		futures_codec        :: { *                                                                     } ,
+		futures              :: { prelude::*, stream::SplitStream, select, ready                        } ,
+		futures              :: { channel::{ mpsc::{ unbounded, UnboundedReceiver, UnboundedSender } }  } ,
+		log                  :: { *                                                                     } ,
+		web_sys              :: { *                                                                     } ,
+		wasm_bindgen         :: { prelude::*, JsCast                                                    } ,
+		gloo_events          :: { *                                                                     } ,
+		std                  :: { rc::Rc, convert::TryInto, cell::RefCell                               } ,
+		std                  :: { task::*, pin::Pin, collections::HashMap, panic                        } ,
+		regex                :: { Regex                                                                 } ,
+		js_sys               :: { Date, Math                                                            } ,
+		pin_utils            :: { pin_mut                                                               } ,
+		wasm_bindgen_futures :: { futures_0_3::spawn_local                                              } ,
 	};
 }
 
@@ -42,8 +44,6 @@ const HELP: &str = "Available commands:
 //
 pub fn main() -> Result<(), JsValue>
 {
-	rt::init( RtConfig::Local ).expect( "init rt" );
-
 	panic::set_hook(Box::new(console_error_panic_hook::hook));
 
 	// Let's only log output when in debug mode
@@ -69,16 +69,16 @@ pub fn main() -> Result<(), JsValue>
 		let (tx, rx) = unbounded();
 
 
-		rt::spawn_local( on_disconnect( reset_evts, rx ) ).expect( "spawn on_key"    );
-		rt::spawn_local( on_key       ( enter_evts     ) ).expect( "spawn on_key"    );
-		rt::spawn_local( on_cresets   ( creset_evts    ) ).expect( "spawn on_key"    );
+		spawn_local( on_disconnect( reset_evts, rx ) );
+		spawn_local( on_key       ( enter_evts     ) );
+		spawn_local( on_cresets   ( creset_evts    ) );
 
 		on_connect( csubmit_evts, tx ).await;
 
 		info!( "main function ends" );
 	};
 
-	rt::spawn_local( program ).expect( "spawn program" );
+	spawn_local( program );
 
 
 	Ok(())
@@ -540,7 +540,7 @@ async fn on_disconnect( mut evts: impl Stream< Item=Event > + Unpin, mut wss: Un
 		}
 	};
 
-	rt::spawn_local( wss_in ).expect_throw( "spawn wss_in" );
+	spawn_local( wss_in );
 
 
 	while evts.next().await.is_some()

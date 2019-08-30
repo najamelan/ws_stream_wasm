@@ -30,6 +30,7 @@ dependencies:
   js-sys                  : ^0.3
   pin-utils               : ^0.1.0-alpha
   getrandom               : { version: ^0.1, default-features: false, features: [ wasm-bindgen ] }
+  wasm-bindgen-futures    : { version: ^0.3, features: [ futures_0_3 ] }
 
 
   web-sys:
