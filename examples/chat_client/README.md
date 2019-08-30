@@ -10,7 +10,7 @@ by hand.
 ## Install
 
 This requires you to run the chat_server example from [ws_stream](https://github.com/najamelan/ws_stream). You can tweak
-the ip:port to something else if you want (for the server you can pass it on the cmd line, for the client it's hard coded).
+the ip:port to something else if you want (for the server you can pass it on the cmd line).
 
 You will need wasm-pack:
 ```bash
@@ -18,7 +18,7 @@ cargo install wasm-pack
 
 # and compile the client
 #
-wasm-pack build --release --target web
+wasm-pack build --target web
 
 # in ws_stream repo
 # make sure this is running in the same network namespace as your browser
@@ -32,7 +32,6 @@ Now you can open the `index.html` from this crate in several web browser tabs an
 
 
 ## TODO
-- disconnect button
 - server side disconnect
 - reread all code and cleanup
 - document as example

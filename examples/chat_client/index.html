@@ -1,127 +1,11 @@
 <html>
 	<head>
 		<meta content="text/html;charset=utf-8" http-equiv="Content-Type"/>
-		<title>ws_stream_wasm Chat Client Example<</title>
-
-		<style>
-
-			p
-			{
-				margin:0;
-				padding: .1rem;
-			}
-
-			body
-			{
-				background: dark-grey;
-				height: 100%;
-				max-height: 100%;
-				width: 100%;
-				overflow:hidden;
-				margin: 0;
-				display: grid;
-				grid-template-columns: 5fr 1fr;
-				grid-template-rows: 2fr 15fr 1fr;
-			}
-
-			#title
-			{
-				background: yellow;
-				grid-column-start: 1;
-				grid-column-end: 3;
-				grid-row-start: 1;
-				grid-row-end: 1;
-			}
-
-			#chat
-			{
-				overflow-y: scroll;
-				background: #111118;
-				color: white;
-				grid-column-start: 1;
-				grid-column-end: 2;
-				grid-row-start: 2;
-				grid-row-end: 3;
-			}
-
-			#users
-			{
-				background: brown;
-				grid-column-start: 2;
-				grid-column-end: 2;
-				grid-row-start: 2;
-				grid-row-end: 4;
-				overflow-y: scroll;
-			}
-
-			#chat_form
-			{
-				grid-column-start: 1;
-				grid-column-end: 2;
-				grid-row-start: 3;
-				grid-row-end: 4;
-				display: flex;
-			}
-
-			#chat_input
-			{
-				flex: auto;
-			}
-
-			#connect_form
-			{
-				margin: 0;
-				background: gray;
-				grid-column-start: 1;
-				grid-column-end: 3;
-				grid-row-start: 2;
-				grid-row-end: 4;
-				display: flex;
-				justify-content: center;
-				align-items: center;
-			}
-
-			#connect_form_content
-			{
-				margin: 0 auto;
-				border: black 1px solid;
-				max-width: 40rem;
-				padding: 2rem;
-			}
-
-			#connect_form_content label
-			{
-				display: block;
-				margin-bottom: 10px;
-			}
-
-			#connect_form_content label > span
-			{
-				width: 15rem;
-				font-weight: bold;
-				padding-top: .5rem;
-				padding-right: .3rem;
-				float: left;
-			}
-
-			#connect_form_content input[type="text"]
-			{
-				width: 24rem;
-			}
-
-			#connect_error
-			{
-				color       : red ;
-				font-weight : bold;
-				display     : none;
-			}
-
-
-
-		</style>
+		<title>ws_stream_wasm Chat Client Example</title>
+		<link rel="stylesheet" type="text/css" href="style.css">
 	</head>
-	<body>
 
+	<body>
 
 		<!-- Note the usage of `type=module` here as this is an ES6 module -->
 		<script type="module">
@@ -155,7 +39,7 @@
 		</script>
 
 
-		<h1 id="title">ws_stream_wasm Chat Client Example</h1>
+		<div id="title_div"><h1 id="title">ws_stream_wasm Chat Client Example</h1></div>
 
 
 		<div id="chat"></div>
@@ -187,7 +71,7 @@
 
 				<label for="connect_url">
 					<span>Url <span class="required">*</span></span>
-					<input type="text" id="connect_url" name="connect_url" value="ws://127.0.0.1:3412" />
+					<input type="text" id="connect_url" name="connect_url" value="ws://127.0.0.1:3412/chat" />
 				</label>
 
 				<label>

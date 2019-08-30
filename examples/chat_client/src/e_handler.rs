@@ -3,7 +3,7 @@ use crate::import::*;
 
 pub struct EHandler
 {
-	receiver: mpsc::UnboundedReceiver<Event>,
+	receiver: UnboundedReceiver<Event>,
 
 	// Automatically removed from the DOM on drop!
 	//
@@ -17,7 +17,7 @@ impl EHandler
 	{
 		// debug!( "set event handler" );
 
-		let (sender, receiver) = mpsc::unbounded();
+		let (sender, receiver) = unbounded();
 		let options = match passive
 		{
 			false => EventListenerOptions::enable_prevent_default(),

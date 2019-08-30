@@ -61,6 +61,7 @@ dependencies:
 dev-dependencies:
 
   tokio                    : { version: ^0.1, default-features: false, features: [codec] }
+  futures_01               : { version: ^0.1, package: futures }
   # wasm-logger              : ^0.1
   console_log              : ^0.1
   console_error_panic_hook : ^0.1
@@ -74,7 +75,6 @@ dev-dependencies:
   flexi_logger             : ^0.11
   futures_codec            : ^0.2
   wasm-bindgen-test        : ^0.2
-  futures_01               : { version: ^0.1, package: futures }
 
 
 

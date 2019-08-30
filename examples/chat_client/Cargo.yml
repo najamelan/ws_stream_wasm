@@ -17,17 +17,19 @@ lib:
 dependencies:
 
   console_error_panic_hook: ^0.1
-  chat_format             : { path: ../../../ws_stream/examples/chat_format }
+  chat_server             : { path: ../chat_server }
   naja_async_runtime      : { version: ^0.3, default-features: false }
   ws_stream_wasm          : { path: ../../ }
   wasm-bindgen            : ^0.2
   futures_codec           : ^0.2
-  futures-preview         : { version: ^0.3.0-alpha.17, features: [io-compat, compat] }
+  futures-preview         : { version: ^0.3.0-alpha, features: [io-compat, compat] }
   log                     : ^0.4
   gloo-events             : { git: "https://github.com/rustwasm/gloo" }
   wasm-logger             : ^0.1
   regex                   : ^1
   js-sys                  : ^0.3
+  pin-utils               : ^0.1.0-alpha
+  getrandom               : { version: ^0.1, default-features: false, features: [ wasm-bindgen ] }
 
 
   web-sys:
