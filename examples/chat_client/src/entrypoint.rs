@@ -566,8 +566,8 @@ fn show_connect_form()
 
 	cform.style().set_property( "display", "flex" ).expect_throw( "set cform display none" );
 
-	let udiv = get_id( "users" );
-	udiv.set_inner_html( "" );
+	get_id( "users" ).set_inner_html( "" );
+	get_id( "chat"  ).set_inner_html( "" );
 }
 
 
