@@ -83,7 +83,7 @@ impl Color
 	//
 	pub fn to_css( &self ) -> String
 	{
-		format!( "#{:2x}{:2x}{:2x}", self.r, self.g, self.b )
+		format!( "#{:02x}{:02x}{:02x}", self.r, self.g, self.b )
 	}
 
 
@@ -95,5 +95,20 @@ impl Color
 	}
 }
 
+
+#[ cfg(test) ]
+mod tests
+{
+	use super::*;
+
+	#[test]
+	//
+	fn padding()
+	{
+		let c = Color::new( 1, 1, 1, 1 );
+
+		assert_eq!( "#010101", c.to_css() );
+	}
+}
 
 
