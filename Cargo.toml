@@ -59,7 +59,7 @@ license = "Unlicense"
 name = "ws_stream_wasm"
 readme = "README.md"
 repository = "https://github.com/najamelan/ws_stream_wasm"
-version = "0.2.1"
+version = "0.3.0"
 
 [package.metadata]
 [package.metadata."docs.rs"]
