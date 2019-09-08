@@ -1,7 +1,4 @@
-use
-{
-	crate :: { import::*, WsErr, WsErrKind, WsState, WsIo, WsEvent, CloseEvent, NextEvent, WsEventType, notify },
-};
+use crate::{ import::*, WsErr, WsErrKind, WsState, WsIo, WsEvent, CloseEvent, NextEvent, WsEventType, notify };
 
 
 /// The meta data related to a websocket.
@@ -84,9 +81,15 @@ impl WsStream
 
 				match de.code()
 				{
-					DomException::SECURITY_ERR => return Err( WsErrKind::ForbiddenPort.into()                         ),
-					DomException::SYNTAX_ERR   => return Err( WsErrKind::InvalidUrl( url.as_ref().to_string()).into() ),
-					_                          => unreachable!(),
+					DomException::SECURITY_ERR => return Err( WsErrKind::ForbiddenPort.into() ),
+
+
+					DomException::SYNTAX_ERR =>
+
+						return Err( WsErrKind::InvalidUrl{ supplied: url.as_ref().to_string() }.into() ),
+
+
+					_ => unreachable!(),
 				};
 			}
 		};
@@ -102,6 +105,9 @@ impl WsStream
 
 
 		// Setup our event listeners
+		// TODO: figure out a way to avoid the trivial cast.
+		//
+		#[ allow( trivial_casts ) ]
 		//
 		let on_open = Closure::wrap( Box::new( move ||
 		{
@@ -115,6 +121,8 @@ impl WsStream
 		}) as Box< dyn FnMut() > );
 
 
+		#[ allow( trivial_casts ) ]
+		//
 		let on_error = Closure::wrap( Box::new( move ||
 		{
 			trace!( "websocket error event" );
@@ -127,6 +135,8 @@ impl WsStream
 		}) as Box< dyn FnMut() > );
 
 
+		#[ allow( trivial_casts ) ]
+		//
 		let on_close = Closure::wrap( Box::new( move |evt: JsCloseEvt|
 		{
 			trace!( "websocket close event" );
@@ -150,11 +160,9 @@ impl WsStream
 
 
 
-		// Listen to the events to figure out whether the connection opens
-		// successfully. We don't want to deal with the error event. Either
-		// a close event happens, in which case we want to recover the CloseEvent
-		// to return it to the user, or an Open event happens in which case we are
-		// happy campers.
+		// Listen to the events to figure out whether the connection opens successfully. We don't want to deal with
+		// the error event. Either a close event happens, in which case we want to recover the CloseEvent to return it
+		// to the user, or an Open event happens in which case we are happy campers.
 		//
 		let evts = NextEvent::new( pharos.borrow_mut().observe_unbounded(), WsEventType::CLOSE | WsEventType::OPEN );
 
@@ -165,7 +173,7 @@ impl WsStream
 		{
 			trace!( "WebSocket connection closed!" );
 
-			return Err( WsErrKind::ConnectionFailed(evt).into() )
+			return Err( WsErrKind::ConnectionFailed{ event: evt }.into() )
 		}
 
 
@@ -205,8 +213,8 @@ impl WsStream
 
 			_ =>
 			{
-				// This can not throw normally, because the only errors the api
-				// can return is if we use a code or a reason string, which we don't.
+				// This can not throw normally, because the only errors the api can return is if we use a code or
+				// a reason string, which we don't.
 				// See [mdn](https://developer.mozilla.org/en-US/docs/Web/API/WebSocket/close#Exceptions_thrown).
 				//
 				self.ws.close().unwrap_throw();
@@ -222,9 +230,8 @@ impl WsStream
 		let evts = NextEvent::new( self.pharos.borrow_mut().observe_unbounded(), WsEventType::CLOSE );
 
 
-		// We promised the user a CloseEvent, so we don't have much choice but to unwrap this.
-		// In any case, the stream will never end and this will hang if the browser fails to
-		// send a close event.
+		// We promised the user a CloseEvent, so we don't have much choice but to unwrap this. In any case, the stream will
+		// never end and this will hang if the browser fails to send a close event.
 		//
 		let ce = evts.await.expect_throw( "receive a close event" );
 		trace!( "WebSocket connection closed!" );
@@ -257,7 +264,7 @@ impl WsStream
 
 					Err(_) =>
 					{
-						let e = WsErr::from( WsErrKind::InvalidCloseCode( code ) );
+						let e = WsErr::from( WsErrKind::InvalidCloseCode{ supplied: code } );
 
 						error!( "{}", e );
 
@@ -310,7 +317,7 @@ impl WsStream
 
 					Err(_) =>
 					{
-						let e = WsErr::from( WsErrKind::InvalidCloseCode( code ) );
+						let e = WsErr::from( WsErrKind::InvalidCloseCode{ supplied: code } );
 
 						error!( "{}", e );
 
@@ -403,7 +410,7 @@ impl WsStream
 
 impl fmt::Debug for WsStream
 {
-	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result
+	fn fmt( &self, f: &mut fmt::Formatter<'_> ) -> fmt::Result
 	{
 		write!( f, "WsStream for connection: {}", self.url() )
 	}

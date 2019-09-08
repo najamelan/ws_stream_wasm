@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.3.0 - 2019-09-08
+
+  - drop dependencies on async_runtime and failure and switch to std::error::Error for error handling
+  - add a fullstack chat example (still needs documentation and cleanup)
+
 ## 0.2.1 - 2019-08-02
 
   - Fix incorrect link to changelog in readme

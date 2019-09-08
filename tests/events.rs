@@ -1,4 +1,4 @@
-#![ feature( async_await, trait_alias )]
+#![ feature( trait_alias )]
 wasm_bindgen_test_configure!(run_in_browser);
 
 // What's tested:
@@ -9,14 +9,14 @@ wasm_bindgen_test_configure!(run_in_browser);
 //
 use
 {
-	futures_01            :: { Future as Future01 } ,
-	futures::prelude      :: { *                  } ,
-	wasm_bindgen::prelude :: { *                  } ,
-	wasm_bindgen_test     :: { *                  } ,
-	log                   :: { *                  } ,
-	ws_stream_wasm        :: { * } ,
+	futures_01            :: { Future as Future01  } ,
+	futures::prelude      :: { *                   } ,
+	wasm_bindgen::prelude :: { *                   } ,
+	wasm_bindgen_test     :: { *                   } ,
+	log                   :: { *                   } ,
+	ws_stream_wasm        :: { *                   } ,
 	pharos                :: { UnboundedObservable } ,
-	// web_sys               :: { console::log_1 as dbg               } ,
+	// web_sys               :: { console::log_1 as dbg } ,
 };
 
 

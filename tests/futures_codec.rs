@@ -1,4 +1,4 @@
-#![ feature( async_await, trait_alias )]
+#![ feature( trait_alias )]
 wasm_bindgen_test_configure!(run_in_browser);
 
 // What's tested:
@@ -106,6 +106,8 @@ async fn echo( name: &str, size: usize, data: Bytes )
 	}
 
 	assert_eq!( &data, &Bytes::from( result  ) );
+
+	framed.close().await.expect_throw( "close" );
 }
 
 
@@ -162,6 +164,8 @@ pub fn lines_integrity() -> impl Future01<Item = (), Error = JsValue>
 		assert_eq!( "A third line\n" , &three );
 
 		info!( "lines_integrity: done" );
+
+		framed.close().await.expect_throw( "close" );
 
 		Ok(())
 

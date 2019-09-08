@@ -1,4 +1,3 @@
-#![ feature( async_await ) ]
 #![ allow( unused_imports ) ]
 
 pub(crate) mod e_handler ;
@@ -11,20 +10,24 @@ mod import
 {
 	pub(crate) use
 	{
-		chat_format    :: { futures_serde_cbor::{ Codec, Error }, ServerMsg, ClientMsg, ChatErr      } ,
-		async_runtime  :: { *                                                                        } ,
-		web_sys        :: { *, console::log_1 as dbg                                                 } ,
-		ws_stream_wasm :: { *                                                                        } ,
-		futures_codec  :: { *                                                                        } ,
-		futures        :: { prelude::*, stream::SplitStream                                          } ,
-		futures        :: { channel::mpsc, ready                                                     } ,
-		log            :: { *                                                                        } ,
-		web_sys        :: { *                                                                        } ,
-		wasm_bindgen   :: { prelude::*, JsCast                                                       } ,
-		gloo_events    :: { *                                                                        } ,
-		std            :: { task::*, pin::Pin, collections::HashMap, panic, rc::Rc, convert::TryInto } ,
-		regex          :: { Regex                                                                    } ,
-		js_sys         :: { Date, Math                                                               } ,
+		chat_format          :: { ServerMsg, ClientMsg                                                  } ,
+		async_runtime        :: { *                                                                     } ,
+		web_sys              :: { *, console::log_1 as dbg                                              } ,
+		ws_stream_wasm       :: { *                                                                     } ,
+		futures_codec        :: { *                                                                     } ,
+		futures_cbor_codec   :: { Codec, Error as CodecError                                            } ,
+		futures              :: { prelude::*, stream::SplitStream, select, ready                        } ,
+		futures              :: { channel::{ mpsc::{ unbounded, UnboundedReceiver, UnboundedSender } }  } ,
+		log                  :: { *                                                                     } ,
+		web_sys              :: { *                                                                     } ,
+		wasm_bindgen         :: { prelude::*, JsCast                                                    } ,
+		gloo_events          :: { *                                                                     } ,
+		std                  :: { rc::Rc, convert::TryInto, cell::RefCell, io                           } ,
+		std                  :: { task::*, pin::Pin, collections::HashMap, panic                        } ,
+		regex                :: { Regex                                                                 } ,
+		js_sys               :: { Date, Math                                                            } ,
+		pin_utils            :: { pin_mut                                                               } ,
+		wasm_bindgen_futures :: { futures_0_3::spawn_local                                              } ,
 	};
 }
 
@@ -54,6 +57,7 @@ pub fn main() -> Result<(), JsValue>
 	{
 		let cform = get_id( "connect_form" );
 		let tarea = get_id( "chat_input"   );
+		let chat  = get_id( "chat_form"    );
 
 		let cnick: HtmlInputElement = get_id( "connect_nick" ).unchecked_into();
 		cnick.set_value( random_name() );
@@ -61,14 +65,22 @@ pub fn main() -> Result<(), JsValue>
 		let enter_evts   = EHandler::new( &tarea, "keypress", false );
 		let csubmit_evts = EHandler::new( &cform, "submit"  , false );
 		let creset_evts  = EHandler::new( &cform, "reset"   , false );
+		let reset_evts   = EHandler::new( &chat , "reset"   , false );
 
-		rt::spawn_local( on_key       ( enter_evts  ) ).expect( "spawn on_key"    );
+		let (tx, rx) = unbounded();
 
-		rt::spawn_local( on_cresets   ( creset_evts ) ).expect( "spawn on_key"    );
-		on_connect( csubmit_evts ).await;
+
+		spawn_local( on_disconnect( reset_evts, rx ) );
+		spawn_local( on_key       ( enter_evts     ) );
+		spawn_local( on_cresets   ( creset_evts    ) );
+
+		on_connect( csubmit_evts, tx ).await;
+
+		info!( "main function ends" );
 	};
 
-	rt::spawn_local( program ).expect( "spawn program" );
+	spawn_local( program );
+
 
 	Ok(())
 }
@@ -121,7 +133,7 @@ fn append_line( chat: &Element, time: f64, nick: &str, line: &str, color: &Color
 }
 
 
-async fn on_msg( mut stream: impl Stream<Item=Result<ServerMsg, Error>> + Unpin )
+async fn on_msg( mut stream: impl Stream<Item=Result<ServerMsg, CodecError>> + Unpin )
 {
 	let chat       = get_id( "chat" );
 	let mut u_list = UserList::new();
@@ -221,13 +233,19 @@ async fn on_msg( mut stream: impl Stream<Item=Result<ServerMsg, Error>> + Unpin 
 			_ => {}
 		}
 	}
+
+	// The stream has closed, so we are disconnected
+	//
+	show_connect_form();
+
+	debug!( "leaving on_msg" );
 }
 
 
 async fn on_submit
 (
-	mut submits: impl Stream< Item=Event             > + Unpin ,
-	mut out    : impl Sink  < ClientMsg, Error=Error > + Unpin ,
+	mut submits: impl Stream< Item=Event                  > + Unpin ,
+	mut out    : impl Sink  < ClientMsg, Error=CodecError > + Unpin ,
 )
 {
 	let chat     = get_id( "chat" );
@@ -290,11 +308,33 @@ async fn on_submit
 		match out.send( msg ).await
 		{
 			Ok(()) => {}
-			Err(e) => { error!( "{}", e ); }
+
+			Err(e) =>
+			{
+				match e
+				{
+					// We lost the connection to the server
+					//
+					CodecError::Io(err) => match err.kind()
+					{
+						io::ErrorKind::NotConnected =>
+						{
+							error!( "The connection to the server was lost" );
+
+							// Show login screen...
+							//
+							show_connect_form();
+						}
+
+						_ => error!( "{}", &err ),
+
+					},
+
+					_ => error!( "{}", &e ),
+				}
+			}
 		};
 	};
-
-	debug!( "leaving on_msg" );
 }
 
 
@@ -327,10 +367,14 @@ async fn on_key
 
 
 
-async fn on_connect( mut evts: impl Stream< Item=Event > + Unpin )
+async fn on_connect( mut evts: impl Stream< Item=Event > + Unpin, mut disconnect: UnboundedSender<WsStream> )
 {
-	while let Some(_evt) = evts.next().await
+	while let Some(evt) = evts.next().await
 	{
+		info!( "Connect button clicked" );
+
+		evt.prevent_default();
+
 		// validate form
 		//
 		let (nick, url) = match validate_connect_form()
@@ -345,6 +389,7 @@ async fn on_connect( mut evts: impl Stream< Item=Event > + Unpin )
 				unreachable!()
 			}
 		};
+
 
 		let (ws, wsio) = match WsStream::connect( url, None ).await
 		{
@@ -391,18 +436,26 @@ async fn on_connect( mut evts: impl Stream< Item=Event > + Unpin )
 			{
 				Ok( ServerMsg::JoinSuccess ) =>
 				{
+					info!( "got joinsuccess" );
+
 					cform.style().set_property( "display", "none" ).expect_throw( "set cform display none" );
 
-					let chat       = get_id( "chat_form"    );
-					let reset_evts = EHandler::new( &chat , "reset"   , false );
+					disconnect.send( ws ).await.expect_throw( "send ws to disconnect" );
 
-					rt::spawn_local( on_msg       ( msgs          ) ).expect( "spawn on_msg"        );
-					rt::spawn_local( on_submit    ( on_send , out ) ).expect( "spawn on_submit"     );
+					let msg = on_msg   ( msgs          ).fuse();
+					let sub = on_submit( on_send , out ).fuse();
 
-					on_disconnect( reset_evts ).await;
-					ws.close().await.expect_throw( "close ws" );
+					pin_mut!( msg );
+					pin_mut!( sub );
 
-					debug!( "connection closed by disconnect" );
+					// on_msg will end when the stream get's closed by disconnect. This way we will
+					// stop on_submit as well.
+					//
+					select!
+					{
+						_ = msg => {}
+						_ = sub => {}
+					}
 	  			}
 
 				// Show an error message on the connect form and let the user try again
@@ -421,25 +474,26 @@ async fn on_connect( mut evts: impl Stream< Item=Event > + Unpin )
 					cerror.style().set_property( "display", "block" ).expect_throw( "set display block on cerror" );
 
 					continue;
-
 				}
 
 				// cbor decoding error
 				//
-				Err(_) =>
+				Err(e) =>
 				{
-
+					error!( "{}", e );
 				}
 
 				_ => {  }
 			}
 		}
 	}
+
+	error!( "on_connect ends" );
 }
 
 
 
-fn validate_connect_form() -> Result< (String, String), ChatErr >
+fn validate_connect_form() -> Result< (String, String), () >
 {
 	let nick_field: HtmlInputElement = get_id( "connect_nick" ).unchecked_into();
 	let url_field : HtmlInputElement = get_id( "connect_url"  ).unchecked_into();
@@ -461,32 +515,55 @@ async fn on_cresets( mut evts: impl Stream< Item=Event > + Unpin )
 		let cnick: HtmlInputElement = get_id( "connect_nick" ).unchecked_into();
 		let curl : HtmlInputElement = get_id( "connect_url"  ).unchecked_into();
 
-		cnick.set_value( random_name()         );
-		curl .set_value( "ws://127.0.0.1:3412" );
+		cnick.set_value( random_name()              );
+		curl .set_value( "ws://127.0.0.1:3412/chat" );
 	}
 }
 
 
 
-async fn on_disconnect( mut evts: impl Stream< Item=Event > + Unpin )
+async fn on_disconnect( mut evts: impl Stream< Item=Event > + Unpin, mut wss: UnboundedReceiver<WsStream> )
 {
+	let ws1: Rc<RefCell<Option<WsStream>>> = Rc::new(RefCell::new( None ));
+	let ws2 = ws1.clone();
+
+
+	let wss_in = async move
+	{
+		while let Some( ws ) = wss.next().await
+		{
+			*ws2.borrow_mut() = Some(ws);
+		}
+	};
+
+	spawn_local( wss_in );
+
+
 	while evts.next().await.is_some()
 	{
 		debug!( "on_disconnect" );
 
-		// show the connect form
-		//
-		let cform: HtmlElement = get_id( "connect_form" ).unchecked_into();
-		let chat : HtmlElement = get_id( "chat"         ).unchecked_into();
-
-		cform.style().set_property( "display", "flex" ).expect_throw( "set cform display none" );
-		chat.set_inner_html( "" );
-
-		let udiv = get_id( "users" );
-		udiv.set_inner_html( "" );
-
-		break;
+		if let Some( ws_stream ) = ws1.borrow_mut().take()
+		{
+			ws_stream.close().await.expect_throw( "close ws" );
+			debug!( "connection closed by disconnect" );
+			show_connect_form();
+		}
 	}
+}
+
+
+
+fn show_connect_form()
+{
+	// show the connect form
+	//
+	let cform: HtmlElement = get_id( "connect_form" ).unchecked_into();
+
+	cform.style().set_property( "display", "flex" ).expect_throw( "set cform display none" );
+
+	get_id( "users" ).set_inner_html( "" );
+	get_id( "chat"  ).set_inner_html( "" );
 }
 
 
@@ -510,28 +587,27 @@ pub fn random_name() -> &'static str
 	//
 	let list = vec!
 	[
-		  "Elena"
+		  "Aleeza"
+		, "Aoun"
 		, "Arya"
-		, "Nora"
-		, "Amaya"
-		, "Noor"
-		, "Ebony"
-		, "Inaaya"
-		, "Nuala"
-		, "Hailie"
-		, "Hafsa"
-		, "Iqra"
-		, "Aleeza"
-		, "Emme"
-		, "Teya"
-		, "Susheela"
-		, "Pippa"
-		, "Kobi"
-		, "Orin"
 		, "Azaan"
+		, "Ebony"
+		, "Emke"
+		, "Elena"
+		, "Hafsa"
+		, "Hailie"
+		, "Inaaya"
+		, "Iqra"
+		, "Kobi"
+		, "Noor"
+		, "Nora"
+		, "Nuala"
+		, "Orin"
+		, "Pippa"
 		, "Rhuaridh"
 		, "Salah"
-		, "Aoun"
+		, "Susheela"
+		, "Teya"
 	];
 
 	// pick one

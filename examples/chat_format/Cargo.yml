@@ -1,0 +1,13 @@
+package:
+
+  name       : chat_format
+  version    : 0.1.0
+  authors    : [ Naja Melan <najamelan@autistici.org> ]
+  edition    : '2018'
+  description: An example for using websockets in rust WASM.
+  repository : https::/github.com/najamelan/ws_stream
+
+
+dependencies:
+
+  serde             : { version: ^1, features: [ derive ] }

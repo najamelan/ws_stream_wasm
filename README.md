@@ -45,14 +45,14 @@ With [cargo yaml](https://gitlab.com/storedbox/cargo-yaml):
 ```yaml
 dependencies:
 
-  ws_stream_wasm: ^0.1
+  ws_stream_wasm: ^0.3
 ```
 
 With raw Cargo.toml
 ```toml
 [dependencies]
 
-   ws_stream_wasm = "^0.1"
+   ws_stream_wasm = "^0.3"
 ```
 
 ### Upgrade
@@ -74,8 +74,6 @@ The [integration tests](https://github.com/najamelan/ws_stream_wasm/tree/master/
 
 ### Basic events example
 ```rust
-#![ feature( async_await ) ]
-
 use
 {
    async_runtime  :: rt                , // from crate naja_async_runtime

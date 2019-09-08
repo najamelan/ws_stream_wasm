@@ -1,0 +1,42 @@
+# Auto-generated from "Cargo.yml"
+[dependencies]
+chrono = "^0.4"
+flexi_logger = "^0.14"
+futures_cbor_codec = "^0.1"
+futures_codec = "^0.2"
+log = "^0.4"
+once_cell = "^1.0.0-pre"
+pin-utils = "^0.1.0-alpha"
+regex = "^1"
+
+[dependencies.chat_format]
+path = "../chat_format"
+
+[dependencies.futures-preview]
+features = ["async-await", "nightly"]
+version = "^0.3.0-alpha"
+
+[dependencies.locks]
+package = "future-parking_lot"
+version = "^0.3.2-alpha"
+
+[dependencies.warp]
+default-features = false
+features = ["websocket"]
+version = "^0.1"
+
+[dependencies.ws_stream]
+path = "../../../ws_stream"
+
+[package]
+authors = ["Naja Melan <najamelan@autistici.org>"]
+description = "An example for using websockets in rust WASM."
+edition = "2018"
+name = "chat_server"
+repository = "https::/github.com/najamelan/ws_stream"
+version = "0.1.0"
+
+[patch]
+[patch.crates-io]
+[patch.crates-io.futures_codec]
+git = "https://github.com/matthunz/futures-codec.git"

@@ -31,12 +31,12 @@ impl TryFrom<u16> for WsState
 	{
 		match state
 		{
-			WebSocket::CONNECTING => Ok ( WsState::Connecting                       ) ,
-			WebSocket::OPEN       => Ok ( WsState::Open                             ) ,
-			WebSocket::CLOSING    => Ok ( WsState::Closing                          ) ,
-			WebSocket::CLOSED     => Ok ( WsState::Closed                           ) ,
+			WebSocket::CONNECTING => Ok ( WsState::Connecting                                 ) ,
+			WebSocket::OPEN       => Ok ( WsState::Open                                       ) ,
+			WebSocket::CLOSING    => Ok ( WsState::Closing                                    ) ,
+			WebSocket::CLOSED     => Ok ( WsState::Closed                                     ) ,
 
-			_                     => Err( WsErrKind::InvalidWsState( state ).into() ) ,
+			_                     => Err( WsErrKind::InvalidWsState{ supplied: state }.into() ) ,
 		}
 	}
 }

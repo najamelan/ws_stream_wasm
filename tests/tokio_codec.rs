@@ -1,4 +1,4 @@
-#![ feature( async_await, trait_alias )]
+#![ feature( trait_alias )]
 wasm_bindgen_test_configure!(run_in_browser);
 
 
@@ -116,6 +116,8 @@ async fn echo( name: &str, size: usize, data: Bytes )
 	}
 
 	assert_eq!( &data, &Bytes::from( result  ) );
+
+	tx.close().await.expect_throw( "close" );
 }
 
 
@@ -194,6 +196,8 @@ async fn echo_cbor( data: Data )
 	let msg = rx.next().await.expect_throw( "read message" ).expect_throw( "msg" );
 
 	assert_eq!( data, msg );
+
+	tx.close().await.expect_throw( "close" );
 }
 
 

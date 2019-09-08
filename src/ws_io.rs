@@ -19,8 +19,7 @@ pub struct WsIo
 	//
 	queue: Rc<RefCell< VecDeque<WsMessage> >>,
 
-	// Last waker of task that wants to read incoming messages
-	// to be woken up on a new message
+	// Last waker of task that wants to read incoming messages to be woken up on a new message
 	//
 	waker: Rc<RefCell< Option<Waker> >>,
 
@@ -28,13 +27,11 @@ pub struct WsIo
 	//
 	sink_waker: Rc<RefCell< Option<Waker> >>,
 
-	// A pointer to the pharos of WsStream for when we
-	// need to listen to events
+	// A pointer to the pharos of WsStream for when we need to listen to events
 	//
 	pharos: Rc<RefCell< Pharos<WsEvent> >>,
 
-	// State information for partially read messages in
-	// AsyncRead
+	// State information for partially read messages in AsyncRead
 	//
 	state: ReadState,
 
@@ -42,8 +39,7 @@ pub struct WsIo
 	//
 	_on_mesg: Closure< dyn FnMut( MessageEvent ) >,
 
-	// This allows us to store a future to poll when
-	// Sink::poll_close is called
+	// This allows us to store a future to poll when Sink::poll_close is called
 	//
 	closer: Option< NextEvent >,
 }
@@ -66,6 +62,8 @@ impl WsIo
 
 
 		// Send the incoming ws messages to the WsStream object
+		//
+		#[ allow( trivial_casts ) ]
 		//
 		let on_mesg = Closure::wrap( Box::new( move |msg_evt: MessageEvent|
 		{
@@ -117,7 +115,7 @@ impl WsIo
 			}
 		};
 
-		rt::spawn_local( wake_on_close ).expect_throw( "spawn wake_on_close" );
+		spawn_local( wake_on_close );
 
 
 		Self
@@ -167,7 +165,7 @@ impl WsIo
 
 impl fmt::Debug for WsIo
 {
-	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result
+	fn fmt( &self, f: &mut fmt::Formatter<'_> ) -> fmt::Result
 	{
 		write!( f, "WsIo for connection: {}", self.ws.url() )
 	}
@@ -213,7 +211,7 @@ impl Stream for WsIo
 	// Currently requires an unfortunate copy from Js memory to Wasm memory. Hopefully one
 	// day we will be able to receive the MessageEvt directly in Wasm.
 	//
-	fn poll_next( mut self: Pin<&mut Self>, cx: &mut Context ) -> Poll<Option< Self::Item >>
+	fn poll_next( mut self: Pin<&mut Self>, cx: &mut Context<'_> ) -> Poll<Option< Self::Item >>
 	{
 		trace!( "WsIo as Stream gets polled" );
 
@@ -227,14 +225,14 @@ impl Stream for WsIo
 
 			match self.ready_state()
 			{
-				WsState::Open | WsState::Connecting => Poll::Pending        ,
-				_                                   => Poll::Ready  ( None ),
+				WsState::Open | WsState::Connecting => Poll::Pending ,
+				_                                   => None.into()   ,
 			}
 		}
 
 		// As long as there is things in the queue, just keep reading
 		//
-		else { Poll::Ready( self.queue.borrow_mut().pop_front() ) }
+		else { self.queue.borrow_mut().pop_front().into() }
 	}
 }
 
@@ -247,7 +245,7 @@ impl Sink<WsMessage> for WsIo
 
 	// Web API does not really seem to let us check for readiness, other than the connection state.
 	//
-	fn poll_ready( mut self: Pin<&mut Self>, cx: &mut Context ) -> Poll<Result<(), Self::Error>>
+	fn poll_ready( mut self: Pin<&mut Self>, cx: &mut Context<'_> ) -> Poll<Result<(), Self::Error>>
 	{
 		trace!( "Sink<WsMessage> for WsIo: poll_ready" );
 
@@ -260,8 +258,8 @@ impl Sink<WsMessage> for WsIo
 				Poll::Pending
 			}
 
-			WsState::Open       => Poll::Ready( Ok(()) ),
-			_                   => Poll::Ready( Err( WsErrKind::ConnectionNotOpen.into() )),
+			WsState::Open => Ok(()).into(),
+			_             => Err( WsErrKind::ConnectionNotOpen.into() ).into(),
 		}
 	}
 
@@ -299,11 +297,11 @@ impl Sink<WsMessage> for WsIo
 
 
 
-	fn poll_flush( self: Pin<&mut Self>, _: &mut Context ) -> Poll<Result<(), Self::Error>>
+	fn poll_flush( self: Pin<&mut Self>, _: &mut Context<'_> ) -> Poll<Result<(), Self::Error>>
 	{
 		trace!( "Sink<WsMessage> for WsIo: poll_flush" );
 
-		Poll::Ready( Ok(()) )
+		Ok(()).into()
 	}
 
 
@@ -312,7 +310,7 @@ impl Sink<WsMessage> for WsIo
 	//       this can be done by creating a custom future. If we are going to implement
 	//       events with pharos, that's probably a good time to re-evaluate this.
 	//
-	fn poll_close( mut self: Pin<&mut Self>, cx: &mut Context ) -> Poll<Result<(), Self::Error>>
+	fn poll_close( mut self: Pin<&mut Self>, cx: &mut Context<'_> ) -> Poll<Result<(), Self::Error>>
 	{
 		trace!( "Sink<WsMessage> for WsIo: poll_close" );
 
@@ -339,7 +337,7 @@ impl Sink<WsMessage> for WsIo
 			WsState::Closed =>
 			{
 				trace!( "WebSocket connection closed!" );
-				Poll::Ready( Ok(()) )
+				Ok(()).into()
 			}
 
 			_ =>
@@ -356,7 +354,7 @@ impl Sink<WsMessage> for WsIo
 
 				let _ = ready!( Pin::new( &mut self.closer.as_mut().unwrap() ).poll(cx) );
 
-				Poll::Ready( Ok(()) )
+				Ok(()).into()
 			}
 		}
 	}
@@ -366,7 +364,7 @@ impl Sink<WsMessage> for WsIo
 
 impl AsyncWrite for WsIo
 {
-	fn poll_write( mut self: Pin<&mut Self>, cx: &mut Context, buf: &[u8] ) -> Poll<Result<usize, io::Error>>
+	fn poll_write( mut self: Pin<&mut Self>, cx: &mut Context<'_>, buf: &[u8] ) -> Poll<Result<usize, io::Error>>
 	{
 		let res = ready!( self.as_mut().poll_ready( cx ) );
 
@@ -378,7 +376,7 @@ impl AsyncWrite for WsIo
 
 				match self.start_send( WsMessage::Binary( buf.into() ) )
 				{
-					Ok (_) => { return Poll::Ready( Ok(n) ); }
+					Ok (_) => { return Ok(n).into(); }
 					Err(e) =>
 					{
 						match e.kind()
@@ -410,19 +408,19 @@ impl AsyncWrite for WsIo
 
 
 
-	fn poll_flush( self: Pin<&mut Self>, _cx: &mut Context ) -> Poll<Result<(), io::Error>>
+	fn poll_flush( self: Pin<&mut Self>, _cx: &mut Context<'_> ) -> Poll<Result<(), io::Error>>
 	{
 		Poll::Ready( Ok(()) )
 	}
 
 
-	fn poll_close( self: Pin<&mut Self>, cx: &mut Context ) -> Poll<Result<(), io::Error>>
+	fn poll_close( self: Pin<&mut Self>, cx: &mut Context<'_> ) -> Poll<Result<(), io::Error>>
 	{
 		let _ = ready!( < Self as Sink<WsMessage> >::poll_close( self, cx ) );
 
 		// WsIo poll_close is infallible
 		//
-		Poll::Ready( Ok(()) )
+		Ok(()).into()
 	}
 }
 
@@ -440,7 +438,7 @@ enum ReadState
 
 impl AsyncRead for WsIo
 {
-	fn poll_read( mut self: Pin<&mut Self>, cx: &mut Context, buf: &mut [u8] ) -> Poll< Result<usize, io::Error> >
+	fn poll_read( mut self: Pin<&mut Self>, cx: &mut Context<'_>, buf: &mut [u8] ) -> Poll< Result<usize, io::Error> >
 	{
 		trace!( "WsIo - AsyncRead: poll_read called" );
 
@@ -459,7 +457,7 @@ impl AsyncRead for WsIo
 					if chunk.len() == end { self.state = ReadState::PendingChunk }
 					else                  { *chunk_start = end                   }
 
-					return Poll::Ready( Ok(len) );
+					return Ok(len).into();
 				}
 
 
@@ -482,7 +480,7 @@ impl AsyncRead for WsIo
 						Poll::Ready( None ) =>
 						{
 							trace!( "poll_read: stream has ended" );
-							return Poll::Ready( Ok(0) );
+							return Ok(0).into();
 						}
 
 						// No chunk yet, save the task to be woken up

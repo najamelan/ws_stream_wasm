@@ -1,0 +1,151 @@
+:root
+{
+	--main-bg-color  : #222;
+	--main-fg-color  : #ddd;
+	--dark-blue-bg   : #111118;
+	--darker-blue-bg : #080811;
+	--chat-input-bg  : black;
+	--chat-input-fg  : light-grey;
+	--border-color   : aliceblue;
+}
+
+p
+{
+	margin:0;
+	padding: .1rem;
+}
+
+body
+{
+	background: var( --main-bg-color );
+	color     : var( --main-fg-color );
+	display: grid;
+	grid-template-columns: 5fr 1fr;
+	grid-template-rows: 2fr 17fr 1fr;
+	height: 100%;
+	margin: 0;
+	max-height: 100%;
+	overflow:hidden;
+	padding   : .5rem;
+}
+
+#title_div
+{
+	grid-column-start: 1;
+	grid-column-end: 3;
+	grid-row-start: 1;
+	grid-row-end: 1;
+	text-align: center;
+	background: #363d59;
+	border-bottom: var( --border-color ) 1px solid;
+}
+
+#title
+{
+}
+
+#chat
+{
+	padding   : .5rem;
+	margin    : 0 .2rem .2rem 0;
+	overflow-y: auto;
+	background: var( --dark-blue-bg );
+	color: white;
+	grid-column-start: 1;
+	grid-column-end: 2;
+	grid-row-start: 2;
+	grid-row-end: 3;
+}
+
+#users
+{
+	background: var( --darker-blue-bg );
+	padding: .5rem;
+	grid-column-start: 2;
+	grid-column-end: 2;
+	grid-row-start: 2;
+	grid-row-end: 4;
+	overflow-y: auto;
+	border-left: var( --border-color ) 1px solid;
+
+}
+
+#chat_form
+{
+	grid-column-start: 1;
+	grid-column-end: 2;
+	grid-row-start: 3;
+	grid-row-end: 4;
+	display: flex;
+	margin: 0;
+}
+
+#chat_input
+{
+	background    : var( --chat-input-bg );
+	color         : var( --chat-input-fg );
+	flex          : auto;
+	margin        : 0;
+	border-radius : 1rem;
+	margin        : .2rem;
+	padding       : .3rem;
+}
+
+#connect_form
+{
+	margin: 0;
+	background: gray;
+	grid-column-start: 1;
+	grid-column-end: 3;
+	grid-row-start: 2;
+	grid-row-end: 4;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+}
+
+#connect_form_content
+{
+	margin: 0 auto;
+	border: black 1px solid;
+	border-radius: 1rem;
+	max-width: 40rem;
+	padding: 2rem;
+}
+
+#connect_form_content label
+{
+	display: block;
+	margin-bottom: 10px;
+}
+
+#connect_form_content label > span
+{
+	width: 15rem;
+	font-weight: bold;
+	padding-top: .5rem;
+	padding-right: .3rem;
+	float: left;
+}
+
+#connect_form_content input[type="text"]
+{
+	width: 24rem;
+}
+
+#connect_error
+{
+	color       : red ;
+	font-weight : bold;
+	display     : none;
+}
+
+  #chat_submit
+, #chat_disconnect
+{
+	background: var( --main-bg-color );
+	color     : white;
+	border: yellow 1px solid;
+	border-radius: 1rem;
+	margin       : .2rem;
+}
