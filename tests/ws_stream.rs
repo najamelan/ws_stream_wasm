@@ -475,6 +475,8 @@ pub fn debug() -> impl Future01<Item = (), Error = JsValue>
 
 		assert_eq!( format!( "WsStream for connection: {}", URL ), format!( "{:?}", ws ) );
 
+		ws.close().await.expect_throw( "close" );
+
 		Ok(())
 
 	}.boxed_local().compat()

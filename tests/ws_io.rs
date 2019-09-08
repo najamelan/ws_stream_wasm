@@ -268,9 +268,11 @@ pub fn debug() -> impl Future01<Item = (), Error = JsValue>
 
 	async
 	{
-		let (_ws, wsio) = WsStream::connect( URL, None ).await.expect_throw( "Could not create websocket" );
+		let (_ws, mut wsio) = WsStream::connect( URL, None ).await.expect_throw( "Could not create websocket" );
 
 		assert_eq!( format!( "WsIo for connection: {}", URL ), format!( "{:?}", wsio ) );
+
+		SinkExt::close( &mut wsio ).await.expect_throw( "close" );
 
 		Ok(())
 
