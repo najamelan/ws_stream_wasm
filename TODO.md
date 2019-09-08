@@ -10,4 +10,7 @@
 
 ## Documentation
 - chat client example
+- automatic reconnect example using pharos to detect the close
+
+
 

@@ -122,16 +122,16 @@ async fn handle_conn( socket: WarpWebSocket, peer_addr: SocketAddr ) -> Result<(
 	//
 	let outgoing = async move
 	{
-		let res = rx.map( |res| Ok( res ) ).forward( out ).await;
+		// ignore result, just log
+		//
+		let _ =
 
-		match res
-		{
-			Ok (_) => {}
-			Err(e) =>
-			{
-				error!( "{}", e );
-			}
-		}
+			 rx
+			.map     ( |res| Ok( res )       )
+			.forward ( out                   )
+			.await
+			.map_err ( |e| error!( "{}", e ) )
+		;
 	};
 
 
