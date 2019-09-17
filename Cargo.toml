@@ -1,4 +1,11 @@
 # Auto-generated from "Cargo.yml"
+[badges]
+[badges.maintenance]
+status = "actively-developed"
+
+[badges.travis-ci]
+repository = "najamelan/ws_stream_wasm"
+
 [dependencies]
 bitflags = "^1"
 js-sys = "^0.3"

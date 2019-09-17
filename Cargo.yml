@@ -28,6 +28,12 @@ package:
       all-features: true
 
 
+badges:
+
+  maintenance : { status     : actively-developed       }
+  travis-ci   : { repository : najamelan/ws_stream_wasm }
+
+
 features:
 
   # only used internally, don't use
