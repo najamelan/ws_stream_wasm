@@ -27,7 +27,7 @@ install:
 
 script:
 
-  - git clone --depth 1 https://github.com/najamelan/ws_stream
+  - git clone --depth 1 https://github.com/najamelan/ws_stream_tungstenite
   - cd ws_stream
   - cargo build --example echo --release
   - cargo build --example echo_tt --release
