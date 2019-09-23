@@ -38,7 +38,7 @@ pub enum ErrorKind
 	//
 	ForbiddenPort,
 
-	/// An invalid url was given to [WsStream::connect](crate::WsStream::connect), please see:
+	/// An invalid URL was given to [WsStream::connect](crate::WsStream::connect), please see:
 	/// [HTML Living Standard](https://html.spec.whatwg.org/multipage/web-sockets.html#dom-websocket)
 	//
 	InvalidUrl
@@ -107,7 +107,7 @@ impl fmt::Display for ErrorKind
 
 			Self::InvalidUrl{ supplied } =>
 
-				write!( f, "An invalid url was given to the connect method: {}", supplied ),
+				write!( f, "An invalid URL was given to the connect method: {}", supplied ),
 
 
 			Self::InvalidCloseCode{ supplied } =>

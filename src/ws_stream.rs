@@ -1,4 +1,4 @@
-use crate::{ import::*, WsErr, WsErrKind, WsState, WsIo, WsEvent, CloseEvent, NextEvent, WsEventType, notify };
+use crate::{ import::*, WsErr, WsErrKind, WsState, WsIo, WsEvent, CloseEvent, notify };
 
 
 /// The meta data related to a websocket.
@@ -20,10 +20,12 @@ pub struct WsStream
 
 impl WsStream
 {
+	const OPEN_CLOSE: Filter<WsEvent> = Filter::Pointer( |evt: &WsEvent| evt.is_open() | evt.is_closed() );
+
 	/// Connect to the server. The future will resolve when the connection has been established with a successful WebSocket
 	/// handshake.
 	///
-	/// This returns both a [WsStream] (allow manipulating and requesting metatdata for the connection) and
+	/// This returns both a [WsStream] (allow manipulating and requesting meta data for the connection) and
 	/// a [WsIo] (AsyncRead/AsyncWrite + Stream/Sink over [WsMessage](crate::WsMessage)).
 	///
 	/// A WsStream instance is observable through the [`pharos::Observable`](https://docs.rs/pharos/0.2.0/pharos/trait.Observable.html) and [`pharos::ObservableUnbounded`](https://docs.rs/pharos/0.2.0/pharos/trait.UnboundedObservable.html) traits. The type of event is [WsEvent]. In the case of a Close event, there will be additional information included
@@ -43,7 +45,7 @@ impl WsStream
 	/// Browsers will forbid making websocket connections to certain ports. See this [Stack Overflow question](https://stackoverflow.com/questions/4313403/why-do-browsers-block-some-ports/4314070).
 	/// `connect` will return a [WsErrKind::ForbiddenPort].
 	///
-	/// If the url is invalid, a [WsErrKind::InvalidUrl] is returned. See the [HTML Living Standard](https://html.spec.whatwg.org/multipage/web-sockets.html#dom-websocket) for more information.
+	/// If the URL is invalid, a [WsErrKind::InvalidUrl] is returned. See the [HTML Living Standard](https://html.spec.whatwg.org/multipage/web-sockets.html#dom-websocket) for more information.
 	///
 	/// When the connection fails (server port not open, wrong ip, wss:// on ws:// server, ... See the [HTML Living Standard](https://html.spec.whatwg.org/multipage/web-sockets.html#dom-websocket)
 	/// for details on all failure possibilities), a [WsErrKind::ConnectionFailed] is returned.
@@ -97,7 +99,7 @@ impl WsStream
 
 		// Create our pharos
 		//
-		let pharos = Rc::new( RefCell::new( Pharos::new() ));
+		let pharos = Rc::new( RefCell::new( Pharos::default() ));
 		let ph1    = pharos.clone();
 		let ph2    = pharos.clone();
 		let ph3    = pharos.clone();
@@ -141,7 +143,7 @@ impl WsStream
 		{
 			trace!( "websocket close event" );
 
-			let c = WsEvent::Close( CloseEvent
+			let c = WsEvent::Closed( CloseEvent
 			{
 				code     : evt.code()     ,
 				reason   : evt.reason()   ,
@@ -164,12 +166,12 @@ impl WsStream
 		// the error event. Either a close event happens, in which case we want to recover the CloseEvent to return it
 		// to the user, or an Open event happens in which case we are happy campers.
 		//
-		let evts = NextEvent::new( pharos.borrow_mut().observe_unbounded(), WsEventType::CLOSE | WsEventType::OPEN );
+		let mut evts = pharos.borrow_mut().observe( Self::OPEN_CLOSE.into() );
 
 
 		// If the connection is closed, return error
 		//
-		if let Some( WsEvent::Close(evt) ) = evts.await
+		if let Some( WsEvent::Closed(evt) ) = evts.next().await
 		{
 			trace!( "WebSocket connection closed!" );
 
@@ -213,9 +215,9 @@ impl WsStream
 
 			_ =>
 			{
-				// This can not throw normally, because the only errors the api can return is if we use a code or
+				// This can not throw normally, because the only errors the API can return is if we use a code or
 				// a reason string, which we don't.
-				// See [mdn](https://developer.mozilla.org/en-US/docs/Web/API/WebSocket/close#Exceptions_thrown).
+				// See [MDN](https://developer.mozilla.org/en-US/docs/Web/API/WebSocket/close#Exceptions_thrown).
 				//
 				self.ws.close().unwrap_throw();
 
@@ -227,16 +229,16 @@ impl WsStream
 		}
 
 
-		let evts = NextEvent::new( self.pharos.borrow_mut().observe_unbounded(), WsEventType::CLOSE );
+		let mut evts = self.pharos.borrow_mut().observe( Filter::Pointer( WsEvent::is_closed ).into() );
 
 
 		// We promised the user a CloseEvent, so we don't have much choice but to unwrap this. In any case, the stream will
 		// never end and this will hang if the browser fails to send a close event.
 		//
-		let ce = evts.await.expect_throw( "receive a close event" );
+		let ce = evts.next().await.expect_throw( "receive a close event" );
 		trace!( "WebSocket connection closed!" );
 
-		if let WsEvent::Close(e) = ce { Ok( e )        }
+		if let WsEvent::Closed(e) = ce { Ok( e )        }
 		else                          { unreachable!() }
 	}
 
@@ -275,12 +277,12 @@ impl WsStream
 		}
 
 
-		let evts = NextEvent::new( self.pharos.borrow_mut().observe_unbounded(), WsEventType::CLOSE );
+		let mut evts = self.pharos.borrow_mut().observe( Filter::Pointer( WsEvent::is_closed ).into() );
 
-		let ce = evts.await.expect_throw( "receive a close event" );
+		let ce = evts.next().await.expect_throw( "receive a close event" );
 		trace!( "WebSocket connection closed!" );
 
-		if let WsEvent::Close(e) = ce { Ok(e)          }
+		if let WsEvent::Closed(e) = ce { Ok(e)          }
 		else                          { unreachable!() }
 	}
 
@@ -327,13 +329,13 @@ impl WsStream
 			}
 		}
 
-		let evts = NextEvent::new( self.pharos.borrow_mut().observe_unbounded(), WsEventType::CLOSE );
+		let mut evts = self.pharos.borrow_mut().observe( Filter::Pointer( WsEvent::is_closed ).into() );
 
-		let ce = evts.await.expect_throw( "receive a close event" );
+		let ce = evts.next().await.expect_throw( "receive a close event" );
 		trace!( "WebSocket connection closed!" );
 
-		if let WsEvent::Close(e) = ce { Ok(e)          }
-		else                          { unreachable!() }
+		if let WsEvent::Closed(e) = ce { Ok(e)          }
+		else                           { unreachable!() }
 	}
 
 
@@ -378,7 +380,7 @@ impl WsStream
 
 	/// The extensions selected by the server as negotiated during the connection.
 	///
-	/// **NOTE**: This is an untested feature. The backend server we use for testing (tungstenite)
+	/// **NOTE**: This is an untested feature. The back-end server we use for testing (tungstenite)
 	/// does not support Extensions.
 	//
 	pub fn extensions( &self ) -> String
@@ -387,7 +389,7 @@ impl WsStream
 	}
 
 
-	/// The name of the subprotocol the server selected during the connection.
+	/// The name of the sub-protocol the server selected during the connection.
 	///
 	/// This will be one of the strings specified in the protocols parameter when
 	/// creating this WsStream instance.
@@ -420,19 +422,9 @@ impl fmt::Debug for WsStream
 
 impl Observable<WsEvent> for WsStream
 {
-	fn observe( &mut self, queue_size: usize ) -> Receiver<WsEvent>
+	fn observe( &mut self, options: ObserveConfig<WsEvent> ) -> Events<WsEvent>
 	{
-		self.pharos.borrow_mut().observe( queue_size )
-	}
-}
-
-
-
-impl UnboundedObservable<WsEvent> for WsStream
-{
-	fn observe_unbounded( &mut self ) -> UnboundedReceiver<WsEvent>
-	{
-		self.pharos.borrow_mut().observe_unbounded()
+		self.pharos.borrow_mut().observe( options )
 	}
 }
 

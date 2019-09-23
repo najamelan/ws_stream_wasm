@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.4.0 - 2019-09-23
+
+  - **BREAKING CHANGE**: use the new filter feature from pharos, making `NextEvent` and `WsEventType` redundant. Those
+    types have been removed from the library. The `observe` and method off `WsStream` now takes a `pharos::ObserveConfig` to filter event types. Please refer to the documentation of [pharos](https://docs.rs/pharos) for how to use them.
+  - spell check all docs
+
 ## 0.3.0 - 2019-09-08
 
   - drop dependencies on async_runtime and failure and switch to std::error::Error for error handling

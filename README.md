@@ -6,10 +6,10 @@
 [![crates.io](https://img.shields.io/crates/v/ws_stream_wasm.svg)](https://crates.io/crates/ws_stream_wasm)
 
 
-> A convenience library for using websockets in WASM
+> A convenience library for using web sockets in WASM
 
 **features:**
-- `WsStream`: A wrapper around [`web_sys::WebSocket`](https://docs.rs/web-sys/0.3.25/web_sys/struct.WebSocket.html).
+- `WsStream`: A wrapper around [`web_sys::WebSocket`](https://docs.rs/web-sys/0.3.27/web_sys/struct.WebSocket.html).
 - `WsMessage`: A simple rusty representation of a WebSocket message.
 - `WsIo`: A futures Sink/Stream of WsMessage. (can use the futures compat layer to get futures 01 versions).
                 It also implements AsyncRead/AsyncWrite from futures 0.3. With the compat layer you can obtain futures
@@ -17,11 +17,11 @@
 - `WsEvents`: `WsStream` is observable with [pharos](https://crates.io/crates/pharos) for events (mainly connection close).
 
 **NOTE:** this crate only works on WASM. If you want a server side equivalent that implements AsyncRead/AsyncWrite over
-WebSockets, check out [ws_stream](https://crates.io/crates/ws_stream).
+WebSockets, check out [ws_stream_tungstenite](https://crates.io/crates/ws_stream_tungstenite).
 
 **missing features:**
 - no automatic reconnect
-- not all features are thoroughly tested. Notably, I have little use for extensions and subprotocols. Tungstenite,
+- not all features are thoroughly tested. Notably, I have little use for extensions and sub-protocols. Tungstenite,
   which I use for the server end (and for automated testing) doesn't support these, making it hard to write unit tests.
 
 ## Table of Contents
@@ -45,14 +45,14 @@ With [cargo yaml](https://gitlab.com/storedbox/cargo-yaml):
 ```yaml
 dependencies:
 
-  ws_stream_wasm: ^0.3
+  ws_stream_wasm: ^0.4
 ```
 
 With raw Cargo.toml
 ```toml
 [dependencies]
 
-   ws_stream_wasm = "^0.3"
+   ws_stream_wasm = "^0.4"
 ```
 
 ### Upgrade
@@ -61,7 +61,7 @@ Please check out the [changelog](https://github.com/najamelan/ws_stream_wasm/blo
 
 ### Dependencies
 
-This crate has few dependiencies. Cargo will automatically handle it's dependencies for you.
+This crate has few dependencies. Cargo will automatically handle it's dependencies for you.
 
 There are no optional features.
 
@@ -76,11 +76,11 @@ The [integration tests](https://github.com/najamelan/ws_stream_wasm/tree/master/
 ```rust
 use
 {
-   async_runtime  :: rt                , // from crate naja_async_runtime
-   ws_stream_wasm :: *                 ,
-   pharos         :: *                 ,
-   wasm_bindgen   :: UnwrapThrowExt    ,
-   futures        :: stream::StreamExt ,
+   ws_stream_wasm       :: *                        ,
+   pharos               :: *                        ,
+   wasm_bindgen         :: UnwrapThrowExt           ,
+   wasm_bindgen_futures :: futures_0_3::spawn_local ,
+   futures              :: stream::StreamExt        ,
 };
 
 let program = async
@@ -89,18 +89,53 @@ let program = async
 
       .expect_throw( "assume the connection succeeds" );
 
-   let mut evts = ws.observe_unbounded();
+   let mut evts = ws.observe( ObserveConfig::default() );
 
    ws.close().await;
 
    // Note that since WsStream::connect resolves to an opened connection, we don't see
    // any Open events here.
    //
-   assert_eq!( WsEventType::CLOSING, evts.next().await.unwrap_throw().ws_type() );
-   assert_eq!( WsEventType::CLOSE  , evts.next().await.unwrap_throw().ws_type() );
+   assert!( evts.next().await.unwrap_throw().is_closing() );
+   assert!( evts.next().await.unwrap_throw().is_closed () );
 };
 
-rt::spawn_local( program ).expect_throw( "spawn program" );
+spawn_local( program );
+```
+
+### Filter events example
+
+This shows how to filter events. The functionality comes from the pharos crate which we use to make
+[`WsStream`] observable.
+
+```rust
+use
+{
+   ws_stream_wasm       :: *                        ,
+   pharos               :: *                        ,
+   wasm_bindgen         :: UnwrapThrowExt           ,
+   wasm_bindgen_futures :: futures_0_3::spawn_local ,
+   futures              :: stream::StreamExt        ,
+};
+
+let program = async
+{
+   let (mut ws, _wsio) = WsStream::connect( "127.0.0.1:3012", None ).await
+
+      .expect_throw( "assume the connection succeeds" );
+
+   // The Filter type comes from the pharos crate.
+   //
+   let mut evts = ws.observe( Filter::Pointer( WsEvent::is_closed ).into() );
+
+   ws.close().await;
+
+   // Note we will only get the closed event here, the WsEvent::Closing has been filtered out.
+   //
+   assert!( evts.next().await.unwrap_throw().is_closed () );
+};
+
+spawn_local( program );
 ```
 
 ## API
@@ -109,24 +144,24 @@ Api documentation can be found on [docs.rs](https://docs.rs/ws_stream_wasm).
 
 
 ## References
-The reference documents for understanding websockets and how the browser handles them are:
+The reference documents for understanding web sockets and how the browser handles them are:
 - [HTML Living Standard](https://html.spec.whatwg.org/multipage/web-sockets.html)
 - [RFC 6455 - The WebSocket Protocol](https://tools.ietf.org/html/rfc6455)
 
 
 ## Contributing
 
-This repository accepts contributions. Ideas, questions, feature requests and bug reports can be filed through github issues.
+This repository accepts contributions. Ideas, questions, feature requests and bug reports can be filed through Github issues.
 
-Pull Requests are welcome on github. By commiting pull requests, you accept that your code might be modified and reformatted to fit the project coding style or to improve the implementation. Please discuss what you want to see modified before filing a pull request if you don't want to be doing work that might be rejected.
+Pull Requests are welcome on Github. By committing pull requests, you accept that your code might be modified and reformatted to fit the project coding style or to improve the implementation. Please discuss what you want to see modified before filing a pull request if you don't want to be doing work that might be rejected.
 
 Please file PR's against the `dev` branch, don't forget to update the changelog and the documentation.
 
 ### Testing
 
-For testing we need backend servers to echo data back to the tests. These are in the `ws_stream` crate.
+For testing we need back-end servers to echo data back to the tests. These are in the `ws_stream_tungstenite` crate.
 ```shell
-git clone https://github.com/najamelan/ws_stream
+git clone https://github.com/najamelan/ws_stream_tungstenite
 cd ws_stream
 cargo run --expample echo --release
 
