@@ -9,13 +9,13 @@ wasm_bindgen_test_configure!(run_in_browser);
 //
 use
 {
-	futures_01            :: { Future as Future01  } ,
-	futures::prelude      :: { *                   } ,
-	wasm_bindgen::prelude :: { *                   } ,
-	wasm_bindgen_test     :: { *                   } ,
-	log                   :: { *                   } ,
-	ws_stream_wasm        :: { *                   } ,
-	pharos                :: { UnboundedObservable } ,
+	futures_01            :: { Future as Future01        } ,
+	futures::prelude      :: { *                         } ,
+	wasm_bindgen::prelude :: { *                         } ,
+	wasm_bindgen_test     :: { *                         } ,
+	log                   :: { *                         } ,
+	ws_stream_wasm        :: { *                         } ,
+	pharos                :: { ObserveConfig, Observable } ,
 	// web_sys               :: { console::log_1 as dbg } ,
 };
 
@@ -38,12 +38,12 @@ pub fn close_events() -> impl Future01<Item = (), Error = JsValue>
 	{
 		let (mut ws, _wsio) = WsStream::connect( URL, None ).await.expect_throw( "Could not create websocket" );
 
-		let mut evts = ws.observe_unbounded();
+		let mut evts = ws.observe( ObserveConfig::default() );
 
 		ws.close().await.expect_throw( "close ws" );
 
-		assert_eq!( WsEventType::CLOSING, evts.next().await.unwrap_throw().ws_type() );
-		assert_eq!( WsEventType::CLOSE  , evts.next().await.unwrap_throw().ws_type() );
+		assert!( evts.next().await.unwrap_throw().is_closing() );
+		assert!( evts.next().await.unwrap_throw().is_closed()  );
 
 		Ok(())
 

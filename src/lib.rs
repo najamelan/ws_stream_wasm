@@ -14,7 +14,6 @@
 #![ warn
 (
 	missing_debug_implementations ,
-	missing_docs                  ,
 	nonstandard_style             ,
 	rust_2018_idioms              ,
 	trivial_casts                 ,
@@ -37,12 +36,12 @@ pub mod error       ;
 
 pub use
 {
-	error             :: { Error as WsErr, ErrorKind as WsErrKind      } ,
-	ws_event          :: { WsEvent, CloseEvent, NextEvent, WsEventType } ,
-	ws_message        :: { WsMessage                                   } ,
-	ws_io             :: { WsIo                                        } ,
-	ws_stream         :: { WsStream                                    } ,
-	ws_state          :: { WsState                                     } ,
+	error             :: { Error as WsErr, ErrorKind as WsErrKind } ,
+	ws_event          :: { WsEvent, CloseEvent                    } ,
+	ws_message        :: { WsMessage                              } ,
+	ws_io             :: { WsIo                                   } ,
+	ws_stream         :: { WsStream                               } ,
+	ws_state          :: { WsState                                } ,
 };
 
 
@@ -51,20 +50,18 @@ mod import
 {
 	pub(crate) use
 	{
-		bitflags             :: { bitflags                                                                      } ,
-		futures              :: { channel::mpsc::{ Receiver, UnboundedReceiver }, Poll                          } ,
-		futures              :: { prelude::{ Stream, Sink, AsyncWrite, AsyncRead }, ready, future::ready        } ,
-		futures              :: { stream::{ StreamExt, FilterMap }, future::Ready                               } ,
-		std                  :: { io, cmp, collections::VecDeque, fmt, task::{ Context, Waker }, future::Future } ,
-		std                  :: { rc::Rc, cell::{ RefCell }, pin::Pin, convert::{ TryFrom, TryInto }            } ,
-		std                  :: { error::Error as ErrorTrait                                                    } ,
-		log                  :: { *                                                                             } ,
-		js_sys               :: { ArrayBuffer, Uint8Array                                                       } ,
-		wasm_bindgen         :: { closure::Closure, JsCast, JsValue, UnwrapThrowExt                             } ,
-		web_sys              :: { *, BinaryType, Blob, WebSocket, CloseEvent as JsCloseEvt, DomException        } ,
-		js_sys               :: { Array                                                                         } ,
-		pharos               :: { Pharos, Observable, UnboundedObservable                                       } ,
-		wasm_bindgen_futures :: { futures_0_3::spawn_local                                                      } ,
+		futures              :: { prelude::{ Stream, Sink, AsyncWrite, AsyncRead }, ready                } ,
+		futures              :: { stream::{ StreamExt }                                                  } ,
+		std                  :: { io, cmp, collections::VecDeque, fmt, task::{ Context, Waker, Poll }    } ,
+		std                  :: { rc::Rc, cell::{ RefCell }, pin::Pin, convert::{ TryFrom, TryInto }     } ,
+		std                  :: { error::Error as ErrorTrait                                             } ,
+		log                  :: { *                                                                      } ,
+		js_sys               :: { ArrayBuffer, Uint8Array                                                } ,
+		wasm_bindgen         :: { closure::Closure, JsCast, JsValue, UnwrapThrowExt                      } ,
+		web_sys              :: { *, BinaryType, Blob, WebSocket, CloseEvent as JsCloseEvt, DomException } ,
+		js_sys               :: { Array                                                                  } ,
+		pharos               :: { Pharos, Observable, Filter, ObserveConfig, Events                      } ,
+		wasm_bindgen_futures :: { futures_0_3::spawn_local                                               } ,
 	};
 }
 

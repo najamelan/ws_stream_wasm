@@ -10,7 +10,7 @@ package:
   # - merge dev branch into master
   # - create git tag
   #
-  version       : 0.3.0
+  version       : 0.4.0
   name          : ws_stream_wasm
   edition       : '2018'
   authors       : [ Naja Melan <najamelan@autistici.org> ]
@@ -24,8 +24,9 @@ package:
   categories    : [ api-bindings, wasm, web-programming, "web-programming::websocket" ]
 
   metadata:
-    docs.rs:
-      all-features: true
+    docs:
+      rs:
+        all-features: true
 
 
 badges:
@@ -43,8 +44,7 @@ features:
 
 dependencies:
 
-  bitflags                : ^1
-  pharos                  : ^0.2
+  pharos                  : ^0.3
   futures-preview         : { version: ^0.3.0-alpha, features: [io-compat, compat] }
   log                     : ^0.4
   js-sys                  : ^0.3
@@ -81,7 +81,6 @@ dev-dependencies:
   flexi_logger             : ^0.11
   futures_codec            : ^0.2
   wasm-bindgen-test        : ^0.2
-
 
 
 profile:

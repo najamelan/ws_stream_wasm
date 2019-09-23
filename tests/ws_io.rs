@@ -27,6 +27,7 @@ use
 	ws_stream_wasm        :: * ,
 	log                   :: * ,
 	pharos                :: * ,
+
 };
 
 
@@ -214,12 +215,12 @@ pub fn close_event_from_sink() -> impl Future01<Item = (), Error = JsValue>
 	{
 		let (mut ws, mut wsio) = WsStream::connect( URL, None ).await.expect_throw( "Could not create websocket" );
 
-		let mut evts = ws.observe_unbounded();
+		let mut evts = ws.observe( ObserveConfig::default() );
 
 		SinkExt::close( &mut wsio ).await.expect_throw( "close ws" );
 
-		assert_eq!( WsEventType::CLOSING, evts.next().await.unwrap_throw().ws_type() );
-		assert_eq!( WsEventType::CLOSE  , evts.next().await.unwrap_throw().ws_type() );
+		assert!( evts.next().await.unwrap_throw().is_closing() );
+		assert!( evts.next().await.unwrap_throw().is_closed()  );
 
 		Ok(())
 
@@ -242,12 +243,12 @@ pub fn close_event_from_async_write() -> impl Future01<Item = (), Error = JsValu
 	{
 		let (mut ws, mut wsio) = WsStream::connect( URL, None ).await.expect_throw( "Could not create websocket" );
 
-		let mut evts = ws.observe_unbounded();
+		let mut evts = ws.observe( ObserveConfig::default() );
 
 		AsyncWriteExt::close( &mut wsio ).await.expect_throw( "close ws" );
 
-		assert_eq!( WsEventType::CLOSING, evts.next().await.unwrap_throw().ws_type() );
-		assert_eq!( WsEventType::CLOSE  , evts.next().await.unwrap_throw().ws_type() );
+		assert!( evts.next().await.unwrap_throw().is_closing() );
+		assert!( evts.next().await.unwrap_throw().is_closed()  );
 
 		Ok(())
 

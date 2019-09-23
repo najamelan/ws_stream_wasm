@@ -1,7 +1,4 @@
-use
-{
-	crate :: { import::*, WsErr, WsErrKind, WsMessage, WsState, WsEvent, NextEvent, WsEventType, notify },
-};
+use crate::{ import::*, WsErr, WsErrKind, WsMessage, WsState, WsEvent, notify };
 
 
 /// A futures 0.3 Sink/Stream of [WsMessage]. It further implements AsyncRead/AsyncWrite
@@ -41,7 +38,7 @@ pub struct WsIo
 
 	// This allows us to store a future to poll when Sink::poll_close is called
 	//
-	closer: Option< NextEvent >,
+	closer: Option< Events<WsEvent> >,
 }
 
 
@@ -94,15 +91,15 @@ impl WsIo
 
 		let wake_on_close = async move
 		{
-			let rx;
+			let mut rx;
 
 			// Scope to avoid borrowing across await point.
 			//
 			{
-				rx = ph.borrow_mut().observe_unbounded();
+				rx = ph.borrow_mut().observe( Filter::Pointer( WsEvent::is_closed ).into() );
 			}
 
-			NextEvent::new( rx, WsEventType::CLOSE ).await;
+			rx.next().await;
 
 			if let Some(w) = &*wake.borrow()
 			{
@@ -347,12 +344,12 @@ impl Sink<WsMessage> for WsIo
 				//
 				if self.closer.is_none()
 				{
-					let rx = self.pharos.borrow_mut().observe_unbounded();
-					self.closer = Some( NextEvent::new( rx, WsEventType::CLOSE ) );
+					let rx = self.pharos.borrow_mut().observe( Filter::Pointer( WsEvent::is_closed ).into() );
+					self.closer = Some( rx );
 				}
 
 
-				let _ = ready!( Pin::new( &mut self.closer.as_mut().unwrap() ).poll(cx) );
+				let _ = ready!( Pin::new( &mut self.closer.as_mut().unwrap() ).poll_next(cx) );
 
 				Ok(()).into()
 			}
