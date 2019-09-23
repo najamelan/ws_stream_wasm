@@ -162,8 +162,8 @@ Please file PR's against the `dev` branch, don't forget to update the changelog 
 For testing we need back-end servers to echo data back to the tests. These are in the `ws_stream_tungstenite` crate.
 ```shell
 git clone https://github.com/najamelan/ws_stream_tungstenite
-cd ws_stream
-cargo run --expample echo --release
+cd ws_stream_tungstenite
+cargo run --example echo --release
 
 # in a different terminal:
 cargo run --example echo_tt --release -- "127.0.0.1:3312"
