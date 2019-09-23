@@ -6,7 +6,7 @@
 [![crates.io](https://img.shields.io/crates/v/ws_stream_wasm.svg)](https://crates.io/crates/ws_stream_wasm)
 
 
-> A convenience library for using websockets in WASM
+> A convenience library for using web sockets in WASM
 
 **features:**
 - `WsStream`: A wrapper around [`web_sys::WebSocket`](https://docs.rs/web-sys/0.3.27/web_sys/struct.WebSocket.html).
@@ -21,7 +21,7 @@ WebSockets, check out [ws_stream_tungstenite](https://crates.io/crates/ws_stream
 
 **missing features:**
 - no automatic reconnect
-- not all features are thoroughly tested. Notably, I have little use for extensions and subprotocols. Tungstenite,
+- not all features are thoroughly tested. Notably, I have little use for extensions and sub-protocols. Tungstenite,
   which I use for the server end (and for automated testing) doesn't support these, making it hard to write unit tests.
 
 ## Table of Contents
@@ -61,7 +61,7 @@ Please check out the [changelog](https://github.com/najamelan/ws_stream_wasm/blo
 
 ### Dependencies
 
-This crate has few dependiencies. Cargo will automatically handle it's dependencies for you.
+This crate has few dependencies. Cargo will automatically handle it's dependencies for you.
 
 There are no optional features.
 
@@ -106,7 +106,7 @@ spawn_local( program );
 ### Filter events example
 
 This shows how to filter events. The functionality comes from the pharos crate which we use to make
-[`WsStream`] obsevable.
+[`WsStream`] observable.
 
 ```rust
 use
@@ -144,22 +144,22 @@ Api documentation can be found on [docs.rs](https://docs.rs/ws_stream_wasm).
 
 
 ## References
-The reference documents for understanding websockets and how the browser handles them are:
+The reference documents for understanding web sockets and how the browser handles them are:
 - [HTML Living Standard](https://html.spec.whatwg.org/multipage/web-sockets.html)
 - [RFC 6455 - The WebSocket Protocol](https://tools.ietf.org/html/rfc6455)
 
 
 ## Contributing
 
-This repository accepts contributions. Ideas, questions, feature requests and bug reports can be filed through github issues.
+This repository accepts contributions. Ideas, questions, feature requests and bug reports can be filed through Github issues.
 
-Pull Requests are welcome on github. By commiting pull requests, you accept that your code might be modified and reformatted to fit the project coding style or to improve the implementation. Please discuss what you want to see modified before filing a pull request if you don't want to be doing work that might be rejected.
+Pull Requests are welcome on Github. By committing pull requests, you accept that your code might be modified and reformatted to fit the project coding style or to improve the implementation. Please discuss what you want to see modified before filing a pull request if you don't want to be doing work that might be rejected.
 
 Please file PR's against the `dev` branch, don't forget to update the changelog and the documentation.
 
 ### Testing
 
-For testing we need backend servers to echo data back to the tests. These are in the `ws_stream_tungstenite` crate.
+For testing we need back-end servers to echo data back to the tests. These are in the `ws_stream_tungstenite` crate.
 ```shell
 git clone https://github.com/najamelan/ws_stream_tungstenite
 cd ws_stream

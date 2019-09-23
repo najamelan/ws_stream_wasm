@@ -25,7 +25,7 @@ impl WsStream
 	/// Connect to the server. The future will resolve when the connection has been established with a successful WebSocket
 	/// handshake.
 	///
-	/// This returns both a [WsStream] (allow manipulating and requesting metatdata for the connection) and
+	/// This returns both a [WsStream] (allow manipulating and requesting meta data for the connection) and
 	/// a [WsIo] (AsyncRead/AsyncWrite + Stream/Sink over [WsMessage](crate::WsMessage)).
 	///
 	/// A WsStream instance is observable through the [`pharos::Observable`](https://docs.rs/pharos/0.2.0/pharos/trait.Observable.html) and [`pharos::ObservableUnbounded`](https://docs.rs/pharos/0.2.0/pharos/trait.UnboundedObservable.html) traits. The type of event is [WsEvent]. In the case of a Close event, there will be additional information included
@@ -45,7 +45,7 @@ impl WsStream
 	/// Browsers will forbid making websocket connections to certain ports. See this [Stack Overflow question](https://stackoverflow.com/questions/4313403/why-do-browsers-block-some-ports/4314070).
 	/// `connect` will return a [WsErrKind::ForbiddenPort].
 	///
-	/// If the url is invalid, a [WsErrKind::InvalidUrl] is returned. See the [HTML Living Standard](https://html.spec.whatwg.org/multipage/web-sockets.html#dom-websocket) for more information.
+	/// If the URL is invalid, a [WsErrKind::InvalidUrl] is returned. See the [HTML Living Standard](https://html.spec.whatwg.org/multipage/web-sockets.html#dom-websocket) for more information.
 	///
 	/// When the connection fails (server port not open, wrong ip, wss:// on ws:// server, ... See the [HTML Living Standard](https://html.spec.whatwg.org/multipage/web-sockets.html#dom-websocket)
 	/// for details on all failure possibilities), a [WsErrKind::ConnectionFailed] is returned.
@@ -215,9 +215,9 @@ impl WsStream
 
 			_ =>
 			{
-				// This can not throw normally, because the only errors the api can return is if we use a code or
+				// This can not throw normally, because the only errors the API can return is if we use a code or
 				// a reason string, which we don't.
-				// See [mdn](https://developer.mozilla.org/en-US/docs/Web/API/WebSocket/close#Exceptions_thrown).
+				// See [MDN](https://developer.mozilla.org/en-US/docs/Web/API/WebSocket/close#Exceptions_thrown).
 				//
 				self.ws.close().unwrap_throw();
 
@@ -380,7 +380,7 @@ impl WsStream
 
 	/// The extensions selected by the server as negotiated during the connection.
 	///
-	/// **NOTE**: This is an untested feature. The backend server we use for testing (tungstenite)
+	/// **NOTE**: This is an untested feature. The back-end server we use for testing (tungstenite)
 	/// does not support Extensions.
 	//
 	pub fn extensions( &self ) -> String
@@ -389,7 +389,7 @@ impl WsStream
 	}
 
 
-	/// The name of the subprotocol the server selected during the connection.
+	/// The name of the sub-protocol the server selected during the connection.
 	///
 	/// This will be one of the strings specified in the protocols parameter when
 	/// creating this WsStream instance.

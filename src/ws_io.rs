@@ -205,8 +205,8 @@ impl Stream for WsIo
 {
 	type Item = WsMessage;
 
-	// Currently requires an unfortunate copy from Js memory to Wasm memory. Hopefully one
-	// day we will be able to receive the MessageEvt directly in Wasm.
+	// Currently requires an unfortunate copy from Js memory to WASM memory. Hopefully one
+	// day we will be able to receive the MessageEvt directly in WASM.
 	//
 	fn poll_next( mut self: Pin<&mut Self>, cx: &mut Context<'_> ) -> Poll<Option< Self::Item >>
 	{
