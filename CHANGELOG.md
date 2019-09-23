@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.4.1 - 2019-09-23
+
+  - fix some more errors in the readme
+
 ## 0.4.0 - 2019-09-23
 
   - **BREAKING CHANGE**: use the new filter feature from pharos, making `NextEvent` and `WsEventType` redundant. Those

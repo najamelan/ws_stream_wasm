@@ -9,12 +9,12 @@
 > A convenience library for using web sockets in WASM
 
 **features:**
-- `WsStream`: A wrapper around [`web_sys::WebSocket`](https://docs.rs/web-sys/0.3.27/web_sys/struct.WebSocket.html).
-- `WsMessage`: A simple rusty representation of a WebSocket message.
-- `WsIo`: A futures Sink/Stream of WsMessage. (can use the futures compat layer to get futures 01 versions).
+- [`WsStream`]: A wrapper around [`web_sys::WebSocket`](https://docs.rs/web-sys/0.3.27/web_sys/struct.WebSocket.html).
+- [`WsMessage`]: A simple rusty representation of a WebSocket message.
+- [`WsIo`]: A futures Sink/Stream of WsMessage. (can use the futures compat layer to get futures 01 versions).
                 It also implements AsyncRead/AsyncWrite from futures 0.3. With the compat layer you can obtain futures
                 01 versions for use with tokio codec.
-- `WsEvents`: `WsStream` is observable with [pharos](https://crates.io/crates/pharos) for events (mainly connection close).
+- [`WsEvent`]: [`WsStream`] is observable with [pharos](https://crates.io/crates/pharos) for events (mainly useful for connection close).
 
 **NOTE:** this crate only works on WASM. If you want a server side equivalent that implements AsyncRead/AsyncWrite over
 WebSockets, check out [ws_stream_tungstenite](https://crates.io/crates/ws_stream_tungstenite).
@@ -162,8 +162,8 @@ Please file PR's against the `dev` branch, don't forget to update the changelog 
 For testing we need back-end servers to echo data back to the tests. These are in the `ws_stream_tungstenite` crate.
 ```shell
 git clone https://github.com/najamelan/ws_stream_tungstenite
-cd ws_stream
-cargo run --expample echo --release
+cd ws_stream_tungstenite
+cargo run --example echo --release
 
 # in a different terminal:
 cargo run --example echo_tt --release -- "127.0.0.1:3312"
