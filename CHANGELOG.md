@@ -1,5 +1,12 @@
 # Changelog
 
+
+## 0.5 - 2019-09-28
+
+  - **BREAKING CHANGE**: update to pharos 0.4. Observable::observe is now fallible, so that is a breaking change for ws_stream_wasm
+  - update to futures-codec 0.3
+
+
 ## 0.4.1 - 2019-09-23
 
   - fix some more errors in the readme

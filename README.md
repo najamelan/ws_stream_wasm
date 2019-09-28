@@ -45,14 +45,14 @@ With [cargo yaml](https://gitlab.com/storedbox/cargo-yaml):
 ```yaml
 dependencies:
 
-  ws_stream_wasm: ^0.4
+  ws_stream_wasm: ^0.5
 ```
 
 With raw Cargo.toml
 ```toml
 [dependencies]
 
-   ws_stream_wasm = "^0.4"
+   ws_stream_wasm = "0.5"
 ```
 
 ### Upgrade
@@ -89,7 +89,7 @@ let program = async
 
       .expect_throw( "assume the connection succeeds" );
 
-   let mut evts = ws.observe( ObserveConfig::default() );
+   let mut evts = ws.observe( ObserveConfig::default() ).expect_throw( "observe" );
 
    ws.close().await;
 
@@ -126,7 +126,7 @@ let program = async
 
    // The Filter type comes from the pharos crate.
    //
-   let mut evts = ws.observe( Filter::Pointer( WsEvent::is_closed ).into() );
+   let mut evts = ws.observe( Filter::Pointer( WsEvent::is_closed ).into() ).expect_throw( "observe" );
 
    ws.close().await;
 
