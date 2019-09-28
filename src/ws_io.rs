@@ -96,7 +96,11 @@ impl WsIo
 			// Scope to avoid borrowing across await point.
 			//
 			{
-				rx = ph.borrow_mut().observe( Filter::Pointer( WsEvent::is_closed ).into() );
+				match ph.borrow_mut().observe( Filter::Pointer( WsEvent::is_closed ).into() )
+				{
+					Ok(events) => rx = events               ,
+					Err(e)     => unreachable!( "{:?}", e ) , // only happens if we closed it.
+				}
 			}
 
 			rx.next().await;
@@ -344,7 +348,12 @@ impl Sink<WsMessage> for WsIo
 				//
 				if self.closer.is_none()
 				{
-					let rx = self.pharos.borrow_mut().observe( Filter::Pointer( WsEvent::is_closed ).into() );
+					let rx = match self.pharos.borrow_mut().observe( Filter::Pointer( WsEvent::is_closed ).into() )
+					{
+						Ok(events) => events                    ,
+						Err(e)     => unreachable!( "{:?}", e ) , // only happens if we closed it.
+					};
+
 					self.closer = Some( rx );
 				}
 

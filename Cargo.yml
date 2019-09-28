@@ -10,7 +10,7 @@ package:
   # - merge dev branch into master
   # - create git tag
   #
-  version       : 0.4.1
+  version       : 0.5.0
   name          : ws_stream_wasm
   edition       : '2018'
   authors       : [ Naja Melan <najamelan@autistici.org> ]
@@ -44,7 +44,7 @@ features:
 
 dependencies:
 
-  pharos                  : ^0.3
+  pharos                  : ^0.4
   futures-preview         : { version: ^0.3.0-alpha, features: [io-compat, compat] }
   log                     : ^0.4
   js-sys                  : ^0.3
@@ -79,20 +79,6 @@ dev-dependencies:
   serde                    : { version: 1.0.87, features: [ derive ] }
   bytes                    : ^0.4
   flexi_logger             : ^0.11
-  futures_codec            : ^0.2
+  futures_codec            : ^0.3
   wasm-bindgen-test        : ^0.2
 
-
-profile:
-
-  release:
-
-    codegen-units: 1
-    # debug        : true
-
-
-patch:
-
-  crates-io:
-
-    futures_codec : { git: "https://github.com/matthunz/futures-codec.git" }

@@ -166,8 +166,11 @@ impl WsStream
 		// the error event. Either a close event happens, in which case we want to recover the CloseEvent to return it
 		// to the user, or an Open event happens in which case we are happy campers.
 		//
-		let mut evts = pharos.borrow_mut().observe( Self::OPEN_CLOSE.into() );
-
+		let mut evts = match pharos.borrow_mut().observe( Self::OPEN_CLOSE.into() )
+		{
+			Ok(events) => events                    ,
+			Err(e)     => unreachable!( "{:?}", e ) , // only happens if we closed it.
+		};
 
 		// If the connection is closed, return error
 		//
@@ -229,8 +232,11 @@ impl WsStream
 		}
 
 
-		let mut evts = self.pharos.borrow_mut().observe( Filter::Pointer( WsEvent::is_closed ).into() );
-
+		let mut evts = match self.pharos.borrow_mut().observe( Filter::Pointer( WsEvent::is_closed ).into() )
+		{
+			Ok(events) => events                    ,
+			Err(e)     => unreachable!( "{:?}", e ) , // only happens if we closed it.
+		};
 
 		// We promised the user a CloseEvent, so we don't have much choice but to unwrap this. In any case, the stream will
 		// never end and this will hang if the browser fails to send a close event.
@@ -277,7 +283,11 @@ impl WsStream
 		}
 
 
-		let mut evts = self.pharos.borrow_mut().observe( Filter::Pointer( WsEvent::is_closed ).into() );
+		let mut evts = match self.pharos.borrow_mut().observe( Filter::Pointer( WsEvent::is_closed ).into() )
+		{
+			Ok(events) => events                    ,
+			Err(e)     => unreachable!( "{:?}", e ) , // only happens if we closed it.
+		};
 
 		let ce = evts.next().await.expect_throw( "receive a close event" );
 		trace!( "WebSocket connection closed!" );
@@ -329,7 +339,11 @@ impl WsStream
 			}
 		}
 
-		let mut evts = self.pharos.borrow_mut().observe( Filter::Pointer( WsEvent::is_closed ).into() );
+		let mut evts = match self.pharos.borrow_mut().observe( Filter::Pointer( WsEvent::is_closed ).into() )
+		{
+			Ok(events) => events                    ,
+			Err(e)     => unreachable!( "{:?}", e ) , // only happens if we closed it.
+		};
 
 		let ce = evts.next().await.expect_throw( "receive a close event" );
 		trace!( "WebSocket connection closed!" );
@@ -422,7 +436,9 @@ impl fmt::Debug for WsStream
 
 impl Observable<WsEvent> for WsStream
 {
-	fn observe( &mut self, options: ObserveConfig<WsEvent> ) -> Events<WsEvent>
+	type Error = pharos::Error;
+
+	fn observe( &mut self, options: ObserveConfig<WsEvent> ) -> Result< Events<WsEvent>, Self::Error >
 	{
 		self.pharos.borrow_mut().observe( options )
 	}

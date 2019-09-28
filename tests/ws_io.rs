@@ -215,7 +215,7 @@ pub fn close_event_from_sink() -> impl Future01<Item = (), Error = JsValue>
 	{
 		let (mut ws, mut wsio) = WsStream::connect( URL, None ).await.expect_throw( "Could not create websocket" );
 
-		let mut evts = ws.observe( ObserveConfig::default() );
+		let mut evts = ws.observe( ObserveConfig::default() ).expect( "observe" );
 
 		SinkExt::close( &mut wsio ).await.expect_throw( "close ws" );
 
@@ -243,7 +243,7 @@ pub fn close_event_from_async_write() -> impl Future01<Item = (), Error = JsValu
 	{
 		let (mut ws, mut wsio) = WsStream::connect( URL, None ).await.expect_throw( "Could not create websocket" );
 
-		let mut evts = ws.observe( ObserveConfig::default() );
+		let mut evts = ws.observe( ObserveConfig::default() ).expect( "observe" );
 
 		AsyncWriteExt::close( &mut wsio ).await.expect_throw( "close ws" );
 

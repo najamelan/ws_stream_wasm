@@ -38,7 +38,7 @@ pub fn close_events() -> impl Future01<Item = (), Error = JsValue>
 	{
 		let (mut ws, _wsio) = WsStream::connect( URL, None ).await.expect_throw( "Could not create websocket" );
 
-		let mut evts = ws.observe( ObserveConfig::default() );
+		let mut evts = ws.observe( ObserveConfig::default() ).expect( "observe" );
 
 		ws.close().await.expect_throw( "close ws" );
 

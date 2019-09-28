@@ -51,7 +51,7 @@ mod import
 	pub(crate) use
 	{
 		futures              :: { prelude::{ Stream, Sink, AsyncWrite, AsyncRead }, ready                } ,
-		futures              :: { stream::{ StreamExt }                                                  } ,
+		futures              :: { StreamExt, SinkExt                                                     } ,
 		std                  :: { io, cmp, collections::VecDeque, fmt, task::{ Context, Waker, Poll }    } ,
 		std                  :: { rc::Rc, cell::{ RefCell }, pin::Pin, convert::{ TryFrom, TryInto }     } ,
 		std                  :: { error::Error as ErrorTrait                                             } ,
@@ -76,7 +76,9 @@ pub(crate) fn notify( pharos: Rc<RefCell<Pharos<WsEvent>>>, evt: WsEvent )
 	{
 		let mut pharos = pharos.borrow_mut();
 
-		pharos.notify( &evt ).await;
+		pharos.send( evt ).await
+
+			.map_err( |e| unreachable!( "{:?}", e ) ).unwrap(); // only happens if we closed it.
 	};
 
 	spawn_local( notify );

@@ -9,7 +9,7 @@ repository = "najamelan/ws_stream_wasm"
 [dependencies]
 js-sys = "^0.3"
 log = "^0.4"
-pharos = "^0.3"
+pharos = "^0.4"
 wasm-bindgen = "^0.2"
 
 [dependencies.futures-preview]
@@ -29,7 +29,7 @@ bytes = "^0.4"
 console_error_panic_hook = "^0.1"
 console_log = "^0.1"
 flexi_logger = "^0.11"
-futures_codec = "^0.2"
+futures_codec = "^0.3"
 pretty_assertions = "^0.6"
 rand = "^0.6"
 rand_xoshiro = "^0.1"
@@ -65,18 +65,9 @@ license = "Unlicense"
 name = "ws_stream_wasm"
 readme = "README.md"
 repository = "https://github.com/najamelan/ws_stream_wasm"
-version = "0.4.1"
+version = "0.5.0"
 
 [package.metadata]
 [package.metadata.docs]
 [package.metadata.docs.rs]
 all-features = true
-
-[patch]
-[patch.crates-io]
-[patch.crates-io.futures_codec]
-git = "https://github.com/matthunz/futures-codec.git"
-
-[profile]
-[profile.release]
-codegen-units = 1
