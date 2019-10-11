@@ -17,8 +17,7 @@ features = ["io-compat", "compat"]
 version = "^0.3.0-alpha"
 
 [dependencies.wasm-bindgen-futures]
-features = ["futures_0_3"]
-version = "^0.3"
+version = "^0.4"
 
 [dependencies.web-sys]
 features = ["BinaryType", "Blob", "console", "MessageEvent", "WebSocket", "CloseEvent", "DomException"]
