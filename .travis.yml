@@ -1,9 +1,15 @@
 language: rust
 
 rust:
-  # - stable
+  - stable
   # - beta
   - nightly
+
+
+branches:
+  only:
+    - master
+    - dev
 
 
 # Need to cache the whole `.cargo` directory to keep .crates.toml for

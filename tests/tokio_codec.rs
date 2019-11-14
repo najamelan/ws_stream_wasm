@@ -1,4 +1,3 @@
-#![ feature( trait_alias )]
 wasm_bindgen_test_configure!(run_in_browser);
 
 
@@ -19,8 +18,6 @@ use
 	rand                  :: { RngCore, SeedableRng                 } ,
 	tokio                 :: { codec::{ BytesCodec, Decoder }       } ,
 	bytes                 :: { Bytes                                } ,
-	futures_01            :: { Future as Future01                   } ,
-	futures               :: { future::{ FutureExt, TryFutureExt }  } ,
 	futures               :: { stream::{ StreamExt }, sink::SinkExt } ,
 	futures               :: { AsyncReadExt, compat::Compat         } ,
 	futures::compat       :: { Stream01CompatExt, Sink01CompatExt   } ,
@@ -49,7 +46,7 @@ async fn connect() -> (WsStream, Compat<WsIo>)
 //
 #[ wasm_bindgen_test( async ) ]
 //
-pub fn data_integrity() -> impl Future01<Item = (), Error = JsValue>
+async fn data_integrity()
 {
 	// It's normal for this to fail, since different tests run in the same module and we can only
 	// set the logger once. Since we don't know which test runs first, we ignore the Result.
@@ -78,16 +75,10 @@ pub fn data_integrity() -> impl Future01<Item = (), Error = JsValue>
 		( "big random", big_size, Bytes::from( random ) ),
 	];
 
-	async move
+	for data in dataset
 	{
-		for data in dataset
-		{
-			echo( data.0, data.1, data.2 ).await;
-		}
-
-		Ok(())
-
-	}.boxed_local().compat()
+		echo( data.0, data.1, data.2 ).await;
+	}
 }
 
 
@@ -144,7 +135,7 @@ struct Data
 //
 #[ wasm_bindgen_test( async ) ]
 //
-pub fn data_integrity_cbor() -> impl Future01<Item = (), Error = JsValue>
+async fn data_integrity_cbor()
 {
 	// It's normal for this to fail, since different tests run in the same module and we can only
 	// set the logger once. Since we don't know which test runs first, we ignore the Result.
@@ -163,16 +154,10 @@ pub fn data_integrity_cbor() -> impl Future01<Item = (), Error = JsValue>
 		Data{ hello: "Hello CBOR - 1MB data".to_string(), data: vec![ 1; 1_024_000 ], num: 3948595 },
 	];
 
-	async move
+	for data in dataset
 	{
-		for data in dataset
-		{
-			echo_cbor( data ).await;
-		}
-
-		Ok(())
-
-	}.boxed_local().compat()
+		echo_cbor( data ).await;
+	}
 }
 
 

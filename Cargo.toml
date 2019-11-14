@@ -11,13 +11,12 @@ js-sys = "^0.3"
 log = "^0.4"
 pharos = "^0.4"
 wasm-bindgen = "^0.2"
+wasm-bindgen-futures = "^0.4"
 
-[dependencies.futures-preview]
+[dependencies.futures]
+default-features = false
 features = ["io-compat", "compat"]
-version = "^0.3.0-alpha"
-
-[dependencies.wasm-bindgen-futures]
-version = "^0.4"
+version = "^0.3"
 
 [dependencies.web-sys]
 features = ["BinaryType", "Blob", "console", "MessageEvent", "WebSocket", "CloseEvent", "DomException"]
@@ -27,18 +26,14 @@ version = "^0.3"
 bytes = "^0.4"
 console_error_panic_hook = "^0.1"
 console_log = "^0.1"
-flexi_logger = "^0.11"
+flexi_logger = "^0.14"
 futures_codec = "^0.3"
 pretty_assertions = "^0.6"
-rand = "^0.6"
-rand_xoshiro = "^0.1"
-serde_cbor = "0.9.0"
+rand = "^0.7"
+rand_xoshiro = "^0.4"
+serde_cbor = "0.10.0"
 tokio-serde-cbor = "0.3.1"
-wasm-bindgen-test = "^0.2"
-
-[dev-dependencies.futures_01]
-package = "futures"
-version = "^0.1"
+wasm-bindgen-test = "^0.3"
 
 [dev-dependencies.serde]
 features = ["derive"]
@@ -64,7 +59,7 @@ license = "Unlicense"
 name = "ws_stream_wasm"
 readme = "README.md"
 repository = "https://github.com/najamelan/ws_stream_wasm"
-version = "0.5.0"
+version = "0.5.1"
 
 [package.metadata]
 [package.metadata.docs]

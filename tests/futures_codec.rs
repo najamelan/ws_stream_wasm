@@ -1,4 +1,3 @@
-#![ feature( trait_alias )]
 wasm_bindgen_test_configure!(run_in_browser);
 
 // What's tested:
@@ -17,8 +16,6 @@ use
 	rand_xoshiro          :: { *                                    } ,
 	rand                  :: { RngCore, SeedableRng                 } ,
 	bytes                 :: { Bytes                                } ,
-	futures_01            :: { Future as Future01                   } ,
-	futures               :: { future::{ FutureExt, TryFutureExt }  } ,
 	futures               :: { stream::StreamExt, sink::SinkExt,    } ,
 	futures_codec         :: { Framed, LinesCodec, BytesCodec       } ,
 	serde                 :: { Serialize, Deserialize               } ,
@@ -43,7 +40,7 @@ async fn connect() -> (WsStream, WsIo)
 //
 #[ wasm_bindgen_test( async ) ]
 //
-pub fn data_integrity() -> impl Future01<Item = (), Error = JsValue>
+async fn data_integrity()
 {
 	let _ = console_log::init_with_level( Level::Trace );
 
@@ -68,16 +65,10 @@ pub fn data_integrity() -> impl Future01<Item = (), Error = JsValue>
 		( "big random"  , big_size, Bytes::from( random ) ),
 	];
 
-	async move
+	for data in dataset
 	{
-		for data in dataset
-		{
-			echo( data.0, data.1, data.2 ).await;
-		}
-
-		Ok(())
-
-	}.boxed_local().compat()
+		echo( data.0, data.1, data.2 ).await;
+	}
 }
 
 
@@ -133,43 +124,37 @@ struct Data
 //
 #[ wasm_bindgen_test( async ) ]
 //
-pub fn lines_integrity() -> impl Future01<Item = (), Error = JsValue>
+async fn lines_integrity()
 {
 	let _ = console_log::init_with_level( Level::Trace );
 
 	info!( "starting test: lines_integrity" );
 
 
-	async move
-	{
-		let (_ws , wsio ) = connect().await;
-		let mut framed = Framed::new( wsio, LinesCodec {} );
+	let (_ws , wsio ) = connect().await;
+	let mut framed = Framed::new( wsio, LinesCodec {} );
 
-		info!( "lines_integrity: start sending" );
+	info!( "lines_integrity: start sending" );
 
-		framed.send( "A line\n"       .to_string() ).await.expect_throw( "Send a line"        );
-		framed.send( "A second line\n".to_string() ).await.expect_throw( "Send a second line" );
-		framed.send( "A third line\n" .to_string() ).await.expect_throw( "Send a third line"  );
+	framed.send( "A line\n"       .to_string() ).await.expect_throw( "Send a line"        );
+	framed.send( "A second line\n".to_string() ).await.expect_throw( "Send a second line" );
+	framed.send( "A third line\n" .to_string() ).await.expect_throw( "Send a third line"  );
 
-		info!( "lines_integrity: start receiving" );
+	info!( "lines_integrity: start receiving" );
 
-		let one   = framed.next().await.expect_throw( "Some" ).expect_throw( "Receive a line"        );
-		let two   = framed.next().await.expect_throw( "Some" ).expect_throw( "Receive a second line" );
-		let three = framed.next().await.expect_throw( "Some" ).expect_throw( "Receive a third line"  );
+	let one   = framed.next().await.expect_throw( "Some" ).expect_throw( "Receive a line"        );
+	let two   = framed.next().await.expect_throw( "Some" ).expect_throw( "Receive a second line" );
+	let three = framed.next().await.expect_throw( "Some" ).expect_throw( "Receive a third line"  );
 
-		info!( "lines_integrity: start asserting" );
+	info!( "lines_integrity: start asserting" );
 
-		assert_eq!( "A line\n"       , &one   );
-		assert_eq!( "A second line\n", &two   );
-		assert_eq!( "A third line\n" , &three );
+	assert_eq!( "A line\n"       , &one   );
+	assert_eq!( "A second line\n", &two   );
+	assert_eq!( "A third line\n" , &three );
 
-		info!( "lines_integrity: done" );
+	info!( "lines_integrity: done" );
 
-		framed.close().await.expect_throw( "close" );
-
-		Ok(())
-
-	}.boxed_local().compat()
+	framed.close().await.expect_throw( "close" );
 }
 
 

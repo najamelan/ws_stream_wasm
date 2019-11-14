@@ -1,4 +1,3 @@
-#![ feature( trait_alias )]
 wasm_bindgen_test_configure!(run_in_browser);
 
 
@@ -25,8 +24,6 @@ wasm_bindgen_test_configure!(run_in_browser);
 //
 use
 {
-	futures_01            :: { Future as Future01 } ,
-	futures::prelude      :: { *                  } ,
 	futures               :: { sink::SinkExt      } ,
 	wasm_bindgen::prelude :: { *                  } ,
 	wasm_bindgen_test     :: { *                  } ,
@@ -44,37 +41,31 @@ const URL: &str = "ws://127.0.0.1:3212/";
 //
 #[ wasm_bindgen_test(async) ]
 //
-pub fn connect_wrong_port() -> impl Future01<Item = (), Error = JsValue>
+async fn connect_wrong_port()
 {
 	let _ = console_log::init_with_level( Level::Trace );
 
 	info!( "starting test: connect_wrong_port" );
 
-	async
-	{
-		let err = WsStream::connect( "ws://127.0.0.1:33212/", None ).await;
+	let err = WsStream::connect( "ws://127.0.0.1:33212/", None ).await;
 
-		assert!( err.is_err() );
+	assert!( err.is_err() );
 
-		let err = err.unwrap_err();
+	let err = err.unwrap_err();
 
-		assert_eq!
-		(
-			&WsErrKind::ConnectionFailed
+	assert_eq!
+	(
+		&WsErrKind::ConnectionFailed
+		{
+			event: CloseEvent
 			{
-				event: CloseEvent
-				{
-					was_clean: false,
-					code     : 1006 ,
-					reason   : "".to_string(),
-				}
-			},
-			err.kind()
-		);
-
-		Ok(())
-
-	}.boxed_local().compat()
+				was_clean: false,
+				code     : 1006 ,
+				reason   : "".to_string(),
+			}
+		},
+		err.kind()
+	);
 }
 
 
@@ -83,26 +74,19 @@ pub fn connect_wrong_port() -> impl Future01<Item = (), Error = JsValue>
 //
 #[ wasm_bindgen_test(async) ]
 //
-pub fn connect_forbidden_port() -> impl Future01<Item = (), Error = JsValue>
+async fn connect_forbidden_port()
 {
 	let _ = console_log::init_with_level( Level::Trace );
 
 	info!( "starting test: connect_forbidden_port" );
 
-	async
-	{
-		let err = WsStream::connect( "ws://127.0.0.1:6666/", None ).await;
+	let err = WsStream::connect( "ws://127.0.0.1:6666/", None ).await;
 
-		assert!( err.is_err() );
+	assert!( err.is_err() );
 
-		let err = err.unwrap_err();
+	let err = err.unwrap_err();
 
-		assert_eq!( &WsErrKind::ForbiddenPort, err.kind() );
-
-
-		Ok(())
-
-	}.boxed_local().compat()
+	assert_eq!( &WsErrKind::ForbiddenPort, err.kind() );
 }
 
 
@@ -111,37 +95,31 @@ pub fn connect_forbidden_port() -> impl Future01<Item = (), Error = JsValue>
 //
 #[ wasm_bindgen_test(async) ]
 //
-pub fn connect_wrong_wss() -> impl Future01<Item = (), Error = JsValue>
+async fn connect_wrong_wss()
 {
 	let _ = console_log::init_with_level( Level::Trace );
 
 	info!( "starting test: connect_wrong_wss" );
 
-	async
-	{
-		let err = WsStream::connect( "wss://127.0.0.1:3212/", None ).await;
+	let err = WsStream::connect( "wss://127.0.0.1:3212/", None ).await;
 
-		assert!( err.is_err() );
+	assert!( err.is_err() );
 
-		let err = err.unwrap_err();
+	let err = err.unwrap_err();
 
-		assert_eq!
-		(
-			&WsErrKind::ConnectionFailed
+	assert_eq!
+	(
+		&WsErrKind::ConnectionFailed
+		{
+			event: CloseEvent
 			{
-				event: CloseEvent
-				{
-					was_clean: false,
-					code     : 1006 ,
-					reason   : "".to_string(),
-				}
-			},
-			err.kind()
-		);
-
-		Ok(())
-
-	}.boxed_local().compat()
+				was_clean: false,
+				code     : 1006 ,
+				reason   : "".to_string(),
+			}
+		},
+		err.kind()
+	);
 }
 
 
@@ -150,25 +128,19 @@ pub fn connect_wrong_wss() -> impl Future01<Item = (), Error = JsValue>
 //
 #[ wasm_bindgen_test(async) ]
 //
-pub fn connect_wrong_scheme() -> impl Future01<Item = (), Error = JsValue>
+async fn connect_wrong_scheme()
 {
 	let _ = console_log::init_with_level( Level::Trace );
 
 	info!( "starting test: connect_wrong_scheme" );
 
-	async
-	{
-		let err = WsStream::connect( "http://127.0.0.1:3212/", None ).await;
+	let err = WsStream::connect( "http://127.0.0.1:3212/", None ).await;
 
-		assert!( err.is_err() );
+	assert!( err.is_err() );
 
-		let err = err.unwrap_err();
+	let err = err.unwrap_err();
 
-		assert_eq!( &WsErrKind::InvalidUrl{ supplied: "http://127.0.0.1:3212/".to_string() }, err.kind() );
-
-		Ok(())
-
-	}.boxed_local().compat()
+	assert_eq!( &WsErrKind::InvalidUrl{ supplied: "http://127.0.0.1:3212/".to_string() }, err.kind() );
 }
 
 
@@ -177,32 +149,26 @@ pub fn connect_wrong_scheme() -> impl Future01<Item = (), Error = JsValue>
 //
 #[ wasm_bindgen_test(async) ]
 //
-pub fn state() -> impl Future01<Item = (), Error = JsValue>
+async fn state()
 {
 	let _ = console_log::init_with_level( Level::Trace );
 
 	info!( "starting test: state" );
 
-	async
-	{
-		let (ws, wsio) = WsStream::connect( URL, None ).await.expect_throw( "Could not create websocket" );
+	let (ws, wsio) = WsStream::connect( URL, None ).await.expect_throw( "Could not create websocket" );
 
-		assert_eq!( WsState::Open, ws  .ready_state() );
-		assert_eq!( WsState::Open, wsio.ready_state() );
+	assert_eq!( WsState::Open, ws  .ready_state() );
+	assert_eq!( WsState::Open, wsio.ready_state() );
 
-		ws.wrapped().close().expect_throw( "close WebSocket" );
+	ws.wrapped().close().expect_throw( "close WebSocket" );
 
-		assert_eq!( WsState::Closing, ws  .ready_state() );
-		assert_eq!( WsState::Closing, wsio.ready_state() );
+	assert_eq!( WsState::Closing, ws  .ready_state() );
+	assert_eq!( WsState::Closing, wsio.ready_state() );
 
-		ws.close().await.expect_throw( "close ws" );
+	ws.close().await.expect_throw( "close ws" );
 
-		assert_eq!( WsState::Closed, ws  .ready_state() );
-		assert_eq!( WsState::Closed, wsio.ready_state() );
-
-		Ok(())
-
-	}.boxed_local().compat()
+	assert_eq!( WsState::Closed, ws  .ready_state() );
+	assert_eq!( WsState::Closed, wsio.ready_state() );
 }
 
 
@@ -210,26 +176,20 @@ pub fn state() -> impl Future01<Item = (), Error = JsValue>
 //
 #[ wasm_bindgen_test(async) ]
 //
-pub fn close_from_wsio() -> impl Future01<Item = (), Error = JsValue>
+async fn close_from_wsio()
 {
 	let _ = console_log::init_with_level( Level::Trace );
 
 	info!( "starting test: close_from_wsio" );
 
-	async
-	{
-		let (ws, mut wsio) = WsStream::connect( URL, None ).await.expect_throw( "Could not create websocket" );
+	let (ws, mut wsio) = WsStream::connect( URL, None ).await.expect_throw( "Could not create websocket" );
 
-		assert_eq!( WsState::Open, ws.ready_state() );
+	assert_eq!( WsState::Open, ws.ready_state() );
 
-		SinkExt::close( &mut wsio ).await.expect( "close wsio sink" );
+	SinkExt::close( &mut wsio ).await.expect( "close wsio sink" );
 
-		assert_eq!( WsState::Closed, wsio.ready_state() );
-		assert_eq!( WsState::Closed, ws  .ready_state() );
-
-		Ok(())
-
-	}.boxed_local().compat()
+	assert_eq!( WsState::Closed, wsio.ready_state() );
+	assert_eq!( WsState::Closed, ws  .ready_state() );
 }
 
 
@@ -239,21 +199,15 @@ pub fn close_from_wsio() -> impl Future01<Item = (), Error = JsValue>
 //
 #[ wasm_bindgen_test(async) ]
 //
-pub fn url() -> impl Future01<Item = (), Error = JsValue>
+async fn url()
 {
 	let _ = console_log::init_with_level( Level::Trace );
 
 	info!( "starting test: url" );
 
-	async
-	{
-		let (ws, _wsio) = WsStream::connect( URL, None ).await.expect_throw( "Could not create websocket" );
+	let (ws, _wsio) = WsStream::connect( URL, None ).await.expect_throw( "Could not create websocket" );
 
-		assert_eq!( URL, ws.url() );
-
-		Ok(())
-
-	}.boxed_local().compat()
+	assert_eq!( URL, ws.url() );
 }
 
 
@@ -263,21 +217,15 @@ pub fn url() -> impl Future01<Item = (), Error = JsValue>
 //
 #[ wasm_bindgen_test(async) ]
 //
-pub fn no_protocols() -> impl Future01<Item = (), Error = JsValue>
+async fn no_protocols()
 {
 	let _ = console_log::init_with_level( Level::Trace );
 
 	info!( "starting test: no_protocols" );
 
-	async
-	{
-		let (ws, _wsio) = WsStream::connect( URL, None ).await.expect_throw( "Could not create websocket" );
+	let (ws, _wsio) = WsStream::connect( URL, None ).await.expect_throw( "Could not create websocket" );
 
-		assert_eq!( "", ws.protocol() );
-
-		Ok(())
-
-	}.boxed_local().compat()
+	assert_eq!( "", ws.protocol() );
 }
 
 
@@ -289,23 +237,15 @@ pub fn no_protocols() -> impl Future01<Item = (), Error = JsValue>
 //
 #[ wasm_bindgen_test(async) ]
 //
-pub fn protocols_server_accept_none() -> impl Future01<Item = (), Error = JsValue>
+async fn protocols_server_accept_none()
 {
 	let _ = console_log::init_with_level( Level::Trace );
 
 	info!( "starting test: protocols_server_accept_none" );
 
-	async
-	{
-		let (ws, _wsio) = WsStream::connect( URL, vec![ "chat" ] ).await.expect_throw( "Could not create websocket" );
+	let (ws, _wsio) = WsStream::connect( URL, vec![ "chat" ] ).await.expect_throw( "Could not create websocket" );
 
-		assert_eq!( "", ws.protocol() );
-
-		let r: Result<(), wasm_bindgen::JsValue> = Ok(());
-
-		r
-
-	}.boxed_local().compat()
+	assert_eq!( "", ws.protocol() );
 }
 */
 
@@ -315,50 +255,38 @@ pub fn protocols_server_accept_none() -> impl Future01<Item = (), Error = JsValu
 //
 #[ wasm_bindgen_test(async) ]
 //
-pub fn close_twice() -> impl Future01<Item = (), Error = JsValue>
+async fn close_twice()
 {
 	let _ = console_log::init_with_level( Level::Trace );
 
 	info!( "starting test: close_twice" );
 
-	async
-	{
-		let (ws, _wsio) = WsStream::connect( URL, None ).await.expect_throw( "Could not create websocket" );
+	let (ws, _wsio) = WsStream::connect( URL, None ).await.expect_throw( "Could not create websocket" );
 
-		let res = ws.close().await;
+	let res = ws.close().await;
 
-		assert!( res.is_ok() );
+	assert!( res.is_ok() );
 
-		assert_eq!( ws.close       ()                         .await.unwrap_err().kind(), &WsErrKind::ConnectionNotOpen );
-		assert_eq!( ws.close_code  ( 1000                    ).await.unwrap_err().kind(), &WsErrKind::ConnectionNotOpen );
-		assert_eq!( ws.close_reason( 1000, "Normal shutdown" ).await.unwrap_err().kind(), &WsErrKind::ConnectionNotOpen );
-
-		Ok(())
-
-	}.boxed_local().compat()
+	assert_eq!( ws.close       ()                         .await.unwrap_err().kind(), &WsErrKind::ConnectionNotOpen );
+	assert_eq!( ws.close_code  ( 1000                    ).await.unwrap_err().kind(), &WsErrKind::ConnectionNotOpen );
+	assert_eq!( ws.close_reason( 1000, "Normal shutdown" ).await.unwrap_err().kind(), &WsErrKind::ConnectionNotOpen );
 }
 
 
 
 #[ wasm_bindgen_test(async) ]
 //
-pub fn close_code_valid() -> impl Future01<Item = (), Error = JsValue>
+async fn close_code_valid()
 {
 	let _ = console_log::init_with_level( Level::Trace );
 
 	info!( "starting test: close_code_valid" );
 
-	async
-	{
-		let (ws, _wsio) = WsStream::connect( URL, None ).await.expect_throw( "Could not create websocket" );
+	let (ws, _wsio) = WsStream::connect( URL, None ).await.expect_throw( "Could not create websocket" );
 
-		let res = ws.close_code( 1000 ).await;
+	let res = ws.close_code( 1000 ).await;
 
-		assert!( res.is_ok() );
-
-		Ok(())
-
-	}.boxed_local().compat()
+	assert!( res.is_ok() );
 }
 
 
@@ -366,23 +294,17 @@ pub fn close_code_valid() -> impl Future01<Item = (), Error = JsValue>
 //
 #[ wasm_bindgen_test(async) ]
 //
-pub fn close_code_invalid() -> impl Future01<Item = (), Error = JsValue>
+async fn close_code_invalid()
 {
 	let _ = console_log::init_with_level( Level::Trace );
 
 	info!( "starting test: close_code_invalid" );
 
-	async
-	{
-		let (ws, _wsio) = WsStream::connect( URL, None ).await.expect_throw( "Could not create websocket" );
+	let (ws, _wsio) = WsStream::connect( URL, None ).await.expect_throw( "Could not create websocket" );
 
-		let res = ws.close_code( 500 ).await;
+	let res = ws.close_code( 500 ).await;
 
-		assert_eq!( &WsErrKind::InvalidCloseCode{ supplied: 500 }, res.unwrap_err().kind() );
-
-		Ok(())
-
-	}.boxed_local().compat()
+	assert_eq!( &WsErrKind::InvalidCloseCode{ supplied: 500 }, res.unwrap_err().kind() );
 }
 
 
@@ -390,23 +312,17 @@ pub fn close_code_invalid() -> impl Future01<Item = (), Error = JsValue>
 //
 #[ wasm_bindgen_test(async) ]
 //
-pub fn close_reason_valid() -> impl Future01<Item = (), Error = JsValue>
+async fn close_reason_valid()
 {
 	let _ = console_log::init_with_level( Level::Trace );
 
 	info!( "starting test: close_reason_valid" );
 
-	async
-	{
-		let (ws, _wsio) = WsStream::connect( URL, None ).await.expect_throw( "Could not create websocket" );
+	let (ws, _wsio) = WsStream::connect( URL, None ).await.expect_throw( "Could not create websocket" );
 
-		let res = ws.close_reason( 1000, "Normal shutdown" ).await;
+	let res = ws.close_reason( 1000, "Normal shutdown" ).await;
 
-		assert!( res.is_ok() );
-
-		Ok(())
-
-	}.boxed_local().compat()
+	assert!( res.is_ok() );
 }
 
 
@@ -414,23 +330,17 @@ pub fn close_reason_valid() -> impl Future01<Item = (), Error = JsValue>
 //
 #[ wasm_bindgen_test(async) ]
 //
-pub fn close_reason_invalid_code() -> impl Future01<Item = (), Error = JsValue>
+async fn close_reason_invalid_code()
 {
 	let _ = console_log::init_with_level( Level::Trace );
 
 	info!( "starting test: close_reason_invalid_code" );
 
-	async
-	{
-		let (ws, _wsio) = WsStream::connect( URL, None ).await.expect_throw( "Could not create websocket" );
+	let (ws, _wsio) = WsStream::connect( URL, None ).await.expect_throw( "Could not create websocket" );
 
-		let res = ws.close_reason( 500, "Normal Shutdown" ).await;
+	let res = ws.close_reason( 500, "Normal Shutdown" ).await;
 
-		assert_eq!( &WsErrKind::InvalidCloseCode{ supplied: 500 }, res.unwrap_err().kind() );
-
-		Ok(())
-
-	}.boxed_local().compat()
+	assert_eq!( &WsErrKind::InvalidCloseCode{ supplied: 500 }, res.unwrap_err().kind() );
 }
 
 
@@ -438,23 +348,17 @@ pub fn close_reason_invalid_code() -> impl Future01<Item = (), Error = JsValue>
 //
 #[ wasm_bindgen_test(async) ]
 //
-pub fn close_reason_invalid() -> impl Future01<Item = (), Error = JsValue>
+async fn close_reason_invalid()
 {
 	let _ = console_log::init_with_level( Level::Trace );
 
 	info!( "starting test: close_reason_invalid" );
 
-	async
-	{
-		let (ws, _wsio) = WsStream::connect( URL, None ).await.expect_throw( "Could not create websocket" );
+	let (ws, _wsio) = WsStream::connect( URL, None ).await.expect_throw( "Could not create websocket" );
 
-		let res = ws.close_reason( 1000, vec![ "a"; 124 ].join( "" ) ).await;
+	let res = ws.close_reason( 1000, vec![ "a"; 124 ].join( "" ) ).await;
 
-		assert_eq!( &WsErrKind::ReasonStringToLong, res.unwrap_err().kind() );
-
-		Ok(())
-
-	}.boxed_local().compat()
+	assert_eq!( &WsErrKind::ReasonStringToLong, res.unwrap_err().kind() );
 }
 
 
@@ -463,22 +367,16 @@ pub fn close_reason_invalid() -> impl Future01<Item = (), Error = JsValue>
 //
 #[ wasm_bindgen_test(async) ]
 //
-pub fn debug() -> impl Future01<Item = (), Error = JsValue>
+async fn debug()
 {
 	let _ = console_log::init_with_level( Level::Trace );
 
 	info!( "starting test: debug" );
 
-	async
-	{
-		let (ws, _wsio) = WsStream::connect( URL, None ).await.expect_throw( "Could not create websocket" );
+	let (ws, _wsio) = WsStream::connect( URL, None ).await.expect_throw( "Could not create websocket" );
 
-		assert_eq!( format!( "WsStream for connection: {}", URL ), format!( "{:?}", ws ) );
+	assert_eq!( format!( "WsStream for connection: {}", URL ), format!( "{:?}", ws ) );
 
-		ws.close().await.expect_throw( "close" );
-
-		Ok(())
-
-	}.boxed_local().compat()
+	ws.close().await.expect_throw( "close" );
 }
 

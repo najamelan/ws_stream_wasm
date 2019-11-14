@@ -41,7 +41,8 @@ pub struct WsIo
 	closer: Option< Events<WsEvent> >,
 }
 
-
+unsafe impl Send for WsIo {}
+unsafe impl Sync for WsIo {}
 
 impl WsIo
 {
@@ -267,7 +268,7 @@ impl Sink<WsMessage> for WsIo
 
 	fn start_send( self: Pin<&mut Self>, item: WsMessage ) -> Result<(), Self::Error>
 	{
-		trace!( "Sink<WsMessage> for WsIo: start_send" );
+		trace!( "Sink<WsMessage> for WsIo: start_send, state is {:?}", self.ready_state() );
 
 		match self.ready_state()
 		{
@@ -282,8 +283,8 @@ impl Sink<WsMessage> for WsIo
 				//
 				match item
 				{
-					WsMessage::Binary( mut d ) => { self.ws.send_with_u8_array( &mut d ).map_err( |_| WsErrKind::ConnectionNotOpen)?; }
-					WsMessage::Text  (     s ) => { self.ws.send_with_str     ( &    s ).map_err( |_| WsErrKind::ConnectionNotOpen)?; }
+					WsMessage::Binary( mut d ) => { trace!( "binary message: {:?}", d ); self.ws.send_with_u8_array( &mut d ).map_err( |_| WsErrKind::ConnectionNotOpen)?; }
+					WsMessage::Text  (     s ) => { trace!( "text message" ); self.ws.send_with_str     ( &    s ).map_err( |_| WsErrKind::ConnectionNotOpen)?; }
 				}
 
 				Ok(())
