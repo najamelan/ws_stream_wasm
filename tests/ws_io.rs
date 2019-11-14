@@ -1,4 +1,3 @@
-#![ feature( trait_alias )]
 wasm_bindgen_test_configure!(run_in_browser);
 
 
@@ -17,8 +16,7 @@ wasm_bindgen_test_configure!(run_in_browser);
 //
 use
 {
-	futures_01            :: Future as Future01       ,
-	wasm_bindgen_futures  :: futures_0_3::spawn_local ,
+	wasm_bindgen_futures  :: spawn_local        ,
 	futures::prelude      :: * ,
 	futures::sink         :: * ,
 	futures::io           :: * ,
@@ -27,7 +25,6 @@ use
 	ws_stream_wasm        :: * ,
 	log                   :: * ,
 	pharos                :: * ,
-
 };
 
 
@@ -41,31 +38,25 @@ const URL_TT: &str = "ws://127.0.0.1:3312/";
 //
 #[ wasm_bindgen_test(async) ]
 //
-pub fn round_trip_text() -> impl Future01<Item = (), Error = JsValue>
+async fn round_trip_text()
 {
 	let _ = console_log::init_with_level( Level::Trace );
 
 	info!( "starting test: round_trip" );
 
-	async
-	{
-		let (_ws, mut wsio) = WsStream::connect( URL_TT, None ).await.expect_throw( "Could not create websocket" );
-		let message         = "Hello from browser".to_string();
+	let (_ws, mut wsio) = WsStream::connect( URL_TT, None ).await.expect_throw( "Could not create websocket" );
+	let message         = "Hello from browser".to_string();
 
 
-		wsio.send( WsMessage::Text( message.clone() ) ).await
+	wsio.send( WsMessage::Text( message.clone() ) ).await
 
-			.expect_throw( "Failed to write to websocket" );
+		.expect_throw( "Failed to write to websocket" );
 
 
-		let msg    = wsio.next().await;
-		let result = msg.expect_throw( "Stream closed" );
+	let msg    = wsio.next().await;
+	let result = msg.expect_throw( "Stream closed" );
 
-		assert_eq!( WsMessage::Text( message ), result );
-
-		Ok(())
-
-	}.boxed_local().compat()
+	assert_eq!( WsMessage::Text( message ), result );
 }
 
 
@@ -74,77 +65,59 @@ pub fn round_trip_text() -> impl Future01<Item = (), Error = JsValue>
 //
 #[ wasm_bindgen_test(async) ]
 //
-pub fn round_trip_binary() -> impl Future01<Item = (), Error = JsValue>
+async fn round_trip_binary()
 {
 	let _ = console_log::init_with_level( Level::Trace );
 
 	info!( "starting test: round_trip" );
 
-	async
-	{
-		let (_ws, mut wsio) = WsStream::connect( URL, None ).await.expect_throw( "Could not create websocket" );
-		let message         = b"Hello from browser".to_vec();
+	let (_ws, mut wsio) = WsStream::connect( URL, None ).await.expect_throw( "Could not create websocket" );
+	let message         = b"Hello from browser".to_vec();
 
 
-		wsio.send( WsMessage::Binary( message.clone() ) ).await
+	wsio.send( WsMessage::Binary( message.clone() ) ).await
 
-			.expect_throw( "Failed to write to websocket" );
+		.expect_throw( "Failed to write to websocket" );
 
 
-		let msg    = wsio.next().await;
-		let result = msg.expect_throw( "Stream closed" );
+	let msg    = wsio.next().await;
+	let result = msg.expect_throw( "Stream closed" );
 
-		assert_eq!( WsMessage::Binary( message ), result );
-
-		Ok(())
-
-	}.boxed_local().compat()
+	assert_eq!( WsMessage::Binary( message ), result );
 }
 
 
 
 #[ wasm_bindgen_test(async) ]
 //
-fn send_while_closing() -> impl Future01<Item = (), Error = JsValue>
+async fn send_while_closing()
 {
 	info!( "starting test: send_while_closing" );
 
-	async
-	{
-		let (ws, mut wsio) = WsStream::connect( URL, None ).await.expect_throw( "Could not create websocket" );
+	let (ws, mut wsio) = WsStream::connect( URL, None ).await.expect_throw( "Could not create websocket" );
 
-		ws.wrapped().close().expect_throw( "close connection" );
+	ws.wrapped().close().expect_throw( "close connection" );
 
-		let res = wsio.send( WsMessage::Text("Hello from browser".into() ) ).await;
+	let res = wsio.send( WsMessage::Text("Hello from browser".into() ) ).await;
 
-		assert_eq!( &WsErrKind::ConnectionNotOpen, res.unwrap_err().kind() );
-
-		Ok(())
-
-	}.boxed_local().compat()
+	assert_eq!( &WsErrKind::ConnectionNotOpen, res.unwrap_err().kind() );
 }
 
 
 
 #[ wasm_bindgen_test(async) ]
 //
-fn send_after_close() -> impl Future01<Item = (), Error = JsValue>
+async fn send_after_close()
 {
 	info!( "starting test: send_after_close" );
 
-	async
-	{
-		let (ws, mut wsio) = WsStream::connect( URL, None ).await.expect_throw( "Could not create websocket" );
+	let (ws, mut wsio) = WsStream::connect( URL, None ).await.expect_throw( "Could not create websocket" );
 
-		ws.close().await.expect_throw( "close ws" );
+	ws.close().await.expect_throw( "close ws" );
 
-		let res = wsio.send( WsMessage::Text("Hello from browser".into() ) ).await;
+	let res = wsio.send( WsMessage::Text("Hello from browser".into() ) ).await;
 
-		assert_eq!( &WsErrKind::ConnectionNotOpen, res.unwrap_err().kind() );
-
-		Ok(())
-
-	}.boxed_local().compat()
+	assert_eq!( &WsErrKind::ConnectionNotOpen, res.unwrap_err().kind() );
 }
 
 
@@ -153,23 +126,17 @@ fn send_after_close() -> impl Future01<Item = (), Error = JsValue>
 //
 #[ wasm_bindgen_test(async) ]
 //
-pub fn close_from_wsstream() -> impl Future01<Item = (), Error = JsValue>
+async fn close_from_wsstream()
 {
 	let _ = console_log::init_with_level( Level::Trace );
 
 	info!( "starting test: close_from_wsstream" );
 
-	async
-	{
-		let (ws, mut wsio) = WsStream::connect( URL, None ).await.expect_throw( "Could not create websocket" );
+	let (ws, mut wsio) = WsStream::connect( URL, None ).await.expect_throw( "Could not create websocket" );
 
-		ws.close().await.expect_throw( "close ws" );
+	ws.close().await.expect_throw( "close ws" );
 
-		assert!( wsio.next().await.is_none() );
-
-		Ok(())
-
-	}.boxed_local().compat()
+	assert!( wsio.next().await.is_none() );
 }
 
 
@@ -178,25 +145,19 @@ pub fn close_from_wsstream() -> impl Future01<Item = (), Error = JsValue>
 //
 #[ wasm_bindgen_test(async) ]
 //
-pub fn close_from_wsstream_while_pending() -> impl Future01<Item = (), Error = JsValue>
+async fn close_from_wsstream_while_pending()
 {
 	let _ = console_log::init_with_level( Level::Trace );
 
 	info!( "starting test: close_from_wsstream_while_pending" );
 
-	async
-	{
-		let (ws, mut wsio) = WsStream::connect( URL, None ).await.expect_throw( "Could not create websocket" );
+	let (ws, mut wsio) = WsStream::connect( URL, None ).await.expect_throw( "Could not create websocket" );
 
-		spawn_local( async move { ws.close().await.expect_throw( "close ws" ); } );
+	spawn_local( async move { ws.close().await.expect_throw( "close ws" ); } );
 
-		// if we don't wake up the task, this will hang
-		//
-		assert!( wsio.next().await.is_none() );
-
-		Ok(())
-
-	}.boxed_local().compat()
+	// if we don't wake up the task, this will hang
+	//
+	assert!( wsio.next().await.is_none() );
 }
 
 
@@ -205,26 +166,20 @@ pub fn close_from_wsstream_while_pending() -> impl Future01<Item = (), Error = J
 //
 #[ wasm_bindgen_test(async) ]
 //
-pub fn close_event_from_sink() -> impl Future01<Item = (), Error = JsValue>
+async fn close_event_from_sink()
 {
 	let _ = console_log::init_with_level( Level::Trace );
 
 	info!( "starting test: close_event_from_sink" );
 
-	async
-	{
-		let (mut ws, mut wsio) = WsStream::connect( URL, None ).await.expect_throw( "Could not create websocket" );
+	let (mut ws, mut wsio) = WsStream::connect( URL, None ).await.expect_throw( "Could not create websocket" );
 
-		let mut evts = ws.observe( ObserveConfig::default() ).expect( "observe" );
+	let mut evts = ws.observe( ObserveConfig::default() ).expect( "observe" );
 
-		SinkExt::close( &mut wsio ).await.expect_throw( "close ws" );
+	SinkExt::close( &mut wsio ).await.expect_throw( "close ws" );
 
-		assert!( evts.next().await.unwrap_throw().is_closing() );
-		assert!( evts.next().await.unwrap_throw().is_closed()  );
-
-		Ok(())
-
-	}.boxed_local().compat()
+	assert!( evts.next().await.unwrap_throw().is_closing() );
+	assert!( evts.next().await.unwrap_throw().is_closed()  );
 }
 
 
@@ -233,26 +188,20 @@ pub fn close_event_from_sink() -> impl Future01<Item = (), Error = JsValue>
 //
 #[ wasm_bindgen_test(async) ]
 //
-pub fn close_event_from_async_write() -> impl Future01<Item = (), Error = JsValue>
+async fn close_event_from_async_write()
 {
 	let _ = console_log::init_with_level( Level::Trace );
 
 	info!( "starting test: close_event_from_async_write" );
 
-	async
-	{
-		let (mut ws, mut wsio) = WsStream::connect( URL, None ).await.expect_throw( "Could not create websocket" );
+	let (mut ws, mut wsio) = WsStream::connect( URL, None ).await.expect_throw( "Could not create websocket" );
 
-		let mut evts = ws.observe( ObserveConfig::default() ).expect( "observe" );
+	let mut evts = ws.observe( ObserveConfig::default() ).expect( "observe" );
 
-		AsyncWriteExt::close( &mut wsio ).await.expect_throw( "close ws" );
+	AsyncWriteExt::close( &mut wsio ).await.expect_throw( "close ws" );
 
-		assert!( evts.next().await.unwrap_throw().is_closing() );
-		assert!( evts.next().await.unwrap_throw().is_closed()  );
-
-		Ok(())
-
-	}.boxed_local().compat()
+	assert!( evts.next().await.unwrap_throw().is_closing() );
+	assert!( evts.next().await.unwrap_throw().is_closed()  );
 }
 
 
@@ -261,21 +210,15 @@ pub fn close_event_from_async_write() -> impl Future01<Item = (), Error = JsValu
 //
 #[ wasm_bindgen_test(async) ]
 //
-pub fn debug() -> impl Future01<Item = (), Error = JsValue>
+async fn debug()
 {
 	let _ = console_log::init_with_level( Level::Trace );
 
 	info!( "starting test: debug" );
 
-	async
-	{
-		let (_ws, mut wsio) = WsStream::connect( URL, None ).await.expect_throw( "Could not create websocket" );
+	let (_ws, mut wsio) = WsStream::connect( URL, None ).await.expect_throw( "Could not create websocket" );
 
-		assert_eq!( format!( "WsIo for connection: {}", URL ), format!( "{:?}", wsio ) );
+	assert_eq!( format!( "WsIo for connection: {}", URL ), format!( "{:?}", wsio ) );
 
-		SinkExt::close( &mut wsio ).await.expect_throw( "close" );
-
-		Ok(())
-
-	}.boxed_local().compat()
+	SinkExt::close( &mut wsio ).await.expect_throw( "close" );
 }

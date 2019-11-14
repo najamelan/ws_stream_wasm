@@ -7,7 +7,7 @@
 
 #![ doc    ( html_root_url = "https://docs.rs/ws_stream_wasm"            ) ]
 #![ deny   ( missing_docs                                                ) ]
-#![ forbid ( unsafe_code                                                 ) ]
+// #![ forbid ( unsafe_code                                                 ) ]
 #![ allow  ( clippy::suspicious_else_formatting, clippy::needless_return ) ]
 
 
@@ -61,7 +61,7 @@ mod import
 		web_sys              :: { *, BinaryType, Blob, WebSocket, CloseEvent as JsCloseEvt, DomException } ,
 		js_sys               :: { Array                                                                  } ,
 		pharos               :: { Pharos, Observable, Filter, ObserveConfig, Events                      } ,
-		wasm_bindgen_futures :: { futures_0_3::spawn_local                                               } ,
+		wasm_bindgen_futures :: { spawn_local                                                            } ,
 	};
 }
 
