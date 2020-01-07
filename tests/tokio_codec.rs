@@ -90,7 +90,7 @@ async fn echo( name: &str, size: usize, data: Bytes )
 	info!( "   Enter echo: {}", name );
 
 	let (_ws, wsio) = connect().await;
-	let (tx, rx)    = BytesCodec::new().framed(  wsio  ).split();
+	let (tx, rx)    = BytesCodec::new().framed( wsio ).split();
 
 	let mut tx = tx.sink_compat();
 	let mut rx = rx.compat();

@@ -1,6 +1,11 @@
 # Changelog
 
 
+## 0.5.2 - 2020-01-06
+
+  - fix version of futures-codec because they didn't bump their major version number after making a breaking change.
+
+
 ## 0.5.1 - 2019-11-14
 
   - update futures to 0.3.1.
