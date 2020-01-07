@@ -10,7 +10,7 @@ package:
   # - merge dev branch into master
   # - create git tag
   #
-  version       : 0.5.1
+  version       : 0.5.2
   name          : ws_stream_wasm
   edition       : '2018'
   authors       : [ Naja Melan <najamelan@autistici.org> ]
@@ -78,6 +78,6 @@ dev-dependencies:
   serde                    : { version: 1.0.87, features: [ derive ] }
   bytes                    : ^0.4
   flexi_logger             : ^0.14
-  futures_codec            : ^0.3
+  futures_codec            : =0.3.3
   wasm-bindgen-test        : ^0.3
 
