@@ -28,7 +28,7 @@ impl WsStream
 	/// This returns both a [WsStream] (allow manipulating and requesting meta data for the connection) and
 	/// a [WsIo] (AsyncRead/AsyncWrite + Stream/Sink over [WsMessage](crate::WsMessage)).
 	///
-	/// A WsStream instance is observable through the [`pharos::Observable`](https://docs.rs/pharos/0.2.0/pharos/trait.Observable.html) and [`pharos::ObservableUnbounded`](https://docs.rs/pharos/0.2.0/pharos/trait.UnboundedObservable.html) traits. The type of event is [WsEvent]. In the case of a Close event, there will be additional information included
+	/// A WsStream instance is observable through the [`pharos::Observable`](https://docs.rs/pharos/0.4.3/pharos/trait.Observable.html) trait. The type of event is [WsEvent]. In the case of a Close event, there will be additional information included
 	/// as a [CloseEvent].
 	///
 	/// When you drop this, the connection does not get closed, however when you drop [WsIo] it does. Streams
