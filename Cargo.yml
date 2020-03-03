@@ -74,10 +74,10 @@ dev-dependencies:
   rand_xoshiro             : ^0.4
   rand                     : ^0.7
   tokio-serde-cbor         : 0.3.1
-  serde_cbor               : 0.10.0
+  serde_cbor               : ^0.11
   serde                    : { version: 1.0.87, features: [ derive ] }
   bytes                    : ^0.4
-  flexi_logger             : ^0.14
+  flexi_logger             : ^0.15
   futures_codec            : =0.3.3
   wasm-bindgen-test        : ^0.3
 
