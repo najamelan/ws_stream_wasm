@@ -433,6 +433,9 @@ impl AsyncWrite for WsIo
 
 
 
+
+
+
 #[derive(Debug, Clone)]
 //
 enum ReadState
@@ -501,6 +504,40 @@ impl AsyncRead for WsIo
 				}
 			}
 		}
+	}
+}
+
+
+
+
+
+impl TokAsyncWrite for WsIo
+{
+	fn poll_write( self: Pin<&mut Self>, cx: &mut Context<'_>, buf: &[u8] ) -> Poll<Result<usize, io::Error>>
+	{
+		AsyncWrite::poll_write( self, cx, buf )
+	}
+
+
+
+	fn poll_flush( self: Pin<&mut Self>, cx: &mut Context<'_> ) -> Poll<Result<(), io::Error>>
+	{
+		AsyncWrite::poll_flush( self, cx )
+	}
+
+
+	fn poll_shutdown( self: Pin<&mut Self>, cx: &mut Context<'_> ) -> Poll<Result<(), io::Error>>
+	{
+		AsyncWrite::poll_close( self, cx )
+	}
+}
+
+
+impl TokAsyncRead for WsIo
+{
+	fn poll_read( self: Pin<&mut Self>, cx: &mut Context<'_>, buf: &mut [u8] ) -> Poll< Result<usize, io::Error> >
+	{
+		AsyncRead::poll_read( self, cx, buf )
 	}
 }
 

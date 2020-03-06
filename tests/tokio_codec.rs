@@ -16,12 +16,9 @@ use
 	log                   :: { *                                    } ,
 	rand_xoshiro          :: { *                                    } ,
 	rand                  :: { RngCore, SeedableRng                 } ,
-	tokio                 :: { codec::{ BytesCodec, Decoder }       } ,
+	tokio_util            :: { codec::{ BytesCodec, Decoder }       } ,
 	bytes                 :: { Bytes                                } ,
 	futures               :: { stream::{ StreamExt }, sink::SinkExt } ,
-	futures               :: { AsyncReadExt, compat::Compat         } ,
-	futures::compat       :: { Stream01CompatExt, Sink01CompatExt   } ,
-	tokio::prelude        :: { Stream                               } ,
 	serde                 :: { Serialize, Deserialize               } ,
 	tokio_serde_cbor      :: { Codec                                } ,
 	// web_sys               :: { console::log_1 as dbg                               } ,
@@ -33,11 +30,11 @@ const URL: &str = "ws://127.0.0.1:3212";
 
 
 
-async fn connect() -> (WsStream, Compat<WsIo>)
+async fn connect() -> (WsStream, WsIo)
 {
 	let (ws, wsio) = WsStream::connect( URL, None ).await.expect_throw( "Could not create websocket" );
 
-	( ws, AsyncReadExt::compat(wsio) )
+	( ws, wsio )
 }
 
 
@@ -89,11 +86,8 @@ async fn echo( name: &str, size: usize, data: Bytes )
 {
 	info!( "   Enter echo: {}", name );
 
-	let (_ws, wsio) = connect().await;
-	let (tx, rx)    = BytesCodec::new().framed( wsio ).split();
-
-	let mut tx = tx.sink_compat();
-	let mut rx = rx.compat();
+	let (_ws, wsio)      = connect().await;
+	let (mut tx, mut rx) = BytesCodec::new().framed( wsio ).split();
 
 	tx.send( data.clone() ).await.expect_throw( "Failed to write to websocket" );
 
@@ -169,12 +163,8 @@ async fn echo_cbor( data: Data )
 
 	let (_ws, wsio) = connect().await;
 
-	let codec: Codec<Data, Data>  = Codec::new().packed( true );
-	let (tx, rx) = codec.framed( wsio ).split();
-
-	let mut tx = tx .sink_compat();
-	let mut rx = rx .compat();
-
+	let codec: Codec<Data, Data> = Codec::new().packed( true );
+	let (mut tx, mut rx)         = codec.framed( wsio ).split();
 
 	tx.send( data.clone() ).await.expect_throw( "Failed to write to websocket" );
 

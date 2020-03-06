@@ -10,12 +10,12 @@ repository = "najamelan/ws_stream_wasm"
 js-sys = "^0.3"
 log = "^0.4"
 pharos = "^0.4"
+tokio = "^0.2"
 wasm-bindgen = "^0.2"
 wasm-bindgen-futures = "^0.4"
 
 [dependencies.futures]
 default-features = false
-features = ["io-compat", "compat"]
 version = "^0.3"
 
 [dependencies.web-sys]
@@ -23,26 +23,26 @@ features = ["BinaryType", "Blob", "console", "MessageEvent", "WebSocket", "Close
 version = "^0.3"
 
 [dev-dependencies]
-bytes = "^0.4"
+bytes = "^0.5"
 console_error_panic_hook = "^0.1"
 console_log = "^0.1"
 flexi_logger = "^0.15"
-futures_codec = "=0.3.3"
+futures_codec = "=0.4"
 pretty_assertions = "^0.6"
 rand = "^0.7"
 rand_xoshiro = "^0.4"
 serde_cbor = "^0.11"
-tokio-serde-cbor = "0.3.1"
+tokio-serde-cbor = "^0.4"
 wasm-bindgen-test = "^0.3"
 
 [dev-dependencies.serde]
 features = ["derive"]
 version = "1.0.87"
 
-[dev-dependencies.tokio]
+[dev-dependencies.tokio-util]
 default-features = false
 features = ["codec"]
-version = "^0.1"
+version = "^0.2"
 
 [features]
 external_doc = []
@@ -53,6 +53,7 @@ categories = ["api-bindings", "wasm", "web-programming", "web-programming::webso
 description = "A convenience library for using websockets in WASM"
 documentation = "https://docs.rs/ws_stream_wasm"
 edition = "2018"
+exclude = ["tests"]
 homepage = "https://github.com/najamelan/ws_stream_wasm"
 keywords = ["wasm", "websocket", "tokio", "stream", "async"]
 license = "Unlicense"
