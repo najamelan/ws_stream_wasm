@@ -41,8 +41,6 @@ pub struct WsIo
 	closer: Option< Events<WsEvent> >,
 }
 
-unsafe impl Send for WsIo {}
-unsafe impl Sync for WsIo {}
 
 impl WsIo
 {
