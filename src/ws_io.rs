@@ -383,33 +383,23 @@ impl AsyncWrite for WsIo
 
 				match self.start_send( WsMessage::Binary( buf.into() ) )
 				{
-					Ok (_) => { return Ok(n).into(); }
-					Err(e) =>
-					{
-						match e.kind()
-						{
-							WsErrKind::ConnectionNotOpen =>
-							{
-								return Poll::Ready( Err( io::Error::from( io::ErrorKind::NotConnected )))
-							}
+					Ok (_) =>  return Ok(n).into(),
 
-							// This shouldn't happen, so panic for early detection.
-							//
-							_ => unreachable!()
-						}
-					}
+					Err(e) if e.kind() == &WsErrKind::ConnectionNotOpen =>
+
+						return Poll::Ready( Err( io::Error::from( io::ErrorKind::NotConnected ))) ,
+
+					// This shouldn't happen, so panic for early detection.
+					//
+					Err(_) => unreachable!(),
 				}
 			}
 
-			Err(e) => match e.kind()
-			{
-				WsErrKind::ConnectionNotOpen =>
-				{
-					return Poll::Ready( Err( io::Error::from( io::ErrorKind::NotConnected )))
-				}
+			Err(e) if e.kind() == &WsErrKind::ConnectionNotOpen =>
 
-				_ => unreachable!()
-			}
+				return Poll::Ready( Err( io::Error::from( io::ErrorKind::NotConnected ))),
+
+			Err(_) => unreachable!(),
 		}
 	}
 
