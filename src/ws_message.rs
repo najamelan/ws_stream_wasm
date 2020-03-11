@@ -50,7 +50,7 @@ impl From< MessageEvent > for WsMessage
 
 
 		// We have set the binary mode to array buffer, so normally this shouldn't happen. That is as long
-		// as this is used within the context of the WsStream constructor.
+		// as this is used within the context of the WsMeta constructor.
 		//
 		// FIXME: find a way to convert a blob...
 		//

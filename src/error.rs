@@ -38,7 +38,7 @@ pub enum ErrorKind
 	//
 	ForbiddenPort,
 
-	/// An invalid URL was given to [WsStream::connect](crate::WsStream::connect), please see:
+	/// An invalid URL was given to [WsMeta::connect](crate::WsMeta::connect), please see:
 	/// [HTML Living Standard](https://html.spec.whatwg.org/multipage/web-sockets.html#dom-websocket)
 	//
 	InvalidUrl

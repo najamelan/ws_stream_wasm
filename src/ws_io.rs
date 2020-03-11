@@ -6,7 +6,7 @@ use crate::{ import::*, WsErr, WsErrKind, WsMessage, WsState, WsEvent, notify };
 /// use tokio codecs. See the [integration tests](https://github.com/ws_stream_wasm/tree/master/tests/tokio_codec.rs)
 /// if you need an example.
 ///
-/// Created with [WsStream::connect](crate::WsStream::connect).
+/// Created with [WsMeta::connect](crate::WsMeta::connect).
 //
 pub struct WsIo
 {
@@ -24,7 +24,7 @@ pub struct WsIo
 	//
 	sink_waker: Rc<RefCell< Option<Waker> >>,
 
-	// A pointer to the pharos of WsStream for when we need to listen to events
+	// A pointer to the pharos of WsMeta for when we need to listen to events
 	//
 	pharos: Rc<RefCell< Pharos<WsEvent> >>,
 
@@ -52,19 +52,19 @@ impl WsIo
 		let w2    = waker.clone();
 
 
-		// Send the incoming ws messages to the WsStream object
+		// Send the incoming ws messages to the WsMeta object
 		//
 		#[ allow( trivial_casts ) ]
 		//
 		let on_mesg = Closure::wrap( Box::new( move |msg_evt: MessageEvent|
 		{
-			trace!( "WsStream: message received!" );
+			trace!( "WsMeta: message received!" );
 
 			q2.borrow_mut().push_back( WsMessage::from( msg_evt ) );
 
 			if let Some( w ) = w2.borrow_mut().take()
 			{
-				trace!( "WsStream: waking up task" );
+				trace!( "WsMeta: waking up task" );
 				w.wake()
 			}
 

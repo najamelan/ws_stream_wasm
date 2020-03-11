@@ -32,7 +32,7 @@ async fn close_events()
 
 	info!( "starting test: close_events" );
 
-	let (mut ws, _wsio) = WsStream::connect( URL, None ).await.expect_throw( "Could not create websocket" );
+	let (mut ws, _wsio) = WsMeta::connect( URL, None ).await.expect_throw( "Could not create websocket" );
 
 	let mut evts = ws.observe( ObserveConfig::default() ).expect( "observe" );
 

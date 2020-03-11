@@ -5,10 +5,10 @@ wasm_bindgen_test_configure!(run_in_browser);
 //
 // Tests send to an echo server which just bounces back all data.
 //
-// ✔ WsStream::connect: Verify error when connecting to a wrong port
-// ✔ WsStream::connect: Verify error when connecting to a forbidden port
-// ✔ WsStream::connect: Verify error when connecting to wss:// on ws:// server
-// ✔ WsStream::connect: Verify error when connecting to a wrong scheme
+// ✔ WsMeta::connect: Verify error when connecting to a wrong port
+// ✔ WsMeta::connect: Verify error when connecting to a forbidden port
+// ✔ WsMeta::connect: Verify error when connecting to wss:// on ws:// server
+// ✔ WsMeta::connect: Verify error when connecting to a wrong scheme
 // ✔ Verify the state method
 // ✔ Verify closing from WsIo
 // ✔ Verify url method
@@ -37,7 +37,7 @@ const URL: &str = "ws://127.0.0.1:3212/";
 
 
 
-// WsStream::connect: Verify error when connecting to a wrong port
+// WsMeta::connect: Verify error when connecting to a wrong port
 //
 #[ wasm_bindgen_test(async) ]
 //
@@ -47,7 +47,7 @@ async fn connect_wrong_port()
 
 	info!( "starting test: connect_wrong_port" );
 
-	let err = WsStream::connect( "ws://127.0.0.1:33212/", None ).await;
+	let err = WsMeta::connect( "ws://127.0.0.1:33212/", None ).await;
 
 	assert!( err.is_err() );
 
@@ -70,7 +70,7 @@ async fn connect_wrong_port()
 
 
 
-// WsStream::connect: Verify error when connecting to a forbidden port
+// WsMeta::connect: Verify error when connecting to a forbidden port
 //
 #[ wasm_bindgen_test(async) ]
 //
@@ -80,7 +80,7 @@ async fn connect_forbidden_port()
 
 	info!( "starting test: connect_forbidden_port" );
 
-	let err = WsStream::connect( "ws://127.0.0.1:6666/", None ).await;
+	let err = WsMeta::connect( "ws://127.0.0.1:6666/", None ).await;
 
 	assert!( err.is_err() );
 
@@ -91,7 +91,7 @@ async fn connect_forbidden_port()
 
 
 
-// WsStream::connect: Verify error when connecting to wss:// on ws:// server
+// WsMeta::connect: Verify error when connecting to wss:// on ws:// server
 //
 #[ wasm_bindgen_test(async) ]
 //
@@ -101,7 +101,7 @@ async fn connect_wrong_wss()
 
 	info!( "starting test: connect_wrong_wss" );
 
-	let err = WsStream::connect( "wss://127.0.0.1:3212/", None ).await;
+	let err = WsMeta::connect( "wss://127.0.0.1:3212/", None ).await;
 
 	assert!( err.is_err() );
 
@@ -124,7 +124,7 @@ async fn connect_wrong_wss()
 
 
 
-// WsStream::connect: Verify error when connecting to a wrong scheme
+// WsMeta::connect: Verify error when connecting to a wrong scheme
 //
 #[ wasm_bindgen_test(async) ]
 //
@@ -134,7 +134,7 @@ async fn connect_wrong_scheme()
 
 	info!( "starting test: connect_wrong_scheme" );
 
-	let err = WsStream::connect( "http://127.0.0.1:3212/", None ).await;
+	let err = WsMeta::connect( "http://127.0.0.1:3212/", None ).await;
 
 	assert!( err.is_err() );
 
@@ -155,7 +155,7 @@ async fn state()
 
 	info!( "starting test: state" );
 
-	let (ws, wsio) = WsStream::connect( URL, None ).await.expect_throw( "Could not create websocket" );
+	let (ws, wsio) = WsMeta::connect( URL, None ).await.expect_throw( "Could not create websocket" );
 
 	assert_eq!( WsState::Open, ws  .ready_state() );
 	assert_eq!( WsState::Open, wsio.ready_state() );
@@ -182,7 +182,7 @@ async fn close_from_wsio()
 
 	info!( "starting test: close_from_wsio" );
 
-	let (ws, mut wsio) = WsStream::connect( URL, None ).await.expect_throw( "Could not create websocket" );
+	let (ws, mut wsio) = WsMeta::connect( URL, None ).await.expect_throw( "Could not create websocket" );
 
 	assert_eq!( WsState::Open, ws.ready_state() );
 
@@ -205,7 +205,7 @@ async fn url()
 
 	info!( "starting test: url" );
 
-	let (ws, _wsio) = WsStream::connect( URL, None ).await.expect_throw( "Could not create websocket" );
+	let (ws, _wsio) = WsMeta::connect( URL, None ).await.expect_throw( "Could not create websocket" );
 
 	assert_eq!( URL, ws.url() );
 }
@@ -223,7 +223,7 @@ async fn no_protocols()
 
 	info!( "starting test: no_protocols" );
 
-	let (ws, _wsio) = WsStream::connect( URL, None ).await.expect_throw( "Could not create websocket" );
+	let (ws, _wsio) = WsMeta::connect( URL, None ).await.expect_throw( "Could not create websocket" );
 
 	assert_eq!( "", ws.protocol() );
 }
@@ -243,7 +243,7 @@ async fn protocols_server_accept_none()
 
 	info!( "starting test: protocols_server_accept_none" );
 
-	let (ws, _wsio) = WsStream::connect( URL, vec![ "chat" ] ).await.expect_throw( "Could not create websocket" );
+	let (ws, _wsio) = WsMeta::connect( URL, vec![ "chat" ] ).await.expect_throw( "Could not create websocket" );
 
 	assert_eq!( "", ws.protocol() );
 }
@@ -261,7 +261,7 @@ async fn close_twice()
 
 	info!( "starting test: close_twice" );
 
-	let (ws, _wsio) = WsStream::connect( URL, None ).await.expect_throw( "Could not create websocket" );
+	let (ws, _wsio) = WsMeta::connect( URL, None ).await.expect_throw( "Could not create websocket" );
 
 	let res = ws.close().await;
 
@@ -282,7 +282,7 @@ async fn close_code_valid()
 
 	info!( "starting test: close_code_valid" );
 
-	let (ws, _wsio) = WsStream::connect( URL, None ).await.expect_throw( "Could not create websocket" );
+	let (ws, _wsio) = WsMeta::connect( URL, None ).await.expect_throw( "Could not create websocket" );
 
 	let res = ws.close_code( 1000 ).await;
 
@@ -300,7 +300,7 @@ async fn close_code_invalid()
 
 	info!( "starting test: close_code_invalid" );
 
-	let (ws, _wsio) = WsStream::connect( URL, None ).await.expect_throw( "Could not create websocket" );
+	let (ws, _wsio) = WsMeta::connect( URL, None ).await.expect_throw( "Could not create websocket" );
 
 	let res = ws.close_code( 500 ).await;
 
@@ -318,7 +318,7 @@ async fn close_reason_valid()
 
 	info!( "starting test: close_reason_valid" );
 
-	let (ws, _wsio) = WsStream::connect( URL, None ).await.expect_throw( "Could not create websocket" );
+	let (ws, _wsio) = WsMeta::connect( URL, None ).await.expect_throw( "Could not create websocket" );
 
 	let res = ws.close_reason( 1000, "Normal shutdown" ).await;
 
@@ -336,7 +336,7 @@ async fn close_reason_invalid_code()
 
 	info!( "starting test: close_reason_invalid_code" );
 
-	let (ws, _wsio) = WsStream::connect( URL, None ).await.expect_throw( "Could not create websocket" );
+	let (ws, _wsio) = WsMeta::connect( URL, None ).await.expect_throw( "Could not create websocket" );
 
 	let res = ws.close_reason( 500, "Normal Shutdown" ).await;
 
@@ -354,7 +354,7 @@ async fn close_reason_invalid()
 
 	info!( "starting test: close_reason_invalid" );
 
-	let (ws, _wsio) = WsStream::connect( URL, None ).await.expect_throw( "Could not create websocket" );
+	let (ws, _wsio) = WsMeta::connect( URL, None ).await.expect_throw( "Could not create websocket" );
 
 	let res = ws.close_reason( 1000, vec![ "a"; 124 ].join( "" ) ).await;
 
@@ -373,9 +373,9 @@ async fn debug()
 
 	info!( "starting test: debug" );
 
-	let (ws, _wsio) = WsStream::connect( URL, None ).await.expect_throw( "Could not create websocket" );
+	let (ws, _wsio) = WsMeta::connect( URL, None ).await.expect_throw( "Could not create websocket" );
 
-	assert_eq!( format!( "WsStream for connection: {}", URL ), format!( "{:?}", ws ) );
+	assert_eq!( format!( "WsMeta for connection: {}", URL ), format!( "{:?}", ws ) );
 
 	ws.close().await.expect_throw( "close" );
 }

@@ -27,9 +27,9 @@ const URL: &str = "ws://127.0.0.1:3212";
 
 
 
-async fn connect() -> (WsStream, WsIo)
+async fn connect() -> (WsMeta, WsIo)
 {
-	let (ws, wsio) = WsStream::connect( URL, None ).await.expect_throw( "Could not create websocket" );
+	let (ws, wsio) = WsMeta::connect( URL, None ).await.expect_throw( "Could not create websocket" );
 
 	(ws, wsio)
 }
@@ -75,7 +75,7 @@ async fn data_integrity()
 
 // Send data to an echo server and verify that what returns is exactly the same
 // We run 2 connections in parallel, the second one we verify that we can use a reference
-// to a WsStream
+// to a WsMeta
 //
 async fn echo( name: &str, size: usize, data: Bytes )
 {

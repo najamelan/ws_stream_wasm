@@ -32,9 +32,9 @@ const URL: &str = "ws://127.0.0.1:3212";
 
 
 
-async fn connect() -> (WsStream, WsIo)
+async fn connect() -> (WsMeta, WsIo)
 {
-	let (ws, wsio) = WsStream::connect( URL, None ).await.expect_throw( "Could not create websocket" );
+	let (ws, wsio) = WsMeta::connect( URL, None ).await.expect_throw( "Could not create websocket" );
 
 	( ws, wsio )
 }

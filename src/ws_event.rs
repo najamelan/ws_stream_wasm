@@ -15,7 +15,7 @@ use crate::{ import::* };
 ///
 ///let program = async
 ///{
-///   let (mut ws, _wsio) = WsStream::connect( "127.0.0.1:3012", None ).await
+///   let (mut ws, _wsio) = WsMeta::connect( "127.0.0.1:3012", None ).await
 ///
 ///      .expect_throw( "assume the connection succeeds" );
 ///
@@ -59,7 +59,7 @@ pub enum WsEvent
 impl WsEvent
 {
 	/// Predicate indicating whether this is a [WsEvent::Open] event. Can be used as a filter for the
-	/// event stream obtained with [`WsStream::observe`].
+	/// event stream obtained with [`WsMeta::observe`].
 	//
 	pub fn is_open( &self ) -> bool
 	{
@@ -71,7 +71,7 @@ impl WsEvent
 	}
 
 	/// Predicate indicating whether this is a [WsEvent::Error] event. Can be used as a filter for the
-	/// event stream obtained with [`WsStream::observe`].
+	/// event stream obtained with [`WsMeta::observe`].
 	//
 	pub fn is_err( &self ) -> bool
 	{
@@ -83,7 +83,7 @@ impl WsEvent
 	}
 
 	/// Predicate indicating whether this is a [WsEvent::Closing] event. Can be used as a filter for the
-	/// event stream obtained with [`WsStream::observe`].
+	/// event stream obtained with [`WsMeta::observe`].
 	//
 	pub fn is_closing( &self ) -> bool
 	{
@@ -95,7 +95,7 @@ impl WsEvent
 	}
 
 	/// Predicate indicating whether this is a [WsEvent::Closed] event. Can be used as a filter for the
-	/// event stream obtained with [`WsStream::observe`].
+	/// event stream obtained with [`WsMeta::observe`].
 	//
 	pub fn is_closed( &self ) -> bool
 	{

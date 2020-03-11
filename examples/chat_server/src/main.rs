@@ -100,7 +100,7 @@ fn main()
 //
 async fn handle_conn( socket: WarpWebSocket, peer_addr: SocketAddr ) -> Result<(), ()>
 {
-	let ws_stream = WsStream::new( socket );
+	let ws_stream = WsMeta::new( socket );
 
 	info!( "Incoming connection from: {:?}", peer_addr );
 

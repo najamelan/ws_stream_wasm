@@ -30,16 +30,16 @@ pub mod error       ;
     mod ws_message  ;
     mod ws_io       ;
     mod ws_state    ;
-    mod ws_stream   ;
+    mod ws_meta     ;
 
 pub use
 {
-	error             :: { Error as WsErr, ErrorKind as WsErrKind } ,
-	ws_event          :: { WsEvent, CloseEvent                    } ,
-	ws_message        :: { WsMessage                              } ,
-	ws_io             :: { WsIo                                   } ,
-	ws_stream         :: { WsStream                               } ,
-	ws_state          :: { WsState                                } ,
+	error      :: { Error as WsErr, ErrorKind as WsErrKind } ,
+	ws_event   :: { WsEvent, CloseEvent                    } ,
+	ws_message :: { WsMessage                              } ,
+	ws_io      :: { WsIo                                   } ,
+	ws_meta    :: { WsMeta                                 } ,
+	ws_state   :: { WsState                                } ,
 };
 
 

@@ -44,7 +44,7 @@ async fn round_trip_text()
 
 	info!( "starting test: round_trip" );
 
-	let (_ws, mut wsio) = WsStream::connect( URL_TT, None ).await.expect_throw( "Could not create websocket" );
+	let (_ws, mut wsio) = WsMeta::connect( URL_TT, None ).await.expect_throw( "Could not create websocket" );
 	let message         = "Hello from browser".to_string();
 
 
@@ -71,7 +71,7 @@ async fn round_trip_binary()
 
 	info!( "starting test: round_trip" );
 
-	let (_ws, mut wsio) = WsStream::connect( URL, None ).await.expect_throw( "Could not create websocket" );
+	let (_ws, mut wsio) = WsMeta::connect( URL, None ).await.expect_throw( "Could not create websocket" );
 	let message         = b"Hello from browser".to_vec();
 
 
@@ -94,7 +94,7 @@ async fn send_while_closing()
 {
 	info!( "starting test: send_while_closing" );
 
-	let (ws, mut wsio) = WsStream::connect( URL, None ).await.expect_throw( "Could not create websocket" );
+	let (ws, mut wsio) = WsMeta::connect( URL, None ).await.expect_throw( "Could not create websocket" );
 
 	ws.wrapped().close().expect_throw( "close connection" );
 
@@ -111,7 +111,7 @@ async fn send_after_close()
 {
 	info!( "starting test: send_after_close" );
 
-	let (ws, mut wsio) = WsStream::connect( URL, None ).await.expect_throw( "Could not create websocket" );
+	let (ws, mut wsio) = WsMeta::connect( URL, None ).await.expect_throw( "Could not create websocket" );
 
 	ws.close().await.expect_throw( "close ws" );
 
@@ -122,7 +122,7 @@ async fn send_after_close()
 
 
 
-// Verify closing that when closing from WsStream, WsIo next() returns none.
+// Verify closing that when closing from WsMeta, WsIo next() returns none.
 //
 #[ wasm_bindgen_test(async) ]
 //
@@ -132,7 +132,7 @@ async fn close_from_wsstream()
 
 	info!( "starting test: close_from_wsstream" );
 
-	let (ws, mut wsio) = WsStream::connect( URL, None ).await.expect_throw( "Could not create websocket" );
+	let (ws, mut wsio) = WsMeta::connect( URL, None ).await.expect_throw( "Could not create websocket" );
 
 	ws.close().await.expect_throw( "close ws" );
 
@@ -151,7 +151,7 @@ async fn close_from_wsstream_while_pending()
 
 	info!( "starting test: close_from_wsstream_while_pending" );
 
-	let (ws, mut wsio) = WsStream::connect( URL, None ).await.expect_throw( "Could not create websocket" );
+	let (ws, mut wsio) = WsMeta::connect( URL, None ).await.expect_throw( "Could not create websocket" );
 
 	spawn_local( async move { ws.close().await.expect_throw( "close ws" ); } );
 
@@ -172,7 +172,7 @@ async fn close_event_from_sink()
 
 	info!( "starting test: close_event_from_sink" );
 
-	let (mut ws, mut wsio) = WsStream::connect( URL, None ).await.expect_throw( "Could not create websocket" );
+	let (mut ws, mut wsio) = WsMeta::connect( URL, None ).await.expect_throw( "Could not create websocket" );
 
 	let mut evts = ws.observe( ObserveConfig::default() ).expect( "observe" );
 
@@ -194,7 +194,7 @@ async fn close_event_from_async_write()
 
 	info!( "starting test: close_event_from_async_write" );
 
-	let (mut ws, mut wsio) = WsStream::connect( URL, None ).await.expect_throw( "Could not create websocket" );
+	let (mut ws, mut wsio) = WsMeta::connect( URL, None ).await.expect_throw( "Could not create websocket" );
 
 	let mut evts = ws.observe( ObserveConfig::default() ).expect( "observe" );
 
@@ -216,7 +216,7 @@ async fn debug()
 
 	info!( "starting test: debug" );
 
-	let (_ws, mut wsio) = WsStream::connect( URL, None ).await.expect_throw( "Could not create websocket" );
+	let (_ws, mut wsio) = WsMeta::connect( URL, None ).await.expect_throw( "Could not create websocket" );
 
 	assert_eq!( format!( "WsIo for connection: {}", URL ), format!( "{:?}", wsio ) );
 
