@@ -83,3 +83,21 @@ impl From<WsMessage> for Vec<u8>
 		}
 	}
 }
+
+
+impl From<Vec<u8>> for WsMessage
+{
+	fn from( vec: Vec<u8> ) -> Self
+	{
+		WsMessage::Binary( vec )
+	}
+}
+
+
+impl From<String> for WsMessage
+{
+	fn from( s: String ) -> Self
+	{
+		WsMessage::Text( s )
+	}
+}
