@@ -35,13 +35,13 @@ pub mod error        ;
 
 pub use
 {
-	error        :: { Error as WsErr, ErrorKind as WsErrKind } ,
-	ws_event     :: { WsEvent, CloseEvent                    } ,
-	ws_message   :: { WsMessage                              } ,
-	ws_meta      :: { WsMeta                                 } ,
-	ws_state     :: { WsState                                } ,
-	ws_stream    :: { WsStream                               } ,
-	ws_stream_io :: { WsStreamIo                             } ,
+	error        :: { WsErr               } ,
+	ws_event     :: { WsEvent, CloseEvent } ,
+	ws_message   :: { WsMessage           } ,
+	ws_meta      :: { WsMeta              } ,
+	ws_state     :: { WsState             } ,
+	ws_stream    :: { WsStream            } ,
+	ws_stream_io :: { WsStreamIo          } ,
 };
 
 
@@ -54,7 +54,6 @@ mod import
 		futures              :: { StreamExt, SinkExt                                                     } ,
 		std                  :: { io, collections::VecDeque, fmt, task::{ Context, Waker, Poll }         } ,
 		std                  :: { rc::Rc, cell::{ RefCell }, pin::Pin, convert::{ TryFrom, TryInto }     } ,
-		std                  :: { error::Error as ErrorTrait                                             } ,
 		log                  :: { *                                                                      } ,
 		js_sys               :: { ArrayBuffer, Uint8Array                                                } ,
 		wasm_bindgen         :: { closure::Closure, JsCast, JsValue, UnwrapThrowExt                      } ,
@@ -63,6 +62,7 @@ mod import
 		pharos               :: { Pharos, Observable, Filter, ObserveConfig, Events                      } ,
 		wasm_bindgen_futures :: { spawn_local                                                            } ,
 		async_io_stream      :: { WsIo                                                                   } ,
+		thiserror            :: { Error                                                                  } ,
 	};
 }
 

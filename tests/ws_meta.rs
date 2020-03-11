@@ -55,7 +55,7 @@ async fn connect_wrong_port()
 
 	assert_eq!
 	(
-		&WsErrKind::ConnectionFailed
+		WsErr::ConnectionFailed
 		{
 			event: CloseEvent
 			{
@@ -64,7 +64,8 @@ async fn connect_wrong_port()
 				reason   : "".to_string(),
 			}
 		},
-		err.kind()
+
+		err
 	);
 }
 
@@ -86,7 +87,7 @@ async fn connect_forbidden_port()
 
 	let err = err.unwrap_err();
 
-	assert_eq!( &WsErrKind::ForbiddenPort, err.kind() );
+	assert_eq!( WsErr::ForbiddenPort, err );
 }
 
 
@@ -109,7 +110,7 @@ async fn connect_wrong_wss()
 
 	assert_eq!
 	(
-		&WsErrKind::ConnectionFailed
+		WsErr::ConnectionFailed
 		{
 			event: CloseEvent
 			{
@@ -118,7 +119,8 @@ async fn connect_wrong_wss()
 				reason   : "".to_string(),
 			}
 		},
-		err.kind()
+
+		err
 	);
 }
 
@@ -140,7 +142,7 @@ async fn connect_wrong_scheme()
 
 	let err = err.unwrap_err();
 
-	assert_eq!( &WsErrKind::InvalidUrl{ supplied: "http://127.0.0.1:3212/".to_string() }, err.kind() );
+	assert_eq!( WsErr::InvalidUrl{ supplied: "http://127.0.0.1:3212/".to_string() }, err );
 }
 
 
@@ -267,9 +269,9 @@ async fn close_twice()
 
 	assert!( res.is_ok() );
 
-	assert_eq!( ws.close       ()                         .await.unwrap_err().kind(), &WsErrKind::ConnectionNotOpen );
-	assert_eq!( ws.close_code  ( 1000                    ).await.unwrap_err().kind(), &WsErrKind::ConnectionNotOpen );
-	assert_eq!( ws.close_reason( 1000, "Normal shutdown" ).await.unwrap_err().kind(), &WsErrKind::ConnectionNotOpen );
+	assert_eq!( ws.close       ()                         .await.unwrap_err(), WsErr::ConnectionNotOpen );
+	assert_eq!( ws.close_code  ( 1000                    ).await.unwrap_err(), WsErr::ConnectionNotOpen );
+	assert_eq!( ws.close_reason( 1000, "Normal shutdown" ).await.unwrap_err(), WsErr::ConnectionNotOpen );
 }
 
 
@@ -304,7 +306,7 @@ async fn close_code_invalid()
 
 	let res = ws.close_code( 500 ).await;
 
-	assert_eq!( &WsErrKind::InvalidCloseCode{ supplied: 500 }, res.unwrap_err().kind() );
+	assert_eq!( WsErr::InvalidCloseCode{ supplied: 500 }, res.unwrap_err() );
 }
 
 
@@ -340,7 +342,7 @@ async fn close_reason_invalid_code()
 
 	let res = ws.close_reason( 500, "Normal Shutdown" ).await;
 
-	assert_eq!( &WsErrKind::InvalidCloseCode{ supplied: 500 }, res.unwrap_err().kind() );
+	assert_eq!( WsErr::InvalidCloseCode{ supplied: 500 }, res.unwrap_err() );
 }
 
 
@@ -358,7 +360,7 @@ async fn close_reason_invalid()
 
 	let res = ws.close_reason( 1000, vec![ "a"; 124 ].join( "" ) ).await;
 
-	assert_eq!( &WsErrKind::ReasonStringToLong, res.unwrap_err().kind() );
+	assert_eq!( WsErr::ReasonStringToLong, res.unwrap_err() );
 }
 
 

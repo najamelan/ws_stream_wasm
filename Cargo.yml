@@ -49,14 +49,15 @@ dependencies:
 
   # public dependencies (bump major if changing version numbers here)
   #
-  pharos                  : ^0.4
-  futures                 : { version: ^0.3, default-features: false }
-  log                     : ^0.4
-  js-sys                  : ^0.3
-  wasm-bindgen            : ^0.2
-  wasm-bindgen-futures    : ^0.4
-  tokio                   : { version: ^0.2, optional: true }
-  async_io_stream         : { version: ^0.1, path: ../async_io_stream, features: [ map_pharos ] }
+  pharos               : ^0.4
+  futures              : { version: ^0.3, default-features: false }
+  log                  : ^0.4
+  js-sys               : ^0.3
+  wasm-bindgen         : ^0.2
+  wasm-bindgen-futures : ^0.4
+  tokio                : { version: ^0.2, optional: true }
+  async_io_stream      : { version: ^0.1, path: ../async_io_stream, features: [ map_pharos ] }
+  thiserror            : ^1
 
 
   web-sys:

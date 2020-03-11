@@ -1,6 +1,6 @@
 # TODO
 
-- rename the error type and use this_error.
+- verify example and doc tests
 - design, do we want to put the use of WsIo on the user?
 - text messages are accepted...
 

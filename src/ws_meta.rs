@@ -1,4 +1,4 @@
-use crate::{ import::*, WsErr, WsErrKind, WsState, WsStream, WsEvent, CloseEvent, notify };
+use crate::{ import::*, WsErr, WsState, WsStream, WsEvent, CloseEvent, notify };
 
 
 /// The meta data related to a websocket.
@@ -43,12 +43,12 @@ impl WsMeta
 	/// ## Errors
 	///
 	/// Browsers will forbid making websocket connections to certain ports. See this [Stack Overflow question](https://stackoverflow.com/questions/4313403/why-do-browsers-block-some-ports/4314070).
-	/// `connect` will return a [WsErrKind::ForbiddenPort].
+	/// `connect` will return a [WsErr::ForbiddenPort].
 	///
-	/// If the URL is invalid, a [WsErrKind::InvalidUrl] is returned. See the [HTML Living Standard](https://html.spec.whatwg.org/multipage/web-sockets.html#dom-websocket) for more information.
+	/// If the URL is invalid, a [WsErr::InvalidUrl] is returned. See the [HTML Living Standard](https://html.spec.whatwg.org/multipage/web-sockets.html#dom-websocket) for more information.
 	///
 	/// When the connection fails (server port not open, wrong ip, wss:// on ws:// server, ... See the [HTML Living Standard](https://html.spec.whatwg.org/multipage/web-sockets.html#dom-websocket)
-	/// for details on all failure possibilities), a [WsErrKind::ConnectionFailed] is returned.
+	/// for details on all failure possibilities), a [WsErr::ConnectionFailed] is returned.
 	//
 	pub async fn connect( url: impl AsRef<str>, protocols: impl Into<Option<Vec<&str>>> )
 
@@ -83,12 +83,12 @@ impl WsMeta
 
 				match de.code()
 				{
-					DomException::SECURITY_ERR => return Err( WsErrKind::ForbiddenPort.into() ),
+					DomException::SECURITY_ERR => return Err( WsErr::ForbiddenPort.into() ),
 
 
 					DomException::SYNTAX_ERR =>
 
-						return Err( WsErrKind::InvalidUrl{ supplied: url.as_ref().to_string() }.into() ),
+						return Err( WsErr::InvalidUrl{ supplied: url.as_ref().to_string() }.into() ),
 
 
 					_ => unreachable!(),
@@ -180,7 +180,7 @@ impl WsMeta
 		{
 			trace!( "WebSocket connection closed!" );
 
-			return Err( WsErrKind::ConnectionFailed{ event: evt }.into() )
+			return Err( WsErr::ConnectionFailed{ event: evt }.into() )
 		}
 
 
@@ -215,7 +215,7 @@ impl WsMeta
 	{
 		match self.ready_state()
 		{
-			WsState::Closed  => return Err( WsErrKind::ConnectionNotOpen.into() ),
+			WsState::Closed  => return Err( WsErr::ConnectionNotOpen.into() ),
 			WsState::Closing => {}
 
 			_ =>
@@ -260,7 +260,7 @@ impl WsMeta
 	{
 		match self.ready_state()
 		{
-			WsState::Closed  => return Err( WsErrKind::ConnectionNotOpen.into() ),
+			WsState::Closed  => return Err( WsErr::ConnectionNotOpen.into() ),
 			WsState::Closing => {}
 
 			_ =>
@@ -274,7 +274,7 @@ impl WsMeta
 
 					Err(_) =>
 					{
-						let e = WsErr::from( WsErrKind::InvalidCloseCode{ supplied: code } );
+						let e = WsErr::from( WsErr::InvalidCloseCode{ supplied: code } );
 
 						error!( "{}", e );
 
@@ -307,14 +307,14 @@ impl WsMeta
 	{
 		match self.ready_state()
 		{
-			WsState::Closed  => return Err( WsErrKind::ConnectionNotOpen.into() ),
+			WsState::Closed  => return Err( WsErr::ConnectionNotOpen.into() ),
 			WsState::Closing => {}
 
 			_ =>
 			{
 				if reason.as_ref().len() > 123
 				{
-					let e = WsErr::from( WsErrKind::ReasonStringToLong );
+					let e = WsErr::from( WsErr::ReasonStringToLong );
 
 					error!( "{}", e );
 
@@ -331,7 +331,7 @@ impl WsMeta
 
 					Err(_) =>
 					{
-						let e = WsErr::from( WsErrKind::InvalidCloseCode{ supplied: code } );
+						let e = WsErr::from( WsErr::InvalidCloseCode{ supplied: code } );
 
 						error!( "{}", e );
 

@@ -100,7 +100,7 @@ async fn send_while_closing()
 
 	let res = wsio.send( WsMessage::Text("Hello from browser".into() ) ).await;
 
-	assert_eq!( &WsErrKind::ConnectionNotOpen, res.unwrap_err().kind() );
+	assert_eq!( WsErr::ConnectionNotOpen, res.unwrap_err() );
 }
 
 
@@ -117,7 +117,7 @@ async fn send_after_close()
 
 	let res = wsio.send( WsMessage::Text("Hello from browser".into() ) ).await;
 
-	assert_eq!( &WsErrKind::ConnectionNotOpen, res.unwrap_err().kind() );
+	assert_eq!( WsErr::ConnectionNotOpen, res.unwrap_err() );
 }
 
 

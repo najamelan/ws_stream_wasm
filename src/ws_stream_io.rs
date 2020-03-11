@@ -1,4 +1,4 @@
-use crate::{ import::*, WsErr, WsErrKind, WsStream };
+use crate::{ import::*, WsErr, WsStream };
 
 
 /// A wrapper around WsStream that converts errors into io::Error so that it can be
@@ -81,9 +81,9 @@ fn convert_res_tuple( res: Result< (), WsErr> ) -> Result< (), io::Error >
 
 fn convert_err( err: WsErr ) -> io::Error
 {
-	match err.kind()
+	match err
 	{
-		&WsErrKind::ConnectionNotOpen =>
+		WsErr::ConnectionNotOpen =>
 
 			return io::Error::from( io::ErrorKind::NotConnected ) ,
 
