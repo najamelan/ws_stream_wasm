@@ -123,6 +123,8 @@ impl WsStream
 		}) as Box< dyn FnMut() > );
 
 
+		// TODO: is there no information at all in an error?
+		//
 		#[ allow( trivial_casts ) ]
 		//
 		let on_error = Closure::wrap( Box::new( move ||

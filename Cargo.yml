@@ -28,7 +28,6 @@ package:
       rs:
         all-features: true
 
-
 badges:
 
   maintenance : { status     : actively-developed       }
@@ -37,9 +36,12 @@ badges:
 
 features:
 
-  # only used internally, don't use
+  tokio_io: [ tokio ]
+
+  # enable when running cargo +nightly doc. Doesn't work on stable.
+  # enable when running cargo +nightly test for doctests.
   #
-  external_doc: []
+  docs: []
 
 
 dependencies:

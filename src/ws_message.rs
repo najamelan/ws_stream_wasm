@@ -7,11 +7,11 @@ use crate::import::*;
 //
 pub enum WsMessage
 {
-	/// The data of the message is a string
+	/// The data of the message is a string.
 	///
 	Text  ( String  ),
 
-	/// The message contains binary data
+	/// The message contains binary data.
 	///
 	Binary( Vec<u8> ),
 }

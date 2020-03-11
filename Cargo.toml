@@ -45,7 +45,7 @@ features = ["codec"]
 version = "^0.2"
 
 [features]
-external_doc = []
+docs = []
 
 [package]
 authors = ["Naja Melan <najamelan@autistici.org>"]
