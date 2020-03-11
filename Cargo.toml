@@ -14,9 +14,8 @@ wasm-bindgen = "^0.2"
 wasm-bindgen-futures = "^0.4"
 
 [dependencies.async_io_stream]
-features = ["pharos"]
-package = "ws_stream_io"
-path = "../ws_stream_io"
+features = ["map_pharos"]
+path = "../async_io_stream"
 version = "^0.1"
 
 [dependencies.futures]

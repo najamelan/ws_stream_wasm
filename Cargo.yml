@@ -56,7 +56,7 @@ dependencies:
   wasm-bindgen            : ^0.2
   wasm-bindgen-futures    : ^0.4
   tokio                   : { version: ^0.2, optional: true }
-  async_io_stream         : { version: ^0.1, path: ../ws_stream_io, features: [ pharos ], package: ws_stream_io }
+  async_io_stream         : { version: ^0.1, path: ../async_io_stream, features: [ map_pharos ] }
 
 
   web-sys:
