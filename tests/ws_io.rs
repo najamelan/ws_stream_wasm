@@ -122,7 +122,7 @@ async fn send_after_close()
 
 
 
-// Verify closing that when closing from WsMeta, WsIo next() returns none.
+// Verify closing that when closing from WsMeta, WsStream next() returns none.
 //
 #[ wasm_bindgen_test(async) ]
 //
@@ -218,7 +218,7 @@ async fn debug()
 
 	let (_ws, mut wsio) = WsMeta::connect( URL, None ).await.expect_throw( "Could not create websocket" );
 
-	assert_eq!( format!( "WsIo for connection: {}", URL ), format!( "{:?}", wsio ) );
+	assert_eq!( format!( "WsStream for connection: {}", URL ), format!( "{:?}", wsio ) );
 
 	SinkExt::close( &mut wsio ).await.expect_throw( "close" );
 }

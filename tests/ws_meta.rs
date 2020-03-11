@@ -10,7 +10,7 @@ wasm_bindgen_test_configure!(run_in_browser);
 // ✔ WsMeta::connect: Verify error when connecting to wss:// on ws:// server
 // ✔ WsMeta::connect: Verify error when connecting to a wrong scheme
 // ✔ Verify the state method
-// ✔ Verify closing from WsIo
+// ✔ Verify closing from WsStream
 // ✔ Verify url method
 // ✔ Verify sending no subprotocols
 //   note: we currently don't have a backend server that supports protocols,
@@ -172,7 +172,7 @@ async fn state()
 }
 
 
-// Verify closing from WsIo.
+// Verify closing from WsStream.
 //
 #[ wasm_bindgen_test(async) ]
 //

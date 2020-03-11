@@ -28,18 +28,18 @@
 pub mod error       ;
     mod ws_event    ;
     mod ws_message  ;
-    mod ws_io       ;
-    mod ws_state    ;
     mod ws_meta     ;
+    mod ws_state    ;
+    mod ws_stream   ;
 
 pub use
 {
 	error      :: { Error as WsErr, ErrorKind as WsErrKind } ,
 	ws_event   :: { WsEvent, CloseEvent                    } ,
 	ws_message :: { WsMessage                              } ,
-	ws_io      :: { WsIo                                   } ,
 	ws_meta    :: { WsMeta                                 } ,
 	ws_state   :: { WsState                                } ,
+	ws_stream  :: { WsStream                               } ,
 };
 
 
@@ -60,7 +60,7 @@ mod import
 		js_sys               :: { Array                                                                  } ,
 		pharos               :: { Pharos, Observable, Filter, ObserveConfig, Events                      } ,
 		wasm_bindgen_futures :: { spawn_local                                                            } ,
-		ws_stream_io         :: { WsIo as WsAsync                                                        } ,
+		ws_stream_io         :: { WsIo                                                                   } ,
 	};
 
 	#[ cfg( feature = "tokio_io" ) ]

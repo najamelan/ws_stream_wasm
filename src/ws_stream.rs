@@ -8,7 +8,7 @@ use crate::{ import::*, WsErr, WsErrKind, WsMessage, WsState, WsEvent, notify };
 ///
 /// Created with [WsMeta::connect](crate::WsMeta::connect).
 //
-pub struct WsIo
+pub struct WsStream
 {
 	ws: Rc< WebSocket >,
 
@@ -38,9 +38,9 @@ pub struct WsIo
 }
 
 
-impl WsIo
+impl WsStream
 {
-	/// Create a new WsIo.
+	/// Create a new WsStream.
 	//
 	pub fn new( ws: Rc<WebSocket>, pharos : Rc<RefCell< Pharos<WsEvent> >> ) -> Self
 	{
@@ -157,23 +157,23 @@ impl WsIo
 
 
 
-impl fmt::Debug for WsIo
+impl fmt::Debug for WsStream
 {
 	fn fmt( &self, f: &mut fmt::Formatter<'_> ) -> fmt::Result
 	{
-		write!( f, "WsIo for connection: {}", self.ws.url() )
+		write!( f, "WsStream for connection: {}", self.ws.url() )
 	}
 }
 
 
 
-impl Drop for WsIo
+impl Drop for WsStream
 {
 	// We don't block here, just tell the browser to close the connection and move on.
 	//
 	fn drop( &mut self )
 	{
-		trace!( "Drop WsIo" );
+		trace!( "Drop WsStream" );
 
 		match self.ready_state()
 		{
@@ -183,7 +183,7 @@ impl Drop for WsIo
 			{
 				// This can't fail
 				//
-				self.ws.close_with_code( 1000 ).expect( "WsIo::drop - close ws socket" );
+				self.ws.close_with_code( 1000 ).expect( "WsStream::drop - close ws socket" );
 
 
 				// Notify Observers
@@ -198,7 +198,7 @@ impl Drop for WsIo
 
 
 
-impl Stream for WsIo
+impl Stream for WsStream
 {
 	type Item = WsMessage;
 
@@ -207,7 +207,7 @@ impl Stream for WsIo
 	//
 	fn poll_next( mut self: Pin<&mut Self>, cx: &mut Context<'_> ) -> Poll<Option< Self::Item >>
 	{
-		trace!( "WsIo as Stream gets polled" );
+		trace!( "WsStream as Stream gets polled" );
 
 		// Once the queue is empty, check the state of the connection.
 		// When it is closing or closed, no more messages will arrive, so
@@ -232,7 +232,7 @@ impl Stream for WsIo
 
 
 
-impl Sink<WsMessage> for WsIo
+impl Sink<WsMessage> for WsStream
 {
 	type Error = WsErr;
 
@@ -241,7 +241,7 @@ impl Sink<WsMessage> for WsIo
 	//
 	fn poll_ready( mut self: Pin<&mut Self>, cx: &mut Context<'_> ) -> Poll<Result<(), Self::Error>>
 	{
-		trace!( "Sink<WsMessage> for WsIo: poll_ready" );
+		trace!( "Sink<WsMessage> for WsStream: poll_ready" );
 
 		match self.ready_state()
 		{
@@ -260,7 +260,7 @@ impl Sink<WsMessage> for WsIo
 
 	fn start_send( self: Pin<&mut Self>, item: WsMessage ) -> Result<(), Self::Error>
 	{
-		trace!( "Sink<WsMessage> for WsIo: start_send, state is {:?}", self.ready_state() );
+		trace!( "Sink<WsMessage> for WsStream: start_send, state is {:?}", self.ready_state() );
 
 		match self.ready_state()
 		{
@@ -293,7 +293,7 @@ impl Sink<WsMessage> for WsIo
 
 	fn poll_flush( self: Pin<&mut Self>, _: &mut Context<'_> ) -> Poll<Result<(), Self::Error>>
 	{
-		trace!( "Sink<WsMessage> for WsIo: poll_flush" );
+		trace!( "Sink<WsMessage> for WsStream: poll_flush" );
 
 		Ok(()).into()
 	}
@@ -306,7 +306,7 @@ impl Sink<WsMessage> for WsIo
 	//
 	fn poll_close( mut self: Pin<&mut Self>, cx: &mut Context<'_> ) -> Poll<Result<(), Self::Error>>
 	{
-		trace!( "Sink<WsMessage> for WsIo: poll_close" );
+		trace!( "Sink<WsMessage> for WsStream: poll_close" );
 
 		let state = self.ready_state();
 

@@ -1,4 +1,4 @@
-use crate::{ import::*, WsErr, WsErrKind, WsState, WsIo, WsEvent, CloseEvent, notify };
+use crate::{ import::*, WsErr, WsErrKind, WsState, WsStream, WsEvent, CloseEvent, notify };
 
 
 /// The meta data related to a websocket.
@@ -26,14 +26,14 @@ impl WsMeta
 	/// handshake.
 	///
 	/// This returns both a [WsMeta] (allow manipulating and requesting meta data for the connection) and
-	/// a [WsIo] (AsyncRead/AsyncWrite + Stream/Sink over [WsMessage](crate::WsMessage)).
+	/// a [WsStream] (AsyncRead/AsyncWrite + Stream/Sink over [WsMessage](crate::WsMessage)).
 	///
 	/// A WsMeta instance is observable through the [`pharos::Observable`](https://docs.rs/pharos/0.4.3/pharos/trait.Observable.html) trait. The type of event is [WsEvent]. In the case of a Close event, there will be additional information included
 	/// as a [CloseEvent].
 	///
-	/// When you drop this, the connection does not get closed, however when you drop [WsIo] it does. Streams
+	/// When you drop this, the connection does not get closed, however when you drop [WsStream] it does. Streams
 	/// of events will be dropped, so you will no longer receive events. One thing is possible if you really
-	/// need it, that's dropping [WsMeta] but keeping [WsIo]. Now through [WsIo::wrapped] you can
+	/// need it, that's dropping [WsMeta] but keeping [WsStream]. Now through [WsStream::wrapped] you can
 	/// access the underlying [web_sys::WebSocket] and set event handlers on it for `on_open`, `on_close`,
 	/// `on_error`. If you would do that while [WsMeta] is still around, that would break the event system
 	/// and can lead to errors if you still call methods on [WsMeta].
@@ -52,7 +52,7 @@ impl WsMeta
 	//
 	pub async fn connect( url: impl AsRef<str>, protocols: impl Into<Option<Vec<&str>>> )
 
-		-> Result< (Self, WsIo), WsErr >
+		-> Result< (Self, WsStream), WsErr >
 	{
 		let res = match protocols.into()
 		{
@@ -202,7 +202,7 @@ impl WsMeta
 				_on_close: on_close   ,
 			},
 
-			WsIo::new( ws, ph4 )
+			WsStream::new( ws, ph4 )
 		))
 	}
 
