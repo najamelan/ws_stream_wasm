@@ -500,7 +500,10 @@ impl AsyncRead for WsIo
 
 
 
-
+#[ cfg( feature = "tokio_io" ) ]
+//
+#[ cfg_attr( feature = "docs", doc(cfg( feature = "tokio_io" )) ) ]
+//
 impl TokAsyncWrite for WsIo
 {
 	fn poll_write( self: Pin<&mut Self>, cx: &mut Context<'_>, buf: &[u8] ) -> Poll<Result<usize, io::Error>>
@@ -523,6 +526,10 @@ impl TokAsyncWrite for WsIo
 }
 
 
+#[ cfg( feature = "tokio_io" ) ]
+//
+#[ cfg_attr( feature = "docs", doc(cfg( feature = "tokio_io" )) ) ]
+//
 impl TokAsyncRead for WsIo
 {
 	fn poll_read( self: Pin<&mut Self>, cx: &mut Context<'_>, buf: &mut [u8] ) -> Poll< Result<usize, io::Error> >

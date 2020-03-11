@@ -60,8 +60,11 @@ mod import
 		js_sys               :: { Array                                                                  } ,
 		pharos               :: { Pharos, Observable, Filter, ObserveConfig, Events                      } ,
 		wasm_bindgen_futures :: { spawn_local                                                            } ,
-		tokio                :: { io::{ AsyncRead as TokAsyncRead, AsyncWrite as TokAsyncWrite }         } ,
 	};
+
+	#[ cfg( feature = "tokio_io" ) ]
+	//
+	pub(crate) use tokio::io::{ AsyncRead as TokAsyncRead, AsyncWrite as TokAsyncWrite };
 }
 
 

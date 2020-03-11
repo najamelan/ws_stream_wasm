@@ -1,3 +1,5 @@
+#![ cfg( feature = "tokio_io" ) ]
+
 wasm_bindgen_test_configure!(run_in_browser);
 
 
@@ -21,7 +23,7 @@ use
 	futures               :: { stream::{ StreamExt }, sink::SinkExt } ,
 	serde                 :: { Serialize, Deserialize               } ,
 	tokio_serde_cbor      :: { Codec                                } ,
-	// web_sys               :: { console::log_1 as dbg                               } ,
+	// web_sys               :: { console::log_1 as dbg               } ,
 };
 
 
