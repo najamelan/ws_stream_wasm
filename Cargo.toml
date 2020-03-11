@@ -52,11 +52,11 @@ tokio_io = ["tokio"]
 
 [package]
 authors = ["Naja Melan <najamelan@autistici.org>"]
-categories = ["api-bindings", "wasm", "web-programming", "web-programming::websocket"]
+categories = ["asynchronous", "network-programming", "api-bindings", "wasm", "web-programming", "web-programming::websocket"]
 description = "A convenience library for using websockets in WASM"
 documentation = "https://docs.rs/ws_stream_wasm"
 edition = "2018"
-exclude = ["tests"]
+exclude = ["tests", "examples"]
 homepage = "https://github.com/najamelan/ws_stream_wasm"
 keywords = ["wasm", "websocket", "tokio", "stream", "async"]
 license = "Unlicense"
