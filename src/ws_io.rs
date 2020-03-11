@@ -28,10 +28,6 @@ pub struct WsIo
 	//
 	pharos: Rc<RefCell< Pharos<WsEvent> >>,
 
-	// State information for partially read messages in AsyncRead
-	//
-	state: ReadState,
-
 	// The closure that will receive the messages
 	//
 	_on_mesg: Closure< dyn FnMut( MessageEvent ) >,
@@ -51,7 +47,6 @@ impl WsIo
 		let waker     : Rc<RefCell<Option<Waker>>> = Rc::new( RefCell::new( None ));
 		let sink_waker: Rc<RefCell<Option<Waker>>> = Rc::new( RefCell::new( None ));
 
-		let state = ReadState::PendingChunk;
 		let queue = Rc::new( RefCell::new( VecDeque::new() ) );
 		let q2    = queue.clone();
 		let w2    = waker.clone();
@@ -122,7 +117,6 @@ impl WsIo
 		{
 			ws                ,
 			queue             ,
-			state             ,
 			waker             ,
 			sink_waker        ,
 			pharos            ,
@@ -364,177 +358,5 @@ impl Sink<WsMessage> for WsIo
 		}
 	}
 }
-
-
-
-impl AsyncWrite for WsIo
-{
-	fn poll_write( mut self: Pin<&mut Self>, cx: &mut Context<'_>, buf: &[u8] ) -> Poll<Result<usize, io::Error>>
-	{
-		let res = ready!( self.as_mut().poll_ready( cx ) );
-
-		match res
-		{
-			Ok(_) =>
-			{
-				let n = buf.len();
-
-				match self.start_send( WsMessage::Binary( buf.into() ) )
-				{
-					Ok (_) =>  return Ok(n).into(),
-
-					Err(e) if e.kind() == &WsErrKind::ConnectionNotOpen =>
-
-						return Poll::Ready( Err( io::Error::from( io::ErrorKind::NotConnected ))) ,
-
-					// This shouldn't happen, so panic for early detection.
-					//
-					Err(_) => unreachable!(),
-				}
-			}
-
-			Err(e) if e.kind() == &WsErrKind::ConnectionNotOpen =>
-
-				return Poll::Ready( Err( io::Error::from( io::ErrorKind::NotConnected ))),
-
-			Err(_) => unreachable!(),
-		}
-	}
-
-
-
-	fn poll_flush( self: Pin<&mut Self>, _cx: &mut Context<'_> ) -> Poll<Result<(), io::Error>>
-	{
-		Poll::Ready( Ok(()) )
-	}
-
-
-	fn poll_close( self: Pin<&mut Self>, cx: &mut Context<'_> ) -> Poll<Result<(), io::Error>>
-	{
-		let _ = ready!( < Self as Sink<WsMessage> >::poll_close( self, cx ) );
-
-		// WsIo poll_close is infallible
-		//
-		Ok(()).into()
-	}
-}
-
-
-
-
-
-
-#[derive(Debug, Clone)]
-//
-enum ReadState
-{
-	Ready { chunk: Vec<u8>, chunk_start: usize },
-	PendingChunk,
-}
-
-
-
-impl AsyncRead for WsIo
-{
-	fn poll_read( mut self: Pin<&mut Self>, cx: &mut Context<'_>, buf: &mut [u8] ) -> Poll< Result<usize, io::Error> >
-	{
-		trace!( "WsIo - AsyncRead: poll_read called" );
-
-		loop
-		{
-			match &mut self.state
-			{
-				ReadState::Ready { chunk, chunk_start } =>
-				{
-					let end = cmp::min( *chunk_start + buf.len(), chunk.len() );
-					let len = end - *chunk_start;
-
-					buf[..len].copy_from_slice( &chunk[ *chunk_start..end ] );
-
-
-					if chunk.len() == end { self.state = ReadState::PendingChunk }
-					else                  { *chunk_start = end                   }
-
-					return Ok(len).into();
-				}
-
-
-				ReadState::PendingChunk =>
-				{
-					trace!( "poll_read: pending" );
-
-					match Pin::new( &mut self ).poll_next(cx)
-					{
-						// We have a message
-						//
-						Poll::Ready( Some(chunk) ) =>
-						{
-							self.state = ReadState::Ready { chunk: chunk.into(), chunk_start: 0 };
-							continue;
-						}
-
-						// The stream has ended
-						//
-						Poll::Ready( None ) =>
-						{
-							trace!( "poll_read: stream has ended" );
-							return Ok(0).into();
-						}
-
-						// No chunk yet, save the task to be woken up
-						//
-						Poll::Pending =>
-						{
-							trace!( "poll_read: return Pending" );
-							return Poll::Pending;
-						}
-					}
-				}
-			}
-		}
-	}
-}
-
-
-
-
-#[ cfg( feature = "tokio_io" ) ]
-//
-#[ cfg_attr( feature = "docs", doc(cfg( feature = "tokio_io" )) ) ]
-//
-impl TokAsyncWrite for WsIo
-{
-	fn poll_write( self: Pin<&mut Self>, cx: &mut Context<'_>, buf: &[u8] ) -> Poll<Result<usize, io::Error>>
-	{
-		AsyncWrite::poll_write( self, cx, buf )
-	}
-
-
-
-	fn poll_flush( self: Pin<&mut Self>, cx: &mut Context<'_> ) -> Poll<Result<(), io::Error>>
-	{
-		AsyncWrite::poll_flush( self, cx )
-	}
-
-
-	fn poll_shutdown( self: Pin<&mut Self>, cx: &mut Context<'_> ) -> Poll<Result<(), io::Error>>
-	{
-		AsyncWrite::poll_close( self, cx )
-	}
-}
-
-
-#[ cfg( feature = "tokio_io" ) ]
-//
-#[ cfg_attr( feature = "docs", doc(cfg( feature = "tokio_io" )) ) ]
-//
-impl TokAsyncRead for WsIo
-{
-	fn poll_read( self: Pin<&mut Self>, cx: &mut Context<'_>, buf: &mut [u8] ) -> Poll< Result<usize, io::Error> >
-	{
-		AsyncRead::poll_read( self, cx, buf )
-	}
-}
-
 
 
