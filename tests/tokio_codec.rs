@@ -23,6 +23,8 @@ use
 	futures               :: { stream::{ StreamExt }, sink::SinkExt } ,
 	serde                 :: { Serialize, Deserialize               } ,
 	tokio_serde_cbor      :: { Codec                                } ,
+	async_io_stream       :: { WsIo                                 } ,
+
 	// web_sys               :: { console::log_1 as dbg               } ,
 };
 
@@ -32,11 +34,11 @@ const URL: &str = "ws://127.0.0.1:3212";
 
 
 
-async fn connect() -> (WsMeta, WsStream)
+async fn connect() -> (WsMeta, WsIo< WsStreamIo, Vec<u8> > )
 {
 	let (ws, wsio) = WsMeta::connect( URL, None ).await.expect_throw( "Could not create websocket" );
 
-	( ws, wsio )
+	(ws, wsio.into_io())
 }
 
 

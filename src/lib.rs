@@ -25,21 +25,23 @@
 
 
 
-pub mod error       ;
-    mod ws_event    ;
-    mod ws_message  ;
-    mod ws_meta     ;
-    mod ws_state    ;
-    mod ws_stream   ;
+pub mod error        ;
+    mod ws_event     ;
+    mod ws_message   ;
+    mod ws_meta      ;
+    mod ws_state     ;
+    mod ws_stream    ;
+    mod ws_stream_io ;
 
 pub use
 {
-	error      :: { Error as WsErr, ErrorKind as WsErrKind } ,
-	ws_event   :: { WsEvent, CloseEvent                    } ,
-	ws_message :: { WsMessage                              } ,
-	ws_meta    :: { WsMeta                                 } ,
-	ws_state   :: { WsState                                } ,
-	ws_stream  :: { WsStream                               } ,
+	error        :: { Error as WsErr, ErrorKind as WsErrKind } ,
+	ws_event     :: { WsEvent, CloseEvent                    } ,
+	ws_message   :: { WsMessage                              } ,
+	ws_meta      :: { WsMeta                                 } ,
+	ws_state     :: { WsState                                } ,
+	ws_stream    :: { WsStream                               } ,
+	ws_stream_io :: { WsStreamIo                             } ,
 };
 
 
@@ -48,9 +50,9 @@ mod import
 {
 	pub(crate) use
 	{
-		futures              :: { prelude::{ Stream, Sink, AsyncWrite, AsyncRead }, ready                } ,
+		futures              :: { prelude::{ Stream, Sink }, ready                                       } ,
 		futures              :: { StreamExt, SinkExt                                                     } ,
-		std                  :: { io, cmp, collections::VecDeque, fmt, task::{ Context, Waker, Poll }    } ,
+		std                  :: { io, collections::VecDeque, fmt, task::{ Context, Waker, Poll }         } ,
 		std                  :: { rc::Rc, cell::{ RefCell }, pin::Pin, convert::{ TryFrom, TryInto }     } ,
 		std                  :: { error::Error as ErrorTrait                                             } ,
 		log                  :: { *                                                                      } ,
@@ -60,12 +62,8 @@ mod import
 		js_sys               :: { Array                                                                  } ,
 		pharos               :: { Pharos, Observable, Filter, ObserveConfig, Events                      } ,
 		wasm_bindgen_futures :: { spawn_local                                                            } ,
-		ws_stream_io         :: { WsIo                                                                   } ,
+		async_io_stream      :: { WsIo                                                                   } ,
 	};
-
-	#[ cfg( feature = "tokio_io" ) ]
-	//
-	pub(crate) use tokio::io::{ AsyncRead as TokAsyncRead, AsyncWrite as TokAsyncWrite };
 }
 
 

@@ -194,11 +194,12 @@ async fn close_event_from_async_write()
 
 	info!( "starting test: close_event_from_async_write" );
 
-	let (mut ws, mut wsio) = WsMeta::connect( URL, None ).await.expect_throw( "Could not create websocket" );
+	let (mut ws, stream) = WsMeta::connect( URL, None ).await.expect_throw( "Could not create websocket" );
+	let mut stream = stream.into_io();
 
 	let mut evts = ws.observe( ObserveConfig::default() ).expect( "observe" );
 
-	AsyncWriteExt::close( &mut wsio ).await.expect_throw( "close ws" );
+	AsyncWriteExt::close( &mut stream ).await.expect_throw( "close ws" );
 
 	assert!( evts.next().await.unwrap_throw().is_closing() );
 	assert!( evts.next().await.unwrap_throw().is_closed()  );

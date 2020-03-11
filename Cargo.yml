@@ -37,7 +37,7 @@ badges:
 
 features:
 
-  tokio_io: [ tokio ]
+  tokio_io: [ tokio, async_io_stream/tokio_io ]
 
   # enable when running cargo +nightly doc. Doesn't work on stable.
   # enable when running cargo +nightly test for doctests.
@@ -56,7 +56,7 @@ dependencies:
   wasm-bindgen            : ^0.2
   wasm-bindgen-futures    : ^0.4
   tokio                   : { version: ^0.2, optional: true }
-  ws_stream_io            : { version: ^0.1, path: ../ws_stream_io, features: [ pharos ] }
+  async_io_stream         : { version: ^0.1, path: ../ws_stream_io, features: [ pharos ], package: ws_stream_io }
 
 
   web-sys:

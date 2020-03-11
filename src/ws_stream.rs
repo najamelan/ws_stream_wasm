@@ -1,4 +1,4 @@
-use crate::{ import::*, WsErr, WsErrKind, WsMessage, WsState, WsEvent, notify };
+use crate::{ import::*, * };
 
 
 /// A futures 0.3 Sink/Stream of [WsMessage]. It further implements AsyncRead/AsyncWrite
@@ -152,6 +152,15 @@ impl WsStream
 	pub fn wrapped( &self ) -> &WebSocket
 	{
 		&self.ws
+	}
+
+
+	/// Wrap this object in WsIo. WsIo implements AsyncRead/AsyncWrite.
+	/// Beware that this will transparenty interprete text messages to bytes.
+	//
+	pub fn into_io( self ) -> WsIo< WsStreamIo, Vec<u8> >
+	{
+		WsIo::new( WsStreamIo::new( self ) )
 	}
 }
 
@@ -358,5 +367,7 @@ impl Sink<WsMessage> for WsStream
 		}
 	}
 }
+
+
 
 

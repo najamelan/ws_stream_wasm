@@ -13,6 +13,12 @@ pharos = "^0.4"
 wasm-bindgen = "^0.2"
 wasm-bindgen-futures = "^0.4"
 
+[dependencies.async_io_stream]
+features = ["pharos"]
+package = "ws_stream_io"
+path = "../ws_stream_io"
+version = "^0.1"
+
 [dependencies.futures]
 default-features = false
 version = "^0.3"
@@ -24,11 +30,6 @@ version = "^0.2"
 [dependencies.web-sys]
 features = ["BinaryType", "Blob", "console", "MessageEvent", "WebSocket", "CloseEvent", "DomException"]
 version = "^0.3"
-
-[dependencies.ws_stream_io]
-features = ["pharos"]
-path = "../ws_stream_io"
-version = "^0.1"
 
 [dev-dependencies]
 bytes = "^0.5"
@@ -54,7 +55,7 @@ version = "^0.2"
 
 [features]
 docs = []
-tokio_io = ["tokio"]
+tokio_io = ["tokio", "async_io_stream/tokio_io"]
 
 [package]
 authors = ["Naja Melan <najamelan@autistici.org>"]

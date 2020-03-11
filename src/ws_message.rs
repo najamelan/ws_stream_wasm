@@ -101,3 +101,19 @@ impl From<String> for WsMessage
 		WsMessage::Text( s )
 	}
 }
+
+
+impl AsRef<[u8]> for WsMessage
+{
+	fn as_ref( &self ) -> &[u8]
+	{
+		match self
+		{
+			WsMessage::Text  ( string ) => string.as_ref() ,
+			WsMessage::Binary( vec    ) => vec   .as_ref() ,
+		}
+	}
+}
+
+
+
