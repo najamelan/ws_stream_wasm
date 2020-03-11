@@ -60,6 +60,7 @@ mod import
 		js_sys               :: { Array                                                                  } ,
 		pharos               :: { Pharos, Observable, Filter, ObserveConfig, Events                      } ,
 		wasm_bindgen_futures :: { spawn_local                                                            } ,
+		ws_stream_io         :: { WsIo as WsAsync                                                        } ,
 	};
 
 	#[ cfg( feature = "tokio_io" ) ]

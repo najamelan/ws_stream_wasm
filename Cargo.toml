@@ -20,9 +20,15 @@ version = "^0.3"
 [dependencies.tokio]
 optional = true
 version = "^0.2"
+
 [dependencies.web-sys]
 features = ["BinaryType", "Blob", "console", "MessageEvent", "WebSocket", "CloseEvent", "DomException"]
 version = "^0.3"
+
+[dependencies.ws_stream_io]
+features = ["pharos"]
+path = "../ws_stream_io"
+version = "^0.1"
 
 [dev-dependencies]
 bytes = "^0.5"
