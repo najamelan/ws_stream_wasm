@@ -37,7 +37,7 @@ badges:
 
 features:
 
-  tokio_io: [ tokio, async_io_stream/tokio_io ]
+  tokio_io: [ async_io_stream/tokio_io ]
 
   # enable when running cargo +nightly doc. Doesn't work on stable.
   # enable when running cargo +nightly test for doctests.
@@ -51,16 +51,13 @@ dependencies:
   #
   pharos               : ^0.4
   futures              : { version: ^0.3, default-features: false }
-  log                  : ^0.4
-  js-sys               : ^0.3
-  wasm-bindgen         : ^0.2
-  wasm-bindgen-futures : ^0.4
-  tokio                : { version: ^0.2, optional: true }
   async_io_stream      : { version: ^0.1, path: ../async_io_stream, features: [ map_pharos ] }
-  thiserror            : ^1
+  log                  : ^0.4
 
-
+  # We expose WebSocket.
+  #
   web-sys:
+
     version : ^0.3
 
     features:
@@ -75,10 +72,16 @@ dependencies:
 
   # private deps
   #
+  js-sys               : ^0.3
+  thiserror            : ^1
   send_wrapper         : ^0.4
+  wasm-bindgen         : ^0.2
+  wasm-bindgen-futures : ^0.4
+
 
 dev-dependencies:
 
+  tokio                    : { version: ^0.2 }
   tokio-util               : { version: ^0.2, default-features: false, features: [codec] }
   # wasm-logger              : ^0.1
   console_log              : ^0.1
