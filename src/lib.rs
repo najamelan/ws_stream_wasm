@@ -25,13 +25,13 @@
 
 
 
-pub mod error        ;
-    mod ws_event     ;
-    mod ws_message   ;
-    mod ws_meta      ;
-    mod ws_state     ;
-    mod ws_stream    ;
-    mod ws_stream_io ;
+mod error        ;
+mod ws_event     ;
+mod ws_message   ;
+mod ws_meta      ;
+mod ws_state     ;
+mod ws_stream    ;
+mod ws_stream_io ;
 
 pub use
 {
@@ -61,7 +61,7 @@ mod import
 		js_sys               :: { Array                                                                  } ,
 		pharos               :: { Pharos, Observable, Filter, ObserveConfig, Events                      } ,
 		wasm_bindgen_futures :: { spawn_local                                                            } ,
-		async_io_stream      :: { WsIo                                                                   } ,
+		async_io_stream      :: { IoStream                                                               } ,
 		thiserror            :: { Error                                                                  } ,
 		send_wrapper         :: { SendWrapper                                                            } ,
 	};

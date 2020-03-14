@@ -155,12 +155,12 @@ impl WsStream
 	}
 
 
-	/// Wrap this object in WsIo. WsIo implements AsyncRead/AsyncWrite.
+	/// Wrap this object in [`IoStream`]. `IoStream` implements AsyncRead/AsyncWrite.
 	/// Beware that this will transparenty interprete text messages to bytes.
 	//
-	pub fn into_io( self ) -> WsIo< WsStreamIo, Vec<u8> >
+	pub fn into_io( self ) -> IoStream< WsStreamIo, Vec<u8> >
 	{
-		WsIo::new( WsStreamIo::new( self ) )
+		IoStream::new( WsStreamIo::new( self ) )
 	}
 }
 
@@ -195,7 +195,7 @@ impl Drop for WsStream
 				self.ws.close_with_code( 1000 ).expect( "WsStream::drop - close ws socket" );
 
 
-				// Notify Observers
+				// Notify Observers. This event is not emitted by the websocket API.
 				//
 				notify( self.pharos.clone(), WsEvent::Closing )
 			}

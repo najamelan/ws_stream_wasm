@@ -5,6 +5,7 @@
 - design, do we want to put the use of WsIo on the user?
 - text messages are accepted...
 - update tokio-util, breaking change, probably needs new version of tokio-serde-cbor
+- ci: https://rustwasm.github.io/docs/wasm-bindgen/wasm-bindgen-test/continuous-integration.html has some windows instructions.
 
 ## Features
 - when the connection is lost, can we know if it's the server that disconnected (correct shutdown exchange)

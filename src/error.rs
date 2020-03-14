@@ -5,19 +5,18 @@ use crate::{ import::*, CloseEvent };
 
 /// The error type for errors happening in `ws_stream_wasm`.
 ///
-/// Use [`Error::kind()`] to know which kind of error happened.
 //
 #[ derive( Debug, Error, Clone, PartialEq, Eq ) ] #[ non_exhaustive ]
 //
 pub enum WsErr
 {
-	/// Invalid input to [WsState::try_from( u16 )](crate::WsState)
+	/// Invalid input to [WsState::try_from( u16 )](crate::WsState).
 	//
 	#[ error( "Invalid input to conversion to WsReadyState: {supplied}" ) ]
 	//
 	InvalidWsState
 	{
-		/// The user supplied value that is in valid
+		/// The user supplied value that is invalid.
 		//
 		supplied: u16
 	},
@@ -35,32 +34,32 @@ pub enum WsErr
 	ForbiddenPort,
 
 	/// An invalid URL was given to [WsMeta::connect](crate::WsMeta::connect), please see:
-	/// [HTML Living Standard](https://html.spec.whatwg.org/multipage/web-sockets.html#dom-websocket)
+	/// [HTML Living Standard](https://html.spec.whatwg.org/multipage/web-sockets.html#dom-websocket).
 	//
 	#[ error( "An invalid URL was given to the connect method: {supplied}" ) ]
 	//
 	InvalidUrl
 	{
-		/// The user supplied value that is in valid
+		/// The user supplied value that is invalid.
 		//
 		supplied: String
 	},
 
 	/// An invalid close code was given to a close method. For valid close codes, please see:
-	/// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/CloseEvent#Status_codes)
+	/// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/CloseEvent#Status_codes).
 	//
 	#[ error( "An invalid close code was given to a close method: {supplied}" ) ]
 	//
 	InvalidCloseCode
 	{
-		/// The user supplied value that is in valid
+		/// The user supplied value that is invalid.
 		//
 		supplied: u16
 	},
 
 
 	/// The reason string given to a close method is longer than 123 bytes, please see:
-	/// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebSocket/close)
+	/// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebSocket/close).
 	//
 	#[ error( "The reason string given to a close method is to long." ) ]
 	//
