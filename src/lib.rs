@@ -63,6 +63,7 @@ mod import
 		wasm_bindgen_futures :: { spawn_local                                                            } ,
 		async_io_stream      :: { WsIo                                                                   } ,
 		thiserror            :: { Error                                                                  } ,
+		send_wrapper         :: { SendWrapper                                                            } ,
 	};
 }
 
@@ -71,7 +72,7 @@ use import::*;
 
 /// Helper function to reduce code bloat
 //
-pub(crate) fn notify( pharos: Rc<RefCell<Pharos<WsEvent>>>, evt: WsEvent )
+pub(crate) fn notify( pharos: SendWrapper< Rc<RefCell<Pharos<WsEvent>>> >, evt: WsEvent )
 {
 	let notify = async move
 	{

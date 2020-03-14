@@ -8,12 +8,12 @@ use crate::{ import::*, WsErr, WsState, WsStream, WsEvent, CloseEvent, notify };
 //
 pub struct WsMeta
 {
-	ws       : Rc<WebSocket>                      ,
-	pharos   : Rc<RefCell< Pharos<WsEvent> >>     ,
+	ws       : SendWrapper< Rc<WebSocket>                  > ,
+	pharos   : SendWrapper< Rc<RefCell< Pharos<WsEvent> >> > ,
 
-	_on_open : Closure< dyn FnMut() >             ,
-	_on_error: Closure< dyn FnMut() >             ,
-	_on_close: Closure< dyn FnMut( JsCloseEvt ) > ,
+	_on_open : SendWrapper< Closure< dyn FnMut() >             >,
+	_on_error: SendWrapper< Closure< dyn FnMut() >             >,
+	_on_close: SendWrapper< Closure< dyn FnMut( JsCloseEvt ) > >,
 }
 
 
@@ -75,7 +75,7 @@ impl WsMeta
 		//
 		let ws = match res
 		{
-			Ok(ws) => Rc::new( ws ),
+			Ok(ws) => SendWrapper::new( Rc::new( ws ) ),
 
 			Err(e) =>
 			{
@@ -99,7 +99,7 @@ impl WsMeta
 
 		// Create our pharos
 		//
-		let pharos = Rc::new( RefCell::new( Pharos::default() ));
+		let pharos = SendWrapper::new( Rc::new( RefCell::new( Pharos::default() )) );
 		let ph1    = pharos.clone();
 		let ph2    = pharos.clone();
 		let ph3    = pharos.clone();
@@ -195,11 +195,11 @@ impl WsMeta
 		((
 			Self
 			{
-				pharos                ,
-				ws       : ws.clone() ,
-				_on_open : on_open    ,
-				_on_error: on_error   ,
-				_on_close: on_close   ,
+				pharos                                  ,
+				ws       : ws.clone()                   ,
+				_on_open : SendWrapper::new( on_open  ) ,
+				_on_error: SendWrapper::new( on_error ) ,
+				_on_close: SendWrapper::new( on_close ) ,
 			},
 
 			WsStream::new( ws, ph4 )

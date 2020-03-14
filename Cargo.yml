@@ -75,6 +75,7 @@ dependencies:
 
   # private deps
   #
+  send_wrapper         : ^0.4
 
 dev-dependencies:
 

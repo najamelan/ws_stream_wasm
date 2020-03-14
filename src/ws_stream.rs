@@ -10,27 +10,27 @@ use crate::{ import::*, * };
 //
 pub struct WsStream
 {
-	ws: Rc< WebSocket >,
+	ws: SendWrapper< Rc< WebSocket > >,
 
 	// The queue of received messages
 	//
-	queue: Rc<RefCell< VecDeque<WsMessage> >>,
+	queue: SendWrapper< Rc<RefCell< VecDeque<WsMessage> >> >,
 
 	// Last waker of task that wants to read incoming messages to be woken up on a new message
 	//
-	waker: Rc<RefCell< Option<Waker> >>,
+	waker: SendWrapper< Rc<RefCell< Option<Waker> >> >,
 
 	// Last waker of task that wants to write to the Sink
 	//
-	sink_waker: Rc<RefCell< Option<Waker> >>,
+	sink_waker: SendWrapper< Rc<RefCell< Option<Waker> >> >,
 
 	// A pointer to the pharos of WsMeta for when we need to listen to events
 	//
-	pharos: Rc<RefCell< Pharos<WsEvent> >>,
+	pharos: SendWrapper< Rc<RefCell< Pharos<WsEvent> >> >,
 
 	// The closure that will receive the messages
 	//
-	_on_mesg: Closure< dyn FnMut( MessageEvent ) >,
+	_on_mesg: SendWrapper< Closure< dyn FnMut( MessageEvent ) > >,
 
 	// This allows us to store a future to poll when Sink::poll_close is called
 	//
@@ -42,12 +42,12 @@ impl WsStream
 {
 	/// Create a new WsStream.
 	//
-	pub fn new( ws: Rc<WebSocket>, pharos : Rc<RefCell< Pharos<WsEvent> >> ) -> Self
+	pub(crate) fn new( ws: SendWrapper< Rc<WebSocket> >, pharos : SendWrapper< Rc<RefCell< Pharos<WsEvent> >> > ) -> Self
 	{
-		let waker     : Rc<RefCell<Option<Waker>>> = Rc::new( RefCell::new( None ));
-		let sink_waker: Rc<RefCell<Option<Waker>>> = Rc::new( RefCell::new( None ));
+		let waker     : SendWrapper< Rc<RefCell<Option<Waker>>> > = SendWrapper::new( Rc::new( RefCell::new( None )) );
+		let sink_waker: SendWrapper< Rc<RefCell<Option<Waker>>> > = SendWrapper::new( Rc::new( RefCell::new( None )) );
 
-		let queue = Rc::new( RefCell::new( VecDeque::new() ) );
+		let queue = SendWrapper::new( Rc::new( RefCell::new( VecDeque::new() ) ) );
 		let q2    = queue.clone();
 		let w2    = waker.clone();
 
@@ -115,13 +115,13 @@ impl WsStream
 
 		Self
 		{
-			ws                ,
-			queue             ,
-			waker             ,
-			sink_waker        ,
-			pharos            ,
-			closer  : None    ,
-			_on_mesg: on_mesg ,
+			ws                                    ,
+			queue                                 ,
+			waker                                 ,
+			sink_waker                            ,
+			pharos                                ,
+			closer  : None                        ,
+			_on_mesg: SendWrapper::new( on_mesg ) ,
 		}
 	}
 
