@@ -1,15 +1,6 @@
+# Currently there's no doc tests nor code coverage on wasm.
+
 language: rust
-
-rust:
-  - stable
-  # - beta
-  - nightly
-
-
-branches:
-  only:
-    - master
-    - dev
 
 
 # Need to cache the whole `.cargo` directory to keep .crates.toml for
@@ -19,6 +10,7 @@ cache:
   directories:
     - /home/travis/.cargo
 
+
 # But don't cache the cargo registry
 # and remove wasm-pack binary to avoid the installer asking confirmation for overwriting it.
 #
@@ -27,29 +19,56 @@ before_cache:
   - rm -rf /home/travis/.cargo/registry
   - rm -rf /home/travis/.cargo/bin/wasm-pack
 
-
 install:
   - curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
 
+
 addons:
   firefox: latest
-  apt:
-    packages:
-      - libgtk-3-dev # needed for headless (sic) firefox https://bugzilla.mozilla.org/show_bug.cgi?id=1372998
-      - libdbus-glib-1-dev # firefox
+  chrome : stable
 
-script:
 
-  - git clone --depth 1 https://github.com/najamelan/ws_stream_tungstenite
-  - cd ws_stream_tungstenite
-  - cargo build --example echo --release
-  - cargo build --example echo_tt --release
-  - cargo run --example echo --release &
-  - cargo run --example echo_tt --release -- "127.0.0.1:3312"  &
-  - cd ..
-  - wasm-pack test  --firefox --headless
-  # chrome just won't work on travis
-  # - wasm-pack test  --chrome  --headless
-  - wasm-pack test  --firefox --headless --release
-  # - wasm-pack test  --chrome  --headless --release
+branches:
+  only:
+    - master
+    - dev
 
+jobs:
+
+  include:
+
+    - name: linux stable rust
+      os  : linux
+      rust: stable
+
+      script:
+        - bash ci/server.bash
+        - bash ci/tests.bash
+
+
+    - name: linux nightly rust
+      os  : linux
+      rust: nightly
+
+      script:
+        - bash ci/server.bash
+        - bash ci/tests.bash
+        - bash ci/docs.bash
+
+
+    - name: osx stable rust
+      os  : osx
+      rust: stable
+
+      script:
+        - bash ci/server.bash
+        - bash ci/tests.bash
+
+
+    - name: windows stable rust
+      os  : windows
+      rust: stable
+
+      script:
+        - bash ci/server.bash
+        - bash ci/tests.bash
