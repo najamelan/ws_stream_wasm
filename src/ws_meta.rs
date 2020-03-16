@@ -3,27 +3,22 @@ use crate::{ import::*, WsErr, WsState, WsStream, WsEvent, CloseEvent, notify };
 
 /// The meta data related to a websocket.
 ///
-/// A `WsMeta` instance is observable through the [`pharos::Observable`](https://docs.rs/pharos/0.4.3/pharos/trait.Observable.html) trait. The type of event is [WsEvent]. In the case of a Close event, there will be additional information included
+/// A `WsMeta` instance is observable through the [`pharos::Observable`](https://docs.rs/pharos/0.4.3/pharos/trait.Observable.html)
+/// trait. The type of event is [WsEvent]. In the case of a Close event, there will be additional information included
 /// as a [CloseEvent].
 ///
-/// When you drop this, the connection does not get closed, however when you drop [WsStream] it does. Streams
-/// of events will be dropped, so you will no longer receive events. One thing is possible if you really
-/// need it, that's dropping [WsMeta] but keeping [WsStream]. Now through [WsStream::wrapped] you can
-/// access the underlying [web_sys::WebSocket] and set event handlers on it for `on_open`, `on_close`,
-/// `on_error`. If you would do that while [WsMeta] is still around, that would break the event system
-/// and can lead to errors if you still call methods on [WsMeta].
+/// When you drop this, the connection does not get closed, however when you drop [WsStream] it does.
 ///
 /// Most of the methods on this type directly map to the web API. For more documentation, check the
 /// [MDN WebSocket documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebSocket/WebSocket).
+///
+/// `WsMeta` exists so you can pass [WsStream] to combinators that consume the `Stream`, yet still allow you
+/// to access the API of the underlying WebSocket.
 //
 pub struct WsMeta
 {
-	ws       : SendWrapper< Rc<WebSocket>                  > ,
-	pharos   : SendWrapper< Rc<RefCell< Pharos<WsEvent> >> > ,
-
-	_on_open : SendWrapper< Closure< dyn FnMut() >             >,
-	_on_error: SendWrapper< Closure< dyn FnMut() >             >,
-	_on_close: SendWrapper< Closure< dyn FnMut( JsCloseEvt ) > >,
+	ws    : SendWrapper< Rc<WebSocket> >                  ,
+	pharos: SendWrapper< Rc<RefCell< Pharos<WsEvent> >> > ,
 }
 
 
@@ -37,8 +32,7 @@ impl WsMeta
 	///
 	/// This returns both a [WsMeta] (allow manipulating and requesting meta data for the connection) and
 	/// a [WsStream] (`Stream`/`Sink` over [WsMessage](crate::WsMessage)). [WsStream] can be wrapped to obtain
-	/// `AsyncRead`/`AsyncWrite`. [WsMeta] exists so you can pass [WsStream] to combinators that consume the
-	/// `Stream`, yet still allow you to access the API of the underlying WebSocket.
+	/// `AsyncRead`/`AsyncWrite` with [WsStream::into_io].
 	///
 	/// ## Errors
 	///
@@ -73,7 +67,7 @@ impl WsMeta
 		};
 
 
-		// Deal with errors from the WebSocket constructor
+		// Deal with errors from the WebSocket constructor.
 		//
 		let ws = match res
 		{
@@ -99,7 +93,7 @@ impl WsMeta
 		};
 
 
-		// Create our pharos
+		// Create our pharos.
 		//
 		let pharos = SendWrapper::new( Rc::new( RefCell::new( Pharos::default() )) );
 		let ph1    = pharos.clone();
@@ -109,7 +103,6 @@ impl WsMeta
 
 
 		// Setup our event listeners
-		// TODO: figure out a way to avoid the trivial cast.
 		//
 		#[ allow( trivial_casts ) ]
 		//
@@ -133,10 +126,9 @@ impl WsMeta
 		{
 			trace!( "websocket error event" );
 
-			// notify observers
+			// notify observers.
 			//
 			notify( ph2.clone(), WsEvent::Error )
-
 
 		}) as Box< dyn FnMut() > );
 
@@ -156,7 +148,6 @@ impl WsMeta
 
 			notify( ph3.clone(), c )
 
-
 		}) as Box< dyn FnMut( JsCloseEvt ) > );
 
 
@@ -170,11 +161,10 @@ impl WsMeta
 		// the error event. Either a close event happens, in which case we want to recover the CloseEvent to return it
 		// to the user, or an Open event happens in which case we are happy campers.
 		//
-		let mut evts = match pharos.borrow_mut().observe( Self::OPEN_CLOSE.into() )
-		{
-			Ok(events) => events                    ,
-			Err(e)     => unreachable!( "{:?}", e ) , // only happens if we closed it.
-		};
+		let mut evts = pharos.borrow_mut().observe( Self::OPEN_CLOSE.into() )
+
+			.expect( "we didn't close pharos" )
+		;
 
 		// If the connection is closed, return error
 		//
@@ -182,7 +172,7 @@ impl WsMeta
 		{
 			trace!( "WebSocket connection closed!" );
 
-			return Err( WsErr::ConnectionFailed{ event: evt }.into() )
+			return Err( WsErr::ConnectionFailed{ event: evt } )
 		}
 
 
@@ -197,14 +187,18 @@ impl WsMeta
 		((
 			Self
 			{
-				pharos                                  ,
-				ws       : ws.clone()                   ,
-				_on_open : SendWrapper::new( on_open  ) ,
-				_on_error: SendWrapper::new( on_error ) ,
-				_on_close: SendWrapper::new( on_close ) ,
+				pharos,
+				ws: ws.clone(),
 			},
 
-			WsStream::new( ws, ph4 )
+			WsStream::new
+			(
+				ws,
+				ph4,
+				SendWrapper::new( on_open  ),
+				SendWrapper::new( on_error ),
+				SendWrapper::new( on_close ),
+			)
 		))
 	}
 
@@ -364,7 +358,7 @@ impl WsMeta
 	{
 		self.ws.ready_state().try_into().map_err( |e| error!( "{}", e ) )
 
-			// This can't throw unless the browser gives us an invalid ready state
+			// This can't throw unless the browser gives us an invalid ready state.
 			//
 			.expect_throw( "Convert ready state from browser API" )
 	}
@@ -388,7 +382,7 @@ impl WsMeta
 	/// The number of bytes of data that have been queued but not yet transmitted to the network.
 	///
 	/// **NOTE:** that this is the number of bytes buffered by the underlying platform WebSocket
-	/// implementation. It does not reflect any buffering performed by ws_stream.
+	/// implementation. It does not reflect any buffering performed by ws_stream_wasm.
 	//
 	pub fn buffered_amount( &self ) -> u32
 	{
@@ -445,24 +439,6 @@ impl Observable<WsEvent> for WsMeta
 	fn observe( &mut self, options: ObserveConfig<WsEvent> ) -> Result< Events<WsEvent>, Self::Error >
 	{
 		self.pharos.borrow_mut().observe( options )
-	}
-}
-
-
-
-impl Drop for WsMeta
-{
-	// We don't block here, just tell the browser to close the connection and move on.
-	// TODO: is this necessary or would it be closed automatically when we drop the WebSocket
-	// object? Note that there is also the WsStream which holds a clone.
-	//
-	fn drop( &mut self )
-	{
-		trace!( "Drop WsMeta" );
-
-		self.ws.set_onopen ( None );
-		self.ws.set_onclose( None );
-		self.ws.set_onerror( None );
 	}
 }
 

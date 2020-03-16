@@ -1,12 +1,26 @@
 use crate::{ import::*, * };
 
 
-/// A futures 0.3 Sink/Stream of [WsMessage]. It further implements AsyncRead/AsyncWrite
-/// that can be framed with codecs. You can use the compat layer from the futures library if you want to
-/// use tokio codecs. See the [integration tests](https://github.com/ws_stream_wasm/tree/master/tests/tokio_codec.rs)
+/// A futures 0.3 Sink/Stream of [WsMessage]. Created with [WsMeta::connect](crate::WsMeta::connect).
+///
+/// ## Closing the connection
+///
+/// When this is dropped, the connection closes, but you should favor calling one of the close
+/// methods on [WsMeta](crate::WsMeta), which allow you to set a proper close code and reason.
+///
+/// Since this implements [`Sink`], it has to have a close method. This method will call the
+/// web api [`WebSocket.close`](https://developer.mozilla.org/en-US/docs/Web/API/WebSocket/close)
+/// without parameters. Eg. a default value of `1005` will be assumed for the close code. The
+/// situation is the same when dropping without calling close.
+///
+/// **Warning**: This object holds the callbacks needed to receive events from the browser.
+/// If you drop it before the close event was emitted, you will no longer receive events. Thus,
+/// observers will never receive a `Close` event. Drop will issue a `Closing` event and this
+/// will be the very last event observers receive. The the stream will end if `WsMeta` is also dropped.
+///
+/// See the [integration tests](https://github.com/ws_stream_wasm/tree/master/tests/tokio_codec.rs)
 /// if you need an example.
 ///
-/// Created with [WsMeta::connect](crate::WsMeta::connect).
 //
 pub struct WsStream
 {
@@ -28,9 +42,12 @@ pub struct WsStream
 	//
 	pharos: SendWrapper< Rc<RefCell< Pharos<WsEvent> >> >,
 
-	// The closure that will receive the messages
+	// The callback closures.
 	//
-	_on_mesg: SendWrapper< Closure< dyn FnMut( MessageEvent ) > >,
+	_on_open : SendWrapper< Closure< dyn FnMut()               > >,
+	_on_error: SendWrapper< Closure< dyn FnMut()               > >,
+	_on_close: SendWrapper< Closure< dyn FnMut( JsCloseEvt   ) > >,
+	_on_mesg : SendWrapper< Closure< dyn FnMut( MessageEvent ) > >,
 
 	// This allows us to store a future to poll when Sink::poll_close is called
 	//
@@ -42,7 +59,16 @@ impl WsStream
 {
 	/// Create a new WsStream.
 	//
-	pub(crate) fn new( ws: SendWrapper< Rc<WebSocket> >, pharos : SendWrapper< Rc<RefCell< Pharos<WsEvent> >> > ) -> Self
+	pub(crate) fn new
+	(
+		ws      : SendWrapper< Rc<WebSocket>                        > ,
+		pharos  : SendWrapper< Rc<RefCell< Pharos<WsEvent> >>       > ,
+		on_open : SendWrapper< Closure< dyn FnMut()               > > ,
+		on_error: SendWrapper< Closure< dyn FnMut()               > > ,
+		on_close: SendWrapper< Closure< dyn FnMut( JsCloseEvt   ) > > ,
+
+	) -> Self
+
 	{
 		let waker     : SendWrapper< Rc<RefCell<Option<Waker>>> > = SendWrapper::new( Rc::new( RefCell::new( None )) );
 		let sink_waker: SendWrapper< Rc<RefCell<Option<Waker>>> > = SendWrapper::new( Rc::new( RefCell::new( None )) );
@@ -115,13 +141,16 @@ impl WsStream
 
 		Self
 		{
-			ws                                    ,
-			queue                                 ,
-			waker                                 ,
-			sink_waker                            ,
-			pharos                                ,
-			closer  : None                        ,
-			_on_mesg: SendWrapper::new( on_mesg ) ,
+			ws                                      ,
+			queue                                   ,
+			waker                                   ,
+			sink_waker                              ,
+			pharos                                  ,
+			closer    : None                        ,
+			_on_mesg  : SendWrapper::new( on_mesg ) ,
+			_on_open  : on_open                     ,
+			_on_error : on_error                    ,
+			_on_close : on_close                    ,
 		}
 	}
 
@@ -202,6 +231,9 @@ impl Drop for WsStream
 		}
 
 		self.ws.set_onmessage( None );
+		self.ws.set_onerror  ( None );
+		self.ws.set_onopen   ( None );
+		self.ws.set_onclose  ( None );
 	}
 }
 
