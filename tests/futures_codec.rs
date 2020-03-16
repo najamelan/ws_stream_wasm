@@ -20,7 +20,7 @@ use
 	futures_codec         :: { Framed, LinesCodec, BytesCodec       } ,
 	serde                 :: { Serialize, Deserialize               } ,
 	// web_sys               :: { console::log_1 as dbg               } ,
-	async_io_stream       :: { WsIo                                 } ,
+	async_io_stream       :: { IoStream                                 } ,
 };
 
 
@@ -28,7 +28,7 @@ const URL: &str = "ws://127.0.0.1:3212";
 
 
 
-async fn connect() -> (WsMeta, WsIo<WsStreamIo, Vec<u8>>)
+async fn connect() -> (WsMeta, IoStream<WsStreamIo, Vec<u8>>)
 {
 	let (ws, wsio) = WsMeta::connect( URL, None ).await.expect_throw( "Could not create websocket" );
 
