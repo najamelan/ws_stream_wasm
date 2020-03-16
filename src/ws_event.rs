@@ -43,6 +43,9 @@ pub enum WsEvent
 
 	/// An error happened on the connection. For more information about when this event
 	/// occurs, see the [HTML Living Standard](https://html.spec.whatwg.org/multipage/web-sockets.html).
+	/// Since the browser is not allowed to convey any information to the client code as to why an error
+	/// happened (for security reasons), as described in the HTML specification, there usually is no extra
+	/// information available. That's why this event has no data attached to it.
 	//
 	Error,
 

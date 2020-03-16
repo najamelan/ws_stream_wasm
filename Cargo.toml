@@ -54,7 +54,6 @@ features = ["codec"]
 version = "^0.2"
 
 [features]
-docs = []
 tokio_io = ["async_io_stream/tokio_io"]
 
 [package]
@@ -76,3 +75,4 @@ version = "0.5.2"
 [package.metadata.docs]
 [package.metadata.docs.rs]
 all-features = true
+rustdocflags = ["--cfg", "docs"]

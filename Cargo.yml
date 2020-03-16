@@ -28,6 +28,7 @@ package:
     docs:
       rs:
         all-features: true
+        rustdocflags: [ --cfg, docs ]
 
 badges:
 
@@ -38,11 +39,6 @@ badges:
 features:
 
   tokio_io: [ async_io_stream/tokio_io ]
-
-  # enable when running cargo +nightly doc. Doesn't work on stable.
-  # enable when running cargo +nightly test for doctests.
-  #
-  docs: []
 
 
 dependencies:

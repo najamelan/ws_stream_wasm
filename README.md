@@ -68,15 +68,16 @@ tokio version of AsyncRead/AsyncWrite.
 
 ## Usage
 
-Please have a look in the [examples directory of the repository](https://github.com/najamelan/ws_stream_wasm/tree/master/examples).
-
-The [integration tests](https://github.com/najamelan/ws_stream_wasm/tree/master/tests) are also useful.
+The [integration tests](https://github.com/najamelan/ws_stream_wasm/tree/master/tests) show most features in action. The
+example directory doesn't currently hold any interesting examples.
 
 The types in this library are `Send` as far as the compiler is concerned. This is so that you can use them with general purpose
 libraries that also work on WASM but that require a connection to be `Send`. Currently WASM has no threads though and most
 underlying types we use aren't `Send`. The solution for the moment is to use [`send_wrapper::SendWrapper`]. This will panic
 if it's ever dereferenced on a different thread than where it's created. You have to consider that the types aren't `Send`, but
 on WASM it's safe to pass them to an API that requires `Send`, because there is no multi-threading.
+
+The main entrypoint you'll want to use, eg to connect, is [`WsMeta::connect`].
 
 ### Basic events example
 ```rust
