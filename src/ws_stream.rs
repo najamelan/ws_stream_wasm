@@ -192,7 +192,7 @@ impl Drop for WsStream
 			{
 				// This can't fail
 				//
-				self.ws.close_with_code( 1000 ).expect( "WsStream::drop - close ws socket" );
+				self.ws.close().expect( "WsStream::drop - close ws socket" );
 
 
 				// Notify Observers. This event is not emitted by the websocket API.
