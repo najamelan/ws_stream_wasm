@@ -47,7 +47,7 @@ dependencies:
   #
   pharos               : ^0.4
   futures              : { version: ^0.3, default-features: false }
-  async_io_stream      : { version: ^0.1, path: ../async_io_stream, features: [ map_pharos ] }
+  async_io_stream      : { version: ^0.1, features: [ map_pharos ] }
   log                  : ^0.4
 
   # We expose WebSocket and CloseEvent.

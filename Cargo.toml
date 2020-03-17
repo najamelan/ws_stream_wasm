@@ -17,7 +17,6 @@ wasm-bindgen-futures = "^0.4"
 
 [dependencies.async_io_stream]
 features = ["map_pharos"]
-path = "../async_io_stream"
 version = "^0.1"
 
 [dependencies.futures]
