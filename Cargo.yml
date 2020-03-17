@@ -28,7 +28,7 @@ package:
     docs:
       rs:
         all-features: true
-        rustdocflags: [ --cfg, docs ]
+
 
 badges:
 
@@ -93,3 +93,7 @@ dev-dependencies:
   futures_codec            : =0.4
   wasm-bindgen-test        : ^0.3
 
+
+build-dependencies:
+
+  rustc_version: ^0.2

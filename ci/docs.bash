@@ -14,3 +14,7 @@ export RUSTFLAGS="-D warnings"
 
 
 cargo doc --all-features
+
+# doc tests aren't working on wasm for now...
+#
+# cargo test --doc --all-features --target wasm32-unknown-unknown

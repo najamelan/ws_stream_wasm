@@ -6,6 +6,9 @@ status = "actively-developed"
 [badges.travis-ci]
 repository = "najamelan/ws_stream_wasm"
 
+[build-dependencies]
+rustc_version = "^0.2"
+
 [dependencies]
 js-sys = "^0.3"
 log = "^0.4"
@@ -74,4 +77,3 @@ version = "0.5.2"
 [package.metadata.docs]
 [package.metadata.docs.rs]
 all-features = true
-rustdocflags = ["--cfg", "docs"]

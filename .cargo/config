@@ -1,2 +1,2 @@
-[build]
-rustdocflags = [ "--cfg", "docs" ]
+[target.wasm32-unknown-unknown]
+runner = 'wasm-bindgen-test-runner'

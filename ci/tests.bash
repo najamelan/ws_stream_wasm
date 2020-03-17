@@ -10,7 +10,7 @@ set -x
 
 export RUSTFLAGS="-D warnings"
 
-wasm-pack test  --firefox --headless
-wasm-pack test  --chrome  --headless
-wasm-pack test  --firefox --headless --release
-wasm-pack test  --chrome  --headless --release
+wasm-pack test  --firefox --headless -- --all-features
+wasm-pack test  --chrome  --headless -- --all-features
+wasm-pack test  --firefox --headless -- --all-features --release
+wasm-pack test  --chrome  --headless -- --all-features --release
