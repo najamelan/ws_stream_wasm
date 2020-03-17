@@ -65,10 +65,12 @@ jobs:
         - bash ci/tests.bash
 
 
-    - name: windows stable rust
-      os  : windows
-      rust: stable
+    # Wasm on windows is broken for now, cannot find firefox binary.
+    #
+    # - name: windows stable rust
+    #   os  : windows
+    #   rust: stable
 
-      script:
-        - bash ci/server.bash
-        - bash ci/tests.bash
+    #   script:
+    #     - bash ci/server.bash
+    #     - bash ci/tests.bash
