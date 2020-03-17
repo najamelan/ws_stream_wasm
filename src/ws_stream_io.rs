@@ -2,7 +2,10 @@ use crate::{ import::*, WsErr, WsStream };
 
 
 /// A wrapper around WsStream that converts errors into io::Error so that it can be
-/// used for io (like AsyncRead/AsyncWrite).
+/// used for io (like `AsyncRead`/`AsyncWrite`).
+///
+/// You shouldn't need to use this manually. It is passed to [`IoStream`] when calling
+/// [`WsStream::into_io`].
 //
 #[ derive(Debug) ]
 //

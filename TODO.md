@@ -1,9 +1,8 @@
 # TODO
 
 - why are the tests for futures_codec so much faster than for tokio codec.
-- verify example and doc tests
+- doc tests
 - look into proper changelogs, like the futures crate.
-- design, do we want to put the use of WsIo on the user?
 - text messages are accepted...
 - update tokio-util, breaking change, probably needs new version of tokio-serde-cbor
 - ci: https://rustwasm.github.io/docs/wasm-bindgen/wasm-bindgen-test/continuous-integration.html has some windows instructions.

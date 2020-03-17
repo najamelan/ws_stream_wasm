@@ -1,7 +1,9 @@
 use crate::{ import::*, WsErr, WsState, WsStream, WsEvent, CloseEvent, notify };
 
 
-/// The meta data related to a websocket.
+/// The meta data related to a websocket. Allows access to the methods on the WebSocket API.
+/// This is split from the `Stream`/`Sink` so you can pass the latter to a combinator whilst
+/// continuing to use this API.
 ///
 /// A `WsMeta` instance is observable through the [`pharos::Observable`](https://docs.rs/pharos/0.4.3/pharos/trait.Observable.html)
 /// trait. The type of event is [WsEvent]. In the case of a Close event, there will be additional information included
@@ -32,7 +34,7 @@ impl WsMeta
 	///
 	/// This returns both a [WsMeta] (allow manipulating and requesting meta data for the connection) and
 	/// a [WsStream] (`Stream`/`Sink` over [WsMessage](crate::WsMessage)). [WsStream] can be wrapped to obtain
-	/// `AsyncRead`/`AsyncWrite` with [WsStream::into_io].
+	/// `AsyncRead`/`AsyncWrite`/`AsyncBufRead` with [WsStream::into_io].
 	///
 	/// ## Errors
 	///
@@ -366,7 +368,7 @@ impl WsMeta
 
 	/// Access the wrapped [web_sys::WebSocket](https://docs.rs/web-sys/0.3.25/web_sys/struct.WebSocket.html) directly.
 	///
-	/// `ws_stream_wasm` tries to expose all useful functionality through an idiomatic rust API, so hopefully
+	/// _ws_stream_wasm_ tries to expose all useful functionality through an idiomatic rust API, so hopefully
 	/// you won't need this, however if I missed something, you can.
 	///
 	/// ## Caveats
@@ -382,7 +384,7 @@ impl WsMeta
 	/// The number of bytes of data that have been queued but not yet transmitted to the network.
 	///
 	/// **NOTE:** that this is the number of bytes buffered by the underlying platform WebSocket
-	/// implementation. It does not reflect any buffering performed by ws_stream_wasm.
+	/// implementation. It does not reflect any buffering performed by _ws_stream_wasm_.
 	//
 	pub fn buffered_amount( &self ) -> u32
 	{
@@ -392,7 +394,7 @@ impl WsMeta
 
 	/// The extensions selected by the server as negotiated during the connection.
 	///
-	/// **NOTE**: This is an untested feature. The back-end server we use for testing (tungstenite)
+	/// **NOTE**: This is an untested feature. The back-end server we use for testing (_tungstenite_)
 	/// does not support Extensions.
 	//
 	pub fn extensions( &self ) -> String

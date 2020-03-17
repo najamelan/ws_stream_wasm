@@ -18,7 +18,7 @@ use crate::{ import::*, * };
 /// observers will never receive a `Close` event. Drop will issue a `Closing` event and this
 /// will be the very last event observers receive. The the stream will end if `WsMeta` is also dropped.
 ///
-/// See the [integration tests](https://github.com/ws_stream_wasm/tree/master/tests/tokio_codec.rs)
+/// See the [integration tests](https://github.com/najamelan/ws_stream_wasm/blob/master/tests/futures_codec.rs)
 /// if you need an example.
 ///
 //
@@ -171,7 +171,7 @@ impl WsStream
 
 	/// Access the wrapped [web_sys::WebSocket](https://docs.rs/web-sys/0.3.25/web_sys/struct.WebSocket.html) directly.
 	///
-	/// `ws_stream_wasm` tries to expose all useful functionality through an idiomatic rust API, so hopefully
+	/// _ws_stream_wasm_ tries to expose all useful functionality through an idiomatic rust API, so hopefully
 	/// you won't need this, however if I missed something, you can.
 	///
 	/// ## Caveats
@@ -184,7 +184,7 @@ impl WsStream
 	}
 
 
-	/// Wrap this object in [`IoStream`]. `IoStream` implements AsyncRead/AsyncWrite.
+	/// Wrap this object in [`IoStream`]. `IoStream` implements `AsyncRead`/`AsyncWrite`/`AsyncBufRead`.
 	/// Beware that this will transparenty interprete text messages to bytes.
 	//
 	pub fn into_io( self ) -> IoStream< WsStreamIo, Vec<u8> >
