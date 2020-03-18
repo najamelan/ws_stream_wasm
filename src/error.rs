@@ -76,6 +76,39 @@ pub enum WsErr
 		//
 		event: CloseEvent
 	},
+
+
+	/// When converting the JavaScript Message into a WsMessage, it's possible that
+	/// a String message doesn't convert correctly as Js does not guarantee that
+	/// strings are valid Unicode. Happens in `impl TryFrom< MessageEvent > for WsMessage`.
+	//
+	#[ error( "Received a String message that couldn't be decoded to valid UTF-8" ) ]
+	//
+	InvalidEncoding,
+
+
+	/// When converting the JavaScript Message into a WsMessage, it's not possible to
+	/// convert Blob type messages, as Blob is a streaming type, that needs to be read
+	/// asynchronously. If you are using the type without setting up the connection with
+	/// [`WsMeta::connect`], you have to make sure to set the binary type of the connection
+	/// to `ArrayBuffer`.
+	///
+	/// Happens in `impl TryFrom< MessageEvent > for WsMessage`.
+	//
+	#[ error( "Received a Blob message that couldn't converted." ) ]
+	//
+	CantDecodeBlob,
+
+
+	/// When converting the JavaScript Message into a WsMessage, the data type was neither
+	/// `Arraybuffer`, `String` nor `Blob`. This should never happen. If it does, please
+	/// try to make a reproducible example and file an issue.
+	///
+	/// Happens in `impl TryFrom< MessageEvent > for WsMessage`.
+	//
+	#[ error( "Received a Blob message that couldn't converted." ) ]
+	//
+	UnknownDataType,
 }
 
 

@@ -1,4 +1,4 @@
-use crate::{ import::* };
+use crate::{ import::*, WsErr };
 
 
 /// Events related to the WebSocket. You can filter like:
@@ -57,6 +57,12 @@ pub enum WsEvent
 	/// The connection was closed. The enclosed [`CloseEvent`] has some extra information.
 	//
 	Closed( CloseEvent ),
+
+	/// An error happened, not on the connection, but inside _ws_stream_wasm_. This currently happens
+	/// when an incoming message can not be converted to Rust types, eg. a String message with invalid
+	/// encoding.
+	//
+	WsErr( WsErr )
 }
 
 
@@ -107,6 +113,18 @@ impl WsEvent
 		{
 			Self::Closed(_) => true,
 			_               => false,
+		}
+	}
+
+	/// Predicate indicating whether this is a [WsEvent::WsErr] event. Can be used as a filter for the
+	/// event stream obtained with [`pharos::Observable::observe`] on [`WsMeta`](crate::WsMeta).
+	//
+	pub fn is_ws_err( &self ) -> bool
+	{
+		match self
+		{
+			Self::WsErr(_) => true,
+			_              => false,
 		}
 	}
 }

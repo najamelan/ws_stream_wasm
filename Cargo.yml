@@ -2,13 +2,18 @@ package:
 
   # When releasing to crates.io:
   #
+  # - last check for all TODO, FIXME, expect, unwrap.
+  # - re-read and final polish of documentation
+  # - run cargo udeps
+  # - run cargo clippy
+  # - recheck log statements (informative, none left that were just for development, ...)
   # - Update CHANGELOG.md.
   # - Update version numbers in Cargo.yml, Cargo.toml, install section of readme.
   # - verify CI result
-  # - test dependent crates
+  # - run cargo test on dependent crates
   # - cargo publish
   # - merge dev branch into master
-  # - create git tag
+  # - create git tag with version number
   #
   version       : 0.6.0
   name          : ws_stream_wasm

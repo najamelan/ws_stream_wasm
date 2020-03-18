@@ -1,4 +1,4 @@
-use crate::import::*;
+use crate::{ import::*, WsErr };
 
 
 /// Represents a WebSocket Message, after converting from JavaScript type.
@@ -18,55 +18,56 @@ pub enum WsMessage
 
 
 
-impl From< MessageEvent > for WsMessage
+/// This will convert the JavaScript event into a WsMessage. Note that this
+/// will only work if the connection is set to use the binary type ArrayBuffer.
+/// On binary type Blob, this will panic.
+//
+impl TryFrom< MessageEvent > for WsMessage
 {
-	fn from( evt: MessageEvent ) -> Self
+	type Error = WsErr;
+
+	fn try_from( evt: MessageEvent ) -> Result< Self, Self::Error >
 	{
-		let data = evt.data();
-
-		if data.is_instance_of::< ArrayBuffer >()
+		match evt.data()
 		{
-			trace!( "JsWebSocket received binary message" );
+			d if d.is_instance_of::< ArrayBuffer >() =>
+			{
+				let     buffy = Uint8Array::new( d.unchecked_ref() );
+				let mut v     = vec![ 0; buffy.length() as usize ];
 
-			let buf: &ArrayBuffer = data.unchecked_ref();
+				buffy.copy_to( &mut v ); // FIXME: get rid of this copy
 
-			let     buffy = Uint8Array::new( buf );
-			let mut v     = vec![ 0; buffy.length() as usize ];
-
-			buffy.copy_to( &mut v ); // FIXME: get rid of this copy
-
-			WsMessage::Binary( v )
-		}
+				Ok( WsMessage::Binary( v ) )
+			}
 
 
-		else if data.is_string()
-		{
-			// should never fail
+			d if d.is_string() =>
+			{
+				match d.as_string()
+				{
+					Some(text) => Ok ( WsMessage::Text( text ) ),
+					None       => Err( WsErr::InvalidEncoding  ),
+				}
+			}
+
+
+			// We have set the binary mode to array buffer (WsMeta::connect), so normally this shouldn't happen.
+			// That is as long as this is used within the context of the WsMeta constructor.
 			//
-			let text = data.as_string().expect_throw( "From< &JsMsgEvent > for WsMessage: data.as_string()" );
+			d if d.is_instance_of::< Blob >() =>
+			{
+				error!( "WsMessage::try_from received a blob...cannot convert to WsMessage" );
 
-			WsMessage::Text( text )
-		}
-
-
-		// We have set the binary mode to array buffer, so normally this shouldn't happen. That is as long
-		// as this is used within the context of the WsMeta constructor.
-		//
-		// FIXME: find a way to convert a blob...
-		//
-		else if data.is_instance_of::< Blob >()
-		{
-			error!( "JsWebSocket received a blob...unimplemented!" );
-
-			unreachable!();
-		}
+				Err( WsErr::CantDecodeBlob )
+			}
 
 
-		else
-		{
-			error!( "JsWebSocket received data that is not string, nor ArrayBuffer, nor Blob, bailing..." );
+			_ =>
+			{
+				error!( "WsMessage::try_from received data that is not String, nor ArrayBuffer, nor Blob, bailing..." );
 
-			unreachable!();
+				Err( WsErr::UnknownDataType )
+			}
 		}
 	}
 }

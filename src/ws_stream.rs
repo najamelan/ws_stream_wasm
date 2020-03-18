@@ -76,6 +76,7 @@ impl WsStream
 		let queue = SendWrapper::new( Rc::new( RefCell::new( VecDeque::new() ) ) );
 		let q2    = queue.clone();
 		let w2    = waker.clone();
+		let ph2   = pharos.clone();
 
 
 		// Send the incoming ws messages to the WsMeta object
@@ -86,7 +87,11 @@ impl WsStream
 		{
 			trace!( "WsMeta: message received!" );
 
-			q2.borrow_mut().push_back( WsMessage::from( msg_evt ) );
+			match WsMessage::try_from( msg_evt )
+			{
+				Ok (msg) => q2.borrow_mut().push_back( msg ),
+				Err(err) => notify( ph2.clone(), WsEvent::WsErr( err ) ),
+			}
 
 			if let Some( w ) = w2.borrow_mut().take()
 			{
@@ -316,8 +321,8 @@ impl Sink<WsMessage> for WsStream
 				//
 				match item
 				{
-					WsMessage::Binary( mut d ) => { trace!( "binary message: {:?}", d ); self.ws.send_with_u8_array( &mut d ).map_err( |_| WsErr::ConnectionNotOpen)?; }
-					WsMessage::Text  (     s ) => { trace!( "text message" ); self.ws.send_with_str     ( &    s ).map_err( |_| WsErr::ConnectionNotOpen)?; }
+					WsMessage::Binary( mut d ) => self.ws.send_with_u8_array( &mut d ).map_err( |_| WsErr::ConnectionNotOpen)? ,
+					WsMessage::Text  (     s ) => self.ws.send_with_str     ( &    s ).map_err( |_| WsErr::ConnectionNotOpen)? ,
 				}
 
 				Ok(())
