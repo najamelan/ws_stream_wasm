@@ -20,7 +20,7 @@ use
 	futures_codec         :: { Framed, LinesCodec, BytesCodec       } ,
 	serde                 :: { Serialize, Deserialize               } ,
 	// web_sys               :: { console::log_1 as dbg               } ,
-	async_io_stream       :: { IoStream                                 } ,
+	async_io_stream       :: { IoStream                             } ,
 };
 
 
@@ -47,7 +47,7 @@ async fn data_integrity()
 
 	info!( "starting test: data_integrity" );
 
-	let big_size   = 10240;
+	let big_size   = 10240; // bytes
 	let mut random = vec![ 0; big_size ];
 	let mut rng    = Xoshiro256Plus::from_seed( [ 1, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 4, 0, 0, 0, 0, 0, 0, 0 ] );
 

@@ -41,6 +41,14 @@ impl TryFrom< MessageEvent > for WsMessage
 			}
 
 
+			// We don't allow invalid encodings. In principle if needed,
+			// we could add a variant to WsMessage with a CString or an OsString
+			// to allow the user to access this data. However until there is a usecase,
+			// I'm not inclined, amongst other things because the conversion from Js isn't very
+			// clear and it would require a bunch of testing for something that's a rather bad
+			// idea to begin with. If you need data that is not a valid string, use a binary
+			// message.
+			//
 			d if d.is_string() =>
 			{
 				match d.as_string()
@@ -54,20 +62,12 @@ impl TryFrom< MessageEvent > for WsMessage
 			// We have set the binary mode to array buffer (WsMeta::connect), so normally this shouldn't happen.
 			// That is as long as this is used within the context of the WsMeta constructor.
 			//
-			d if d.is_instance_of::< Blob >() =>
-			{
-				error!( "WsMessage::try_from received a blob...cannot convert to WsMessage" );
-
-				Err( WsErr::CantDecodeBlob )
-			}
+			d if d.is_instance_of::< Blob >() => Err( WsErr::CantDecodeBlob ),
 
 
-			_ =>
-			{
-				error!( "WsMessage::try_from received data that is not String, nor ArrayBuffer, nor Blob, bailing..." );
-
-				Err( WsErr::UnknownDataType )
-			}
+			// should never happen.
+			//
+			_ => Err( WsErr::UnknownDataType ),
 		}
 	}
 }

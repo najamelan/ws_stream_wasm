@@ -85,8 +85,6 @@ impl WsStream
 		//
 		let on_mesg = Closure::wrap( Box::new( move |msg_evt: MessageEvent|
 		{
-			trace!( "WsMeta: message received!" );
-
 			match WsMessage::try_from( msg_evt )
 			{
 				Ok (msg) => q2.borrow_mut().push_back( msg ),
@@ -95,7 +93,6 @@ impl WsStream
 
 			if let Some( w ) = w2.borrow_mut().take()
 			{
-				trace!( "WsMeta: waking up task" );
 				w.wake()
 			}
 
@@ -110,8 +107,8 @@ impl WsStream
 		// When the connection closes, we need to verify if there are any tasks
 		// waiting on poll_next. We need to wake them up.
 		//
-		let ph    = pharos.clone();
-		let wake  = waker.clone();
+		let ph    = pharos    .clone();
+		let wake  = waker     .clone();
 		let swake = sink_waker.clone();
 
 		let wake_on_close = async move
@@ -190,7 +187,7 @@ impl WsStream
 
 
 	/// Wrap this object in [`IoStream`]. `IoStream` implements `AsyncRead`/`AsyncWrite`/`AsyncBufRead`.
-	/// Beware that this will transparenty interprete text messages to bytes.
+	/// **Beware**: that this will transparenty include text messages as bytes.
 	//
 	pub fn into_io( self ) -> IoStream< WsStreamIo, Vec<u8> >
 	{
@@ -224,7 +221,8 @@ impl Drop for WsStream
 
 			_ =>
 			{
-				// This can't fail
+				// This can't fail. Only exceptions are related to invalid
+				// close codes and reason strings to long.
 				//
 				self.ws.close().expect( "WsStream::drop - close ws socket" );
 

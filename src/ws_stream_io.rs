@@ -15,6 +15,7 @@ pub struct WsStreamIo
 }
 
 
+
 impl WsStreamIo
 {
 	/// Create a new WsStreamIo.
@@ -24,6 +25,7 @@ impl WsStreamIo
 		Self { inner }
 	}
 }
+
 
 
 impl Stream for WsStreamIo
@@ -37,7 +39,7 @@ impl Stream for WsStreamIo
 
 			.map( |opt|
 
-				opt.map( |r| Ok(r.into()) )
+				opt.map( |msg| Ok( msg.into() ) )
 			)
 	}
 }
@@ -74,21 +76,19 @@ impl Sink< Vec<u8> > for WsStreamIo
 }
 
 
+
 fn convert_res_tuple( res: Result< (), WsErr> ) -> Result< (), io::Error >
 {
-	res
-
-		.map_err( convert_err )
+	res.map_err( convert_err )
 }
+
 
 
 fn convert_err( err: WsErr ) -> io::Error
 {
 	match err
 	{
-		WsErr::ConnectionNotOpen =>
-
-			return io::Error::from( io::ErrorKind::NotConnected ) ,
+		WsErr::ConnectionNotOpen => return io::Error::from( io::ErrorKind::NotConnected ) ,
 
 		// This shouldn't happen, so panic for early detection.
 		//

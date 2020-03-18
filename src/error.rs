@@ -106,7 +106,7 @@ pub enum WsErr
 	///
 	/// Happens in `impl TryFrom< MessageEvent > for WsMessage`.
 	//
-	#[ error( "Received a Blob message that couldn't converted." ) ]
+	#[ error( "Received a message that is neither ArrayBuffer, String or Blob." ) ]
 	//
 	UnknownDataType,
 }

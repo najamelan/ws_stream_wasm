@@ -1,9 +1,8 @@
 # TODO
 
-- why are the tests for futures_codec so much faster than for tokio codec.
+- tests for new behavior of WsMessage tryfrom and error handling.
 - doc tests
 - look into proper changelogs, like the futures crate.
-- text messages are accepted...
 - update tokio-util, breaking change, probably needs new version of tokio-serde-cbor
 - ci: https://rustwasm.github.io/docs/wasm-bindgen/wasm-bindgen-test/continuous-integration.html has some windows instructions.
 
