@@ -13,7 +13,7 @@ set -x
 export RUSTFLAGS="-D warnings"
 
 
-cargo doc --all-features
+cargo doc --all-features --no-deps
 
 # doc tests aren't working on wasm for now...
 #
