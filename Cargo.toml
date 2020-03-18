@@ -77,3 +77,4 @@ version = "0.6.0"
 [package.metadata.docs]
 [package.metadata.docs.rs]
 all-features = true
+targets = []

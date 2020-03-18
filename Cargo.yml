@@ -28,7 +28,7 @@ package:
     docs:
       rs:
         all-features: true
-
+        targets     : [] # should be wasm, but that's not available.
 
 badges:
 
