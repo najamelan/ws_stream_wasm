@@ -65,12 +65,12 @@ jobs:
         - bash ci/tests.bash
 
 
-    # Wasm on windows is broken for now, cannot find firefox binary.
-    #
-    # - name: windows stable rust
-    #   os  : windows
-    #   rust: stable
+    - name: windows stable rust
+      os  : windows
+      rust: stable
 
-    #   script:
-    #     - bash ci/server.bash
-    #     - bash ci/tests.bash
+      script:
+        - set CHROMEDRIVER=C:\Tools\WebDriver\chromedriver.exe
+        - set GECKODRIVER=C:\Tools\WebDriver\geckodriver.exe
+        - bash ci/server.bash
+        - bash ci/tests.bash
