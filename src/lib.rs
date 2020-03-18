@@ -5,7 +5,6 @@
 #![doc = ""] // empty doc line to handle missing doc warning when the feature is missing.
 
 #![ doc    ( html_root_url = "https://docs.rs/ws_stream_wasm"            ) ]
-#![ deny   ( missing_docs                                                ) ]
 #![ forbid ( unsafe_code                                                 ) ]
 #![ allow  ( clippy::suspicious_else_formatting, clippy::needless_return ) ]
 
@@ -13,6 +12,7 @@
 #![ warn
 (
 	missing_debug_implementations ,
+	missing_docs                  ,
 	nonstandard_style             ,
 	rust_2018_idioms              ,
 	trivial_casts                 ,
