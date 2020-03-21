@@ -60,7 +60,7 @@ tokio_io = ["async_io_stream/tokio_io"]
 
 [package]
 authors = ["Naja Melan <najamelan@autistici.org>"]
-categories = ["asynchronous", "network-programming", "api-bindings", "wasm", "web-programming", "web-programming::websocket"]
+categories = ["asynchronous", "network-programming", "api-bindings", "wasm", "web-programming::websocket"]
 description = "A convenience library for using websockets in WASM"
 documentation = "https://docs.rs/ws_stream_wasm"
 edition = "2018"

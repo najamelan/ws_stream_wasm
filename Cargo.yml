@@ -26,7 +26,7 @@ package:
   repository    : https://github.com/najamelan/ws_stream_wasm
   readme        : README.md
   keywords      : [ wasm, websocket, tokio, stream, async ]
-  categories    : [ asynchronous, network-programming, api-bindings, wasm, web-programming, "web-programming::websocket" ]
+  categories    : [ asynchronous, network-programming, api-bindings, wasm, "web-programming::websocket" ]
   exclude       : [ tests, examples ]
 
   metadata:
