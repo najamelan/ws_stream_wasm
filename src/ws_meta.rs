@@ -81,12 +81,12 @@ impl WsMeta
 
 				match de.code()
 				{
-					DomException::SECURITY_ERR => return Err( WsErr::ForbiddenPort.into() ),
+					DomException::SECURITY_ERR => return Err( WsErr::ForbiddenPort ),
 
 
 					DomException::SYNTAX_ERR =>
 
-						return Err( WsErr::InvalidUrl{ supplied: url.as_ref().to_string() }.into() ),
+						return Err( WsErr::InvalidUrl{ supplied: url.as_ref().to_string() } ),
 
 
 					_ => unreachable!(),
@@ -213,7 +213,7 @@ impl WsMeta
 	{
 		match self.ready_state()
 		{
-			WsState::Closed  => return Err( WsErr::ConnectionNotOpen.into() ),
+			WsState::Closed  => return Err( WsErr::ConnectionNotOpen ),
 			WsState::Closing => {}
 
 			_ =>
@@ -258,7 +258,7 @@ impl WsMeta
 	{
 		match self.ready_state()
 		{
-			WsState::Closed  => return Err( WsErr::ConnectionNotOpen.into() ),
+			WsState::Closed  => return Err( WsErr::ConnectionNotOpen ),
 			WsState::Closing => {}
 
 			_ =>
@@ -272,11 +272,7 @@ impl WsMeta
 
 					Err(_) =>
 					{
-						let e = WsErr::from( WsErr::InvalidCloseCode{ supplied: code } );
-
-						error!( "{}", e );
-
-						return Err( e );
+						return Err( WsErr::InvalidCloseCode{ supplied: code } );
 					}
 				}
 			}
@@ -290,7 +286,6 @@ impl WsMeta
 		};
 
 		let ce = evts.next().await.expect_throw( "receive a close event" );
-		trace!( "WebSocket connection closed!" );
 
 		if let WsEvent::Closed(e) = ce { Ok(e)          }
 		else                          { unreachable!() }
@@ -305,18 +300,14 @@ impl WsMeta
 	{
 		match self.ready_state()
 		{
-			WsState::Closed  => return Err( WsErr::ConnectionNotOpen.into() ),
+			WsState::Closed  => return Err( WsErr::ConnectionNotOpen ),
 			WsState::Closing => {}
 
 			_ =>
 			{
 				if reason.as_ref().len() > 123
 				{
-					let e = WsErr::from( WsErr::ReasonStringToLong );
-
-					error!( "{}", e );
-
-					return Err( e );
+					return Err( WsErr::ReasonStringToLong );
 				}
 
 
@@ -329,11 +320,7 @@ impl WsMeta
 
 					Err(_) =>
 					{
-						let e = WsErr::from( WsErr::InvalidCloseCode{ supplied: code } );
-
-						error!( "{}", e );
-
-						return Err( e )
+						return Err( WsErr::InvalidCloseCode{ supplied: code } )
 					}
 				}
 			}
@@ -346,7 +333,6 @@ impl WsMeta
 		};
 
 		let ce = evts.next().await.expect_throw( "receive a close event" );
-		trace!( "WebSocket connection closed!" );
 
 		if let WsEvent::Closed(e) = ce { Ok(e)          }
 		else                           { unreachable!() }

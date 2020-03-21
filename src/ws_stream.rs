@@ -297,7 +297,7 @@ impl Sink<WsMessage> for WsStream
 			}
 
 			WsState::Open => Ok(()).into(),
-			_             => Err( WsErr::ConnectionNotOpen.into() ).into(),
+			_             => Err( WsErr::ConnectionNotOpen ).into(),
 		}
 	}
 
@@ -319,8 +319,8 @@ impl Sink<WsMessage> for WsStream
 				//
 				match item
 				{
-					WsMessage::Binary( mut d ) => self.ws.send_with_u8_array( &mut d ).map_err( |_| WsErr::ConnectionNotOpen)? ,
-					WsMessage::Text  (     s ) => self.ws.send_with_str     ( &    s ).map_err( |_| WsErr::ConnectionNotOpen)? ,
+					WsMessage::Binary( d ) => self.ws.send_with_u8_array( &d ).map_err( |_| WsErr::ConnectionNotOpen )? ,
+					WsMessage::Text  ( s ) => self.ws.send_with_str     ( &s ).map_err( |_| WsErr::ConnectionNotOpen )? ,
 				}
 
 				Ok(())
@@ -329,7 +329,7 @@ impl Sink<WsMessage> for WsStream
 
 			// Connecting, Closing or Closed
 			//
-			_ => Err( WsErr::ConnectionNotOpen.into() ),
+			_ => Err( WsErr::ConnectionNotOpen ),
 		}
 	}
 
