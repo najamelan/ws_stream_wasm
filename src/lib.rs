@@ -55,7 +55,6 @@ mod import
 		futures              :: { StreamExt, SinkExt                                                     } ,
 		std                  :: { io, collections::VecDeque, fmt, task::{ Context, Waker, Poll }         } ,
 		std                  :: { rc::Rc, cell::{ RefCell }, pin::Pin, convert::{ TryFrom, TryInto }     } ,
-		log                  :: { *                                                                      } ,
 		js_sys               :: { ArrayBuffer, Uint8Array                                                } ,
 		wasm_bindgen         :: { closure::Closure, JsCast, JsValue, UnwrapThrowExt                      } ,
 		web_sys              :: { *, BinaryType, Blob, WebSocket, CloseEvent as JsCloseEvt, DomException } ,

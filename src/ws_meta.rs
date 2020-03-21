@@ -110,8 +110,6 @@ impl WsMeta
 		//
 		let on_open = Closure::wrap( Box::new( move ||
 		{
-			trace!( "websocket open event" );
-
 			// notify observers
 			//
 			notify( ph1.clone(), WsEvent::Open )
@@ -126,8 +124,6 @@ impl WsMeta
 		//
 		let on_error = Closure::wrap( Box::new( move ||
 		{
-			trace!( "websocket error event" );
-
 			// notify observers.
 			//
 			notify( ph2.clone(), WsEvent::Error )
@@ -139,8 +135,6 @@ impl WsMeta
 		//
 		let on_close = Closure::wrap( Box::new( move |evt: JsCloseEvt|
 		{
-			trace!( "websocket close event" );
-
 			let c = WsEvent::Closed( CloseEvent
 			{
 				code     : evt.code()     ,
@@ -172,13 +166,9 @@ impl WsMeta
 		//
 		if let Some( WsEvent::Closed(evt) ) = evts.next().await
 		{
-			trace!( "WebSocket connection closed!" );
-
 			return Err( WsErr::ConnectionFailed{ event: evt } )
 		}
 
-
-		trace!( "WebSocket connection opened!" );
 
 		// We don't handle Blob's
 		//
@@ -242,7 +232,6 @@ impl WsMeta
 		// never end and this will hang if the browser fails to send a close event.
 		//
 		let ce = evts.next().await.expect_throw( "receive a close event" );
-		trace!( "WebSocket connection closed!" );
 
 		if let WsEvent::Closed(e) = ce { Ok( e )        }
 		else                          { unreachable!() }
@@ -344,7 +333,7 @@ impl WsMeta
 	//
 	pub fn ready_state( &self ) -> WsState
 	{
-		self.ws.ready_state().try_into().map_err( |e| error!( "{}", e ) )
+		self.ws.ready_state().try_into()
 
 			// This can't throw unless the browser gives us an invalid ready state.
 			//

@@ -162,7 +162,7 @@ impl WsStream
 	//
 	pub fn ready_state( &self ) -> WsState
 	{
-		self.ws.ready_state().try_into().map_err( |e| error!( "{}", e ) )
+		self.ws.ready_state().try_into()
 
 			// This can't throw unless the browser gives us an invalid ready state
 			//
@@ -213,8 +213,6 @@ impl Drop for WsStream
 	//
 	fn drop( &mut self )
 	{
-		trace!( "Drop WsStream" );
-
 		match self.ready_state()
 		{
 			WsState::Closing | WsState::Closed => {}
@@ -251,8 +249,6 @@ impl Stream for WsStream
 	//
 	fn poll_next( mut self: Pin<&mut Self>, cx: &mut Context<'_> ) -> Poll<Option< Self::Item >>
 	{
-		trace!( "WsStream as Stream gets polled" );
-
 		// Once the queue is empty, check the state of the connection.
 		// When it is closing or closed, no more messages will arrive, so
 		// return Poll::Ready( None )
@@ -285,8 +281,6 @@ impl Sink<WsMessage> for WsStream
 	//
 	fn poll_ready( mut self: Pin<&mut Self>, cx: &mut Context<'_> ) -> Poll<Result<(), Self::Error>>
 	{
-		trace!( "Sink<WsMessage> for WsStream: poll_ready" );
-
 		match self.ready_state()
 		{
 			WsState::Connecting =>
@@ -304,8 +298,6 @@ impl Sink<WsMessage> for WsStream
 
 	fn start_send( self: Pin<&mut Self>, item: WsMessage ) -> Result<(), Self::Error>
 	{
-		trace!( "Sink<WsMessage> for WsStream: start_send, state is {:?}", self.ready_state() );
-
 		match self.ready_state()
 		{
 			WsState::Open =>
@@ -337,8 +329,6 @@ impl Sink<WsMessage> for WsStream
 
 	fn poll_flush( self: Pin<&mut Self>, _: &mut Context<'_> ) -> Poll<Result<(), Self::Error>>
 	{
-		trace!( "Sink<WsMessage> for WsStream: poll_flush" );
-
 		Ok(()).into()
 	}
 
@@ -350,8 +340,6 @@ impl Sink<WsMessage> for WsStream
 	//
 	fn poll_close( mut self: Pin<&mut Self>, cx: &mut Context<'_> ) -> Poll<Result<(), Self::Error>>
 	{
-		trace!( "Sink<WsMessage> for WsStream: poll_close" );
-
 		let state = self.ready_state();
 
 
@@ -372,11 +360,7 @@ impl Sink<WsMessage> for WsStream
 		//
 		match state
 		{
-			WsState::Closed =>
-			{
-				trace!( "WebSocket connection closed!" );
-				Ok(()).into()
-			}
+			WsState::Closed => Ok(()).into(),
 
 			_ =>
 			{
