@@ -367,7 +367,7 @@ async fn on_key
 
 
 
-async fn on_connect( mut evts: impl Stream< Item=Event > + Unpin, mut disconnect: UnboundedSender<WsStream> )
+async fn on_connect( mut evts: impl Stream< Item=Event > + Unpin, mut disconnect: UnboundedSender<WsMeta> )
 {
 	while let Some(evt) = evts.next().await
 	{
@@ -391,7 +391,7 @@ async fn on_connect( mut evts: impl Stream< Item=Event > + Unpin, mut disconnect
 		};
 
 
-		let (ws, wsio) = match WsStream::connect( url, None ).await
+		let (ws, wsio) = match WsMeta::connect( url, None ).await
 		{
 			Ok(conn) => conn,
 
@@ -522,9 +522,9 @@ async fn on_cresets( mut evts: impl Stream< Item=Event > + Unpin )
 
 
 
-async fn on_disconnect( mut evts: impl Stream< Item=Event > + Unpin, mut wss: UnboundedReceiver<WsStream> )
+async fn on_disconnect( mut evts: impl Stream< Item=Event > + Unpin, mut wss: UnboundedReceiver<WsMeta> )
 {
-	let ws1: Rc<RefCell<Option<WsStream>>> = Rc::new(RefCell::new( None ));
+	let ws1: Rc<RefCell<Option<WsMeta>>> = Rc::new(RefCell::new( None ));
 	let ws2 = ws1.clone();
 
 

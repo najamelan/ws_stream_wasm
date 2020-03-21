@@ -1,7 +1,12 @@
 # TODO
 
+- tests for new behavior of WsMessage tryfrom and error handling.
+- doc tests
+- look into proper changelogs, like the futures crate.
+- update tokio-util, breaking change, probably needs new version of tokio-serde-cbor
+- ci: https://rustwasm.github.io/docs/wasm-bindgen/wasm-bindgen-test/continuous-integration.html has some windows instructions.
+
 ## Features
-- check all dev dependencies for version upgrades, check whether we do something with tokio 0.2
 - when the connection is lost, can we know if it's the server that disconnected (correct shutdown exchange)
   or whether we have network problems.
 - reconnect?

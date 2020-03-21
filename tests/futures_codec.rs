@@ -20,6 +20,7 @@ use
 	futures_codec         :: { Framed, LinesCodec, BytesCodec       } ,
 	serde                 :: { Serialize, Deserialize               } ,
 	// web_sys               :: { console::log_1 as dbg               } ,
+	async_io_stream       :: { IoStream                             } ,
 };
 
 
@@ -27,11 +28,11 @@ const URL: &str = "ws://127.0.0.1:3212";
 
 
 
-async fn connect() -> (WsStream, WsIo)
+async fn connect() -> (WsMeta, IoStream<WsStreamIo, Vec<u8>>)
 {
-	let (ws, wsio) = WsStream::connect( URL, None ).await.expect_throw( "Could not create websocket" );
+	let (ws, wsio) = WsMeta::connect( URL, None ).await.expect_throw( "Could not create websocket" );
 
-	(ws, wsio)
+	(ws, wsio.into_io())
 }
 
 
@@ -46,7 +47,7 @@ async fn data_integrity()
 
 	info!( "starting test: data_integrity" );
 
-	let big_size   = 10240;
+	let big_size   = 10240; // bytes
 	let mut random = vec![ 0; big_size ];
 	let mut rng    = Xoshiro256Plus::from_seed( [ 1, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 4, 0, 0, 0, 0, 0, 0, 0 ] );
 
@@ -75,7 +76,7 @@ async fn data_integrity()
 
 // Send data to an echo server and verify that what returns is exactly the same
 // We run 2 connections in parallel, the second one we verify that we can use a reference
-// to a WsStream
+// to a WsMeta
 //
 async fn echo( name: &str, size: usize, data: Bytes )
 {

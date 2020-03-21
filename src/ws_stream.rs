@@ -1,355 +1,159 @@
-use crate::{ import::*, WsErr, WsErrKind, WsState, WsIo, WsEvent, CloseEvent, notify };
+use crate::{ import::*, * };
 
 
-/// The meta data related to a websocket.
+/// A futures 0.3 Sink/Stream of [WsMessage]. Created with [WsMeta::connect](crate::WsMeta::connect).
 ///
-/// Most of the methods on this type directly map to the web API. For more documentation, check the
-/// [MDN WebSocket documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebSocket/WebSocket).
+/// ## Closing the connection
+///
+/// When this is dropped, the connection closes, but you should favor calling one of the close
+/// methods on [WsMeta](crate::WsMeta), which allow you to set a proper close code and reason.
+///
+/// Since this implements [`Sink`], it has to have a close method. This method will call the
+/// web api [`WebSocket.close`](https://developer.mozilla.org/en-US/docs/Web/API/WebSocket/close)
+/// without parameters. Eg. a default value of `1005` will be assumed for the close code. The
+/// situation is the same when dropping without calling close.
+///
+/// **Warning**: This object holds the callbacks needed to receive events from the browser.
+/// If you drop it before the close event was emitted, you will no longer receive events. Thus,
+/// observers will never receive a `Close` event. Drop will issue a `Closing` event and this
+/// will be the very last event observers receive. The the stream will end if `WsMeta` is also dropped.
+///
+/// See the [integration tests](https://github.com/najamelan/ws_stream_wasm/blob/master/tests/futures_codec.rs)
+/// if you need an example.
+///
 //
 pub struct WsStream
 {
-	ws       : Rc<WebSocket>                      ,
-	pharos   : Rc<RefCell< Pharos<WsEvent> >>     ,
+	ws: SendWrapper< Rc< WebSocket > >,
 
-	_on_open : Closure< dyn FnMut() >             ,
-	_on_error: Closure< dyn FnMut() >             ,
-	_on_close: Closure< dyn FnMut( JsCloseEvt ) > ,
+	// The queue of received messages
+	//
+	queue: SendWrapper< Rc<RefCell< VecDeque<WsMessage> >> >,
+
+	// Last waker of task that wants to read incoming messages to be woken up on a new message
+	//
+	waker: SendWrapper< Rc<RefCell< Option<Waker> >> >,
+
+	// Last waker of task that wants to write to the Sink
+	//
+	sink_waker: SendWrapper< Rc<RefCell< Option<Waker> >> >,
+
+	// A pointer to the pharos of WsMeta for when we need to listen to events
+	//
+	pharos: SendWrapper< Rc<RefCell< Pharos<WsEvent> >> >,
+
+	// The callback closures.
+	//
+	_on_open : SendWrapper< Closure< dyn FnMut()               > >,
+	_on_error: SendWrapper< Closure< dyn FnMut()               > >,
+	_on_close: SendWrapper< Closure< dyn FnMut( JsCloseEvt   ) > >,
+	_on_mesg : SendWrapper< Closure< dyn FnMut( MessageEvent ) > >,
+
+	// This allows us to store a future to poll when Sink::poll_close is called
+	//
+	closer: Option< Events<WsEvent> >,
 }
-
 
 
 impl WsStream
 {
-	const OPEN_CLOSE: Filter<WsEvent> = Filter::Pointer( |evt: &WsEvent| evt.is_open() | evt.is_closed() );
-
-	/// Connect to the server. The future will resolve when the connection has been established with a successful WebSocket
-	/// handshake.
-	///
-	/// This returns both a [WsStream] (allow manipulating and requesting meta data for the connection) and
-	/// a [WsIo] (AsyncRead/AsyncWrite + Stream/Sink over [WsMessage](crate::WsMessage)).
-	///
-	/// A WsStream instance is observable through the [`pharos::Observable`](https://docs.rs/pharos/0.2.0/pharos/trait.Observable.html) and [`pharos::ObservableUnbounded`](https://docs.rs/pharos/0.2.0/pharos/trait.UnboundedObservable.html) traits. The type of event is [WsEvent]. In the case of a Close event, there will be additional information included
-	/// as a [CloseEvent].
-	///
-	/// When you drop this, the connection does not get closed, however when you drop [WsIo] it does. Streams
-	/// of events will be dropped, so you will no longer receive events. One thing is possible if you really
-	/// need it, that's dropping [WsStream] but keeping [WsIo]. Now through [WsIo::wrapped] you can
-	/// access the underlying [web_sys::WebSocket] and set event handlers on it for `on_open`, `on_close`,
-	/// `on_error`. If you would do that while [WsStream] is still around, that would break the event system
-	/// and can lead to errors if you still call methods on [WsStream].
-	///
-	/// **Note**: Sending protocols to a server that doesn't support them will make the connection fail.
-	///
-	/// ## Errors
-	///
-	/// Browsers will forbid making websocket connections to certain ports. See this [Stack Overflow question](https://stackoverflow.com/questions/4313403/why-do-browsers-block-some-ports/4314070).
-	/// `connect` will return a [WsErrKind::ForbiddenPort].
-	///
-	/// If the URL is invalid, a [WsErrKind::InvalidUrl] is returned. See the [HTML Living Standard](https://html.spec.whatwg.org/multipage/web-sockets.html#dom-websocket) for more information.
-	///
-	/// When the connection fails (server port not open, wrong ip, wss:// on ws:// server, ... See the [HTML Living Standard](https://html.spec.whatwg.org/multipage/web-sockets.html#dom-websocket)
-	/// for details on all failure possibilities), a [WsErrKind::ConnectionFailed] is returned.
+	/// Create a new WsStream.
 	//
-	pub async fn connect( url: impl AsRef<str>, protocols: impl Into<Option<Vec<&str>>> )
+	pub(crate) fn new
+	(
+		ws      : SendWrapper< Rc<WebSocket>                        > ,
+		pharos  : SendWrapper< Rc<RefCell< Pharos<WsEvent> >>       > ,
+		on_open : SendWrapper< Closure< dyn FnMut()               > > ,
+		on_error: SendWrapper< Closure< dyn FnMut()               > > ,
+		on_close: SendWrapper< Closure< dyn FnMut( JsCloseEvt   ) > > ,
 
-		-> Result< (Self, WsIo), WsErr >
+	) -> Self
+
 	{
-		let res = match protocols.into()
-		{
-			None => WebSocket::new( url.as_ref() ),
+		let waker     : SendWrapper< Rc<RefCell<Option<Waker>>> > = SendWrapper::new( Rc::new( RefCell::new( None )) );
+		let sink_waker: SendWrapper< Rc<RefCell<Option<Waker>>> > = SendWrapper::new( Rc::new( RefCell::new( None )) );
 
-			Some(v) =>
-			{
-				let js_protos = v.iter().fold( Array::new(), |acc, proto|
-				{
-					acc.push( &JsValue::from_str( proto ) );
-					acc
-				});
-
-				WebSocket::new_with_str_sequence( url.as_ref(), &js_protos )
-			}
-		};
+		let queue = SendWrapper::new( Rc::new( RefCell::new( VecDeque::new() ) ) );
+		let q2    = queue.clone();
+		let w2    = waker.clone();
+		let ph2   = pharos.clone();
 
 
-		// Deal with errors from the WebSocket constructor
-		//
-		let ws = match res
-		{
-			Ok(ws) => Rc::new( ws ),
-
-			Err(e) =>
-			{
-				let de: &DomException = e.unchecked_ref();
-
-				match de.code()
-				{
-					DomException::SECURITY_ERR => return Err( WsErrKind::ForbiddenPort.into() ),
-
-
-					DomException::SYNTAX_ERR =>
-
-						return Err( WsErrKind::InvalidUrl{ supplied: url.as_ref().to_string() }.into() ),
-
-
-					_ => unreachable!(),
-				};
-			}
-		};
-
-
-		// Create our pharos
-		//
-		let pharos = Rc::new( RefCell::new( Pharos::default() ));
-		let ph1    = pharos.clone();
-		let ph2    = pharos.clone();
-		let ph3    = pharos.clone();
-		let ph4    = pharos.clone();
-
-
-		// Setup our event listeners
-		// TODO: figure out a way to avoid the trivial cast.
+		// Send the incoming ws messages to the WsMeta object
 		//
 		#[ allow( trivial_casts ) ]
 		//
-		let on_open = Closure::wrap( Box::new( move ||
+		let on_mesg = Closure::wrap( Box::new( move |msg_evt: MessageEvent|
 		{
-			trace!( "websocket open event" );
+			match WsMessage::try_from( msg_evt )
+			{
+				Ok (msg) => q2.borrow_mut().push_back( msg ),
+				Err(err) => notify( ph2.clone(), WsEvent::WsErr( err ) ),
+			}
 
-			// notify observers
+			if let Some( w ) = w2.borrow_mut().take()
+			{
+				w.wake()
+			}
+
+		}) as Box< dyn FnMut( MessageEvent ) > );
+
+
+		// Install callback
+		//
+		ws.set_onmessage  ( Some( on_mesg.as_ref().unchecked_ref() ) );
+
+
+		// When the connection closes, we need to verify if there are any tasks
+		// waiting on poll_next. We need to wake them up.
+		//
+		let ph    = pharos    .clone();
+		let wake  = waker     .clone();
+		let swake = sink_waker.clone();
+
+		let wake_on_close = async move
+		{
+			let mut rx;
+
+			// Scope to avoid borrowing across await point.
 			//
-			notify( ph1.clone(), WsEvent::Open )
-
-
-		}) as Box< dyn FnMut() > );
-
-
-		#[ allow( trivial_casts ) ]
-		//
-		let on_error = Closure::wrap( Box::new( move ||
-		{
-			trace!( "websocket error event" );
-
-			// notify observers
-			//
-			notify( ph2.clone(), WsEvent::Error )
-
-
-		}) as Box< dyn FnMut() > );
-
-
-		#[ allow( trivial_casts ) ]
-		//
-		let on_close = Closure::wrap( Box::new( move |evt: JsCloseEvt|
-		{
-			trace!( "websocket close event" );
-
-			let c = WsEvent::Closed( CloseEvent
 			{
-				code     : evt.code()     ,
-				reason   : evt.reason()   ,
-				was_clean: evt.was_clean(),
-			});
-
-			notify( ph3.clone(), c )
-
-
-		}) as Box< dyn FnMut( JsCloseEvt ) > );
-
-
-		ws.set_onopen ( Some( &on_open .as_ref().unchecked_ref() ));
-		ws.set_onclose( Some( &on_close.as_ref().unchecked_ref() ));
-		ws.set_onerror( Some( &on_error.as_ref().unchecked_ref() ));
-
-
-
-		// Listen to the events to figure out whether the connection opens successfully. We don't want to deal with
-		// the error event. Either a close event happens, in which case we want to recover the CloseEvent to return it
-		// to the user, or an Open event happens in which case we are happy campers.
-		//
-		let mut evts = match pharos.borrow_mut().observe( Self::OPEN_CLOSE.into() )
-		{
-			Ok(events) => events                    ,
-			Err(e)     => unreachable!( "{:?}", e ) , // only happens if we closed it.
-		};
-
-		// If the connection is closed, return error
-		//
-		if let Some( WsEvent::Closed(evt) ) = evts.next().await
-		{
-			trace!( "WebSocket connection closed!" );
-
-			return Err( WsErrKind::ConnectionFailed{ event: evt }.into() )
-		}
-
-
-		trace!( "WebSocket connection opened!" );
-
-		// We don't handle Blob's
-		//
-		ws.set_binary_type( BinaryType::Arraybuffer );
-
-
-		Ok
-		((
-			Self
-			{
-				pharos                ,
-				ws       : ws.clone() ,
-				_on_open : on_open    ,
-				_on_error: on_error   ,
-				_on_close: on_close   ,
-			},
-
-			WsIo::new( ws, ph4 )
-		))
-	}
-
-
-
-	/// Close the socket. The future will resolve once the socket's state has become `WsState::CLOSED`.
-	/// See: [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebSocket/close)
-	//
-	pub async fn close( &self ) -> Result< CloseEvent, WsErr >
-	{
-		match self.ready_state()
-		{
-			WsState::Closed  => return Err( WsErrKind::ConnectionNotOpen.into() ),
-			WsState::Closing => {}
-
-			_ =>
-			{
-				// This can not throw normally, because the only errors the API can return is if we use a code or
-				// a reason string, which we don't.
-				// See [MDN](https://developer.mozilla.org/en-US/docs/Web/API/WebSocket/close#Exceptions_thrown).
-				//
-				self.ws.close().unwrap_throw();
-
-
-				// Notify Observers
-				//
-				notify( self.pharos.clone(), WsEvent::Closing )
-			}
-		}
-
-
-		let mut evts = match self.pharos.borrow_mut().observe( Filter::Pointer( WsEvent::is_closed ).into() )
-		{
-			Ok(events) => events                    ,
-			Err(e)     => unreachable!( "{:?}", e ) , // only happens if we closed it.
-		};
-
-		// We promised the user a CloseEvent, so we don't have much choice but to unwrap this. In any case, the stream will
-		// never end and this will hang if the browser fails to send a close event.
-		//
-		let ce = evts.next().await.expect_throw( "receive a close event" );
-		trace!( "WebSocket connection closed!" );
-
-		if let WsEvent::Closed(e) = ce { Ok( e )        }
-		else                          { unreachable!() }
-	}
-
-
-
-
-	/// Close the socket. The future will resolve once the socket's state has become `WsState::CLOSED`.
-	/// See: [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebSocket/close)
-	//
-	pub async fn close_code( &self, code: u16  ) -> Result<CloseEvent, WsErr>
-	{
-		match self.ready_state()
-		{
-			WsState::Closed  => return Err( WsErrKind::ConnectionNotOpen.into() ),
-			WsState::Closing => {}
-
-			_ =>
-			{
-				match self.ws.close_with_code( code )
+				match ph.borrow_mut().observe( Filter::Pointer( WsEvent::is_closed ).into() )
 				{
-					// Notify Observers
-					//
-					Ok(_) => notify( self.pharos.clone(), WsEvent::Closing ),
-
-
-					Err(_) =>
-					{
-						let e = WsErr::from( WsErrKind::InvalidCloseCode{ supplied: code } );
-
-						error!( "{}", e );
-
-						return Err( e );
-					}
+					Ok(events) => rx = events               ,
+					Err(e)     => unreachable!( "{:?}", e ) , // only happens if we closed it.
 				}
 			}
-		}
 
+			rx.next().await;
 
-		let mut evts = match self.pharos.borrow_mut().observe( Filter::Pointer( WsEvent::is_closed ).into() )
-		{
-			Ok(events) => events                    ,
-			Err(e)     => unreachable!( "{:?}", e ) , // only happens if we closed it.
-		};
-
-		let ce = evts.next().await.expect_throw( "receive a close event" );
-		trace!( "WebSocket connection closed!" );
-
-		if let WsEvent::Closed(e) = ce { Ok(e)          }
-		else                          { unreachable!() }
-	}
-
-
-
-	/// Close the socket. The future will resolve once the socket's state has become `WsState::CLOSED`.
-	/// See: [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebSocket/close)
-	//
-	pub async fn close_reason( &self, code: u16, reason: impl AsRef<str>  ) -> Result<CloseEvent, WsErr>
-	{
-		match self.ready_state()
-		{
-			WsState::Closed  => return Err( WsErrKind::ConnectionNotOpen.into() ),
-			WsState::Closing => {}
-
-			_ =>
+			if let Some(w) = &*wake.borrow()
 			{
-				if reason.as_ref().len() > 123
-				{
-					let e = WsErr::from( WsErrKind::ReasonStringToLong );
-
-					error!( "{}", e );
-
-					return Err( e );
-				}
-
-
-				match self.ws.close_with_code_and_reason( code, reason.as_ref() )
-				{
-					// Notify Observers
-					//
-					Ok(_) => notify( self.pharos.clone(), WsEvent::Closing ),
-
-
-					Err(_) =>
-					{
-						let e = WsErr::from( WsErrKind::InvalidCloseCode{ supplied: code } );
-
-						error!( "{}", e );
-
-						return Err( e )
-					}
-				}
+				w.wake_by_ref();
 			}
-		}
 
-		let mut evts = match self.pharos.borrow_mut().observe( Filter::Pointer( WsEvent::is_closed ).into() )
-		{
-			Ok(events) => events                    ,
-			Err(e)     => unreachable!( "{:?}", e ) , // only happens if we closed it.
+			if let Some(w) = &*swake.borrow()
+			{
+				w.wake_by_ref();
+			}
 		};
 
-		let ce = evts.next().await.expect_throw( "receive a close event" );
-		trace!( "WebSocket connection closed!" );
+		spawn_local( wake_on_close );
 
-		if let WsEvent::Closed(e) = ce { Ok(e)          }
-		else                           { unreachable!() }
+
+		Self
+		{
+			ws                                      ,
+			queue                                   ,
+			waker                                   ,
+			sink_waker                              ,
+			pharos                                  ,
+			closer    : None                        ,
+			_on_mesg  : SendWrapper::new( on_mesg ) ,
+			_on_open  : on_open                     ,
+			_on_error : on_error                    ,
+			_on_close : on_close                    ,
+		}
 	}
 
 
@@ -358,7 +162,7 @@ impl WsStream
 	//
 	pub fn ready_state( &self ) -> WsState
 	{
-		self.ws.ready_state().try_into().map_err( |e| error!( "{}", e ) )
+		self.ws.ready_state().try_into()
 
 			// This can't throw unless the browser gives us an invalid ready state
 			//
@@ -366,9 +170,10 @@ impl WsStream
 	}
 
 
+
 	/// Access the wrapped [web_sys::WebSocket](https://docs.rs/web-sys/0.3.25/web_sys/struct.WebSocket.html) directly.
 	///
-	/// `ws_stream_wasm` tries to expose all useful functionality through an idiomatic rust API, so hopefully
+	/// _ws_stream_wasm_ tries to expose all useful functionality through an idiomatic rust API, so hopefully
 	/// you won't need this, however if I missed something, you can.
 	///
 	/// ## Caveats
@@ -381,44 +186,12 @@ impl WsStream
 	}
 
 
-	/// The number of bytes of data that have been queued but not yet transmitted to the network.
-	///
-	/// **NOTE:** that this is the number of bytes buffered by the underlying platform WebSocket
-	/// implementation. It does not reflect any buffering performed by ws_stream.
+	/// Wrap this object in [`IoStream`]. `IoStream` implements `AsyncRead`/`AsyncWrite`/`AsyncBufRead`.
+	/// **Beware**: that this will transparenty include text messages as bytes.
 	//
-	pub fn buffered_amount( &self ) -> u32
+	pub fn into_io( self ) -> IoStream< WsStreamIo, Vec<u8> >
 	{
-		self.ws.buffered_amount()
-	}
-
-
-	/// The extensions selected by the server as negotiated during the connection.
-	///
-	/// **NOTE**: This is an untested feature. The back-end server we use for testing (tungstenite)
-	/// does not support Extensions.
-	//
-	pub fn extensions( &self ) -> String
-	{
-		self.ws.extensions()
-	}
-
-
-	/// The name of the sub-protocol the server selected during the connection.
-	///
-	/// This will be one of the strings specified in the protocols parameter when
-	/// creating this WsStream instance.
-	//
-	pub fn protocol(&self) -> String
-	{
-		self.ws.protocol()
-	}
-
-
-	/// Retrieve the address to which this socket is connected.
-	//
-	pub fn url( &self ) -> String
-	{
-		self.ws.url()
+		IoStream::new( WsStreamIo::new( self ) )
 	}
 }
 
@@ -428,19 +201,7 @@ impl fmt::Debug for WsStream
 {
 	fn fmt( &self, f: &mut fmt::Formatter<'_> ) -> fmt::Result
 	{
-		write!( f, "WsStream for connection: {}", self.url() )
-	}
-}
-
-
-
-impl Observable<WsEvent> for WsStream
-{
-	type Error = pharos::Error;
-
-	fn observe( &mut self, options: ObserveConfig<WsEvent> ) -> Result< Events<WsEvent>, Self::Error >
-	{
-		self.pharos.borrow_mut().observe( options )
+		write!( f, "WsStream for connection: {}", self.ws.url() )
 	}
 }
 
@@ -449,17 +210,183 @@ impl Observable<WsEvent> for WsStream
 impl Drop for WsStream
 {
 	// We don't block here, just tell the browser to close the connection and move on.
-	// TODO: is this necessary or would it be closed automatically when we drop the WebSocket
-	// object? Note that there is also the WsStream which holds a clone.
 	//
 	fn drop( &mut self )
 	{
-		trace!( "Drop WsStream" );
+		match self.ready_state()
+		{
+			WsState::Closing | WsState::Closed => {}
 
-		self.ws.set_onopen ( None );
-		self.ws.set_onclose( None );
-		self.ws.set_onerror( None );
+			_ =>
+			{
+				// This can't fail. Only exceptions are related to invalid
+				// close codes and reason strings to long.
+				//
+				self.ws.close().expect( "WsStream::drop - close ws socket" );
+
+
+				// Notify Observers. This event is not emitted by the websocket API.
+				//
+				notify( self.pharos.clone(), WsEvent::Closing )
+			}
+		}
+
+		self.ws.set_onmessage( None );
+		self.ws.set_onerror  ( None );
+		self.ws.set_onopen   ( None );
+		self.ws.set_onclose  ( None );
 	}
 }
+
+
+
+impl Stream for WsStream
+{
+	type Item = WsMessage;
+
+	// Currently requires an unfortunate copy from Js memory to WASM memory. Hopefully one
+	// day we will be able to receive the MessageEvt directly in WASM.
+	//
+	fn poll_next( mut self: Pin<&mut Self>, cx: &mut Context<'_> ) -> Poll<Option< Self::Item >>
+	{
+		// Once the queue is empty, check the state of the connection.
+		// When it is closing or closed, no more messages will arrive, so
+		// return Poll::Ready( None )
+		//
+		if self.queue.borrow().is_empty()
+		{
+			*self.waker.borrow_mut() = Some( cx.waker().clone() );
+
+			match self.ready_state()
+			{
+				WsState::Open | WsState::Connecting => Poll::Pending ,
+				_                                   => None.into()   ,
+			}
+		}
+
+		// As long as there is things in the queue, just keep reading
+		//
+		else { self.queue.borrow_mut().pop_front().into() }
+	}
+}
+
+
+
+impl Sink<WsMessage> for WsStream
+{
+	type Error = WsErr;
+
+
+	// Web API does not really seem to let us check for readiness, other than the connection state.
+	//
+	fn poll_ready( mut self: Pin<&mut Self>, cx: &mut Context<'_> ) -> Poll<Result<(), Self::Error>>
+	{
+		match self.ready_state()
+		{
+			WsState::Connecting =>
+			{
+				*self.sink_waker.borrow_mut() = Some( cx.waker().clone() );
+
+				Poll::Pending
+			}
+
+			WsState::Open => Ok(()).into(),
+			_             => Err( WsErr::ConnectionNotOpen ).into(),
+		}
+	}
+
+
+	fn start_send( self: Pin<&mut Self>, item: WsMessage ) -> Result<(), Self::Error>
+	{
+		match self.ready_state()
+		{
+			WsState::Open =>
+			{
+				// The send method can return 2 errors:
+				// - unpaired surrogates in UTF (we shouldn't get those in rust strings)
+				// - connection is already closed.
+				//
+				// So if this returns an error, we will return ConnectionNotOpen. In principle
+				// we just checked that it's open, but this guarantees correctness.
+				//
+				match item
+				{
+					WsMessage::Binary( d ) => self.ws.send_with_u8_array( &d ).map_err( |_| WsErr::ConnectionNotOpen )? ,
+					WsMessage::Text  ( s ) => self.ws.send_with_str     ( &s ).map_err( |_| WsErr::ConnectionNotOpen )? ,
+				}
+
+				Ok(())
+			},
+
+
+			// Connecting, Closing or Closed
+			//
+			_ => Err( WsErr::ConnectionNotOpen ),
+		}
+	}
+
+
+
+	fn poll_flush( self: Pin<&mut Self>, _: &mut Context<'_> ) -> Poll<Result<(), Self::Error>>
+	{
+		Ok(()).into()
+	}
+
+
+
+	// TODO: find a simpler implementation, notably this needs to spawn a future.
+	//       this can be done by creating a custom future. If we are going to implement
+	//       events with pharos, that's probably a good time to re-evaluate this.
+	//
+	fn poll_close( mut self: Pin<&mut Self>, cx: &mut Context<'_> ) -> Poll<Result<(), Self::Error>>
+	{
+		let state = self.ready_state();
+
+
+		// First close the inner connection
+		//
+		if state == WsState::Connecting
+		|| state == WsState::Open
+		{
+			// Can't fail
+			//
+			self.ws.close().unwrap_throw();
+
+			notify( self.pharos.clone(), WsEvent::Closing );
+		}
+
+
+		// Check whether it's closed
+		//
+		match state
+		{
+			WsState::Closed => Ok(()).into(),
+
+			_ =>
+			{
+				// Create a future that will resolve with the close event, so we can
+				// poll it.
+				//
+				if self.closer.is_none()
+				{
+					let rx = match self.pharos.borrow_mut().observe( Filter::Pointer( WsEvent::is_closed ).into() )
+					{
+						Ok(events) => events                    ,
+						Err(e)     => unreachable!( "{:?}", e ) , // only happens if we closed it.
+					};
+
+					self.closer = Some( rx );
+				}
+
+
+				let _ = ready!( Pin::new( &mut self.closer.as_mut().unwrap() ).poll_next(cx) );
+
+				Ok(()).into()
+			}
+		}
+	}
+}
+
+
 
 

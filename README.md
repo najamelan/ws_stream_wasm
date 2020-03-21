@@ -9,12 +9,11 @@
 > A convenience library for using web sockets in WASM
 
 **features:**
-- [`WsStream`]: A wrapper around [`web_sys::WebSocket`](https://docs.rs/web-sys/0.3.27/web_sys/struct.WebSocket.html).
+- [`WsMeta`]: A wrapper around [`web_sys::WebSocket`].
 - [`WsMessage`]: A simple rusty representation of a WebSocket message.
-- [`WsIo`]: A futures Sink/Stream of WsMessage. (can use the futures compat layer to get futures 01 versions).
-                It also implements AsyncRead/AsyncWrite from futures 0.3. With the compat layer you can obtain futures
-                01 versions for use with tokio codec.
-- [`WsEvent`]: [`WsStream`] is observable with [pharos](https://crates.io/crates/pharos) for events (mainly useful for connection close).
+- [`WsStream`]: A _futures_ `Sink`/`Stream` of `WsMessage`.
+                It also has a method `into_io()` which let's you get a wrapper that implements `AsyncRead`/`AsyncWrite` (_tokio_ version behind the feature `tokio_io`).
+- [`WsEvent`]: [`WsMeta`] is observable with [pharos](https://crates.io/crates/pharos) for events (mainly useful for connection close).
 
 **NOTE:** this crate only works on WASM. If you want a server side equivalent that implements AsyncRead/AsyncWrite over
 WebSockets, check out [ws_stream_tungstenite](https://crates.io/crates/ws_stream_tungstenite).
@@ -45,14 +44,14 @@ With [cargo yaml](https://gitlab.com/storedbox/cargo-yaml):
 ```yaml
 dependencies:
 
-  ws_stream_wasm: ^0.5
+  ws_stream_wasm: ^0.6
 ```
 
 With raw Cargo.toml
 ```toml
 [dependencies]
 
-   ws_stream_wasm = "0.5"
+   ws_stream_wasm = "0.6"
 ```
 
 ### Upgrade
@@ -63,14 +62,22 @@ Please check out the [changelog](https://github.com/najamelan/ws_stream_wasm/blo
 
 This crate has few dependencies. Cargo will automatically handle it's dependencies for you.
 
-There are no optional features.
+There is one optional features. The `tokio_io` features causes the `WsIo` returned from [`WsStream::into_io`] to implement the
+tokio version of AsyncRead/AsyncWrite.
 
 
 ## Usage
 
-Please have a look in the [examples directory of the repository](https://github.com/najamelan/ws_stream_wasm/tree/master/examples).
+The [integration tests](https://github.com/najamelan/ws_stream_wasm/tree/master/tests) show most features in action. The
+example directory doesn't currently hold any interesting examples.
 
-The [integration tests](https://github.com/najamelan/ws_stream_wasm/tree/master/tests) are also useful.
+The types in this library are `Send` as far as the compiler is concerned. This is so that you can use them with general purpose
+libraries that also work on WASM but that require a connection to be `Send`. Currently WASM has no threads though and most
+underlying types we use aren't `Send`. The solution for the moment is to use [`send_wrapper::SendWrapper`]. This will panic
+if it's ever dereferenced on a different thread than where it's created. You have to consider that the types aren't `Send`, but
+on WASM it's safe to pass them to an API that requires `Send`, because there is no multi-threading.
+
+The main entrypoint you'll want to use, eg to connect, is [`WsMeta::connect`].
 
 ### Basic events example
 ```rust
@@ -85,7 +92,7 @@ use
 
 let program = async
 {
-   let (mut ws, _wsio) = WsStream::connect( "127.0.0.1:3012", None ).await
+   let (mut ws, _wsio) = WsMeta::connect( "127.0.0.1:3012", None ).await
 
       .expect_throw( "assume the connection succeeds" );
 
@@ -93,7 +100,7 @@ let program = async
 
    ws.close().await;
 
-   // Note that since WsStream::connect resolves to an opened connection, we don't see
+   // Note that since WsMeta::connect resolves to an opened connection, we don't see
    // any Open events here.
    //
    assert!( evts.next().await.unwrap_throw().is_closing() );
@@ -105,8 +112,8 @@ spawn_local( program );
 
 ### Filter events example
 
-This shows how to filter events. The functionality comes from the pharos crate which we use to make
-[`WsStream`] observable.
+This shows how to filter events. The functionality comes from _pharos_ which we use to make
+[`WsMeta`] observable.
 
 ```rust
 use
@@ -120,7 +127,7 @@ use
 
 let program = async
 {
-   let (mut ws, _wsio) = WsStream::connect( "127.0.0.1:3012", None ).await
+   let (mut ws, _wsio) = WsMeta::connect( "127.0.0.1:3012", None ).await
 
       .expect_throw( "assume the connection succeeds" );
 
@@ -151,16 +158,13 @@ The reference documents for understanding web sockets and how the browser handle
 
 ## Contributing
 
-This repository accepts contributions. Ideas, questions, feature requests and bug reports can be filed through Github issues.
+Please check out the [contribution guidelines](https://github.com/najamelan/ws_stream_wasm/blob/master/CONTRIBUTING.md).
 
-Pull Requests are welcome on Github. By committing pull requests, you accept that your code might be modified and reformatted to fit the project coding style or to improve the implementation. Please discuss what you want to see modified before filing a pull request if you don't want to be doing work that might be rejected.
-
-Please file PR's against the `dev` branch, don't forget to update the changelog and the documentation.
 
 ### Testing
 
 For testing we need back-end servers to echo data back to the tests. These are in the `ws_stream_tungstenite` crate.
-```shell
+```bash
 git clone https://github.com/najamelan/ws_stream_tungstenite
 cd ws_stream_tungstenite
 cargo run --example echo --release
@@ -168,8 +172,8 @@ cargo run --example echo --release
 # in a different terminal:
 cargo run --example echo_tt --release -- "127.0.0.1:3312"
 
-# the second server is pure tokio-tungstenite without ws_stream wrapping it in AsyncRead/Write. This
-# is needed for testing a WsMessage::Text because ws_stream only does binary.
+# the second server is pure async-tungstenite without ws_stream_tungstenite wrapping it in AsyncRead/Write. This
+# is needed for testing a WsMessage::Text because ws_stream_tungstenite only does binary.
 
 # in a third terminal, in ws_stream_wasm you have different options:
 wasm-pack test --firefox [--headless] [--release]
@@ -182,7 +186,7 @@ otherwise only info and up level are reported.
 
 ### Code of conduct
 
-Any of the behaviors described in [point 4 "Unacceptable Behavior" of the Citizens Code of Conduct](http://citizencodeofconduct.org/#unacceptable-behavior) are not welcome here and might get you banned. If anyone including maintainers and moderators of the project fail to respect these/your limits, you are entitled to call them out.
+Any of the behaviors described in [point 4 "Unacceptable Behavior" of the Citizens Code of Conduct](http://citizencodeofconduct.org/#unacceptable-behavior) are not welcome here and might get you banned. If anyone, including maintainers and moderators of the project, fail to respect these/your limits, you are entitled to call them out.
 
 ## License
 

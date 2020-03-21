@@ -1,19 +1,18 @@
 // See: https://github.com/rust-lang/rust/issues/44732#issuecomment-488766871
 //
-#![ cfg_attr( feature = "external_doc", feature(external_doc)         ) ]
-#![ cfg_attr( feature = "external_doc", doc(include = "../README.md") ) ]
-//!
-
+#![ cfg_attr( nightly, feature(doc_cfg, external_doc) ) ]
+#![ cfg_attr( nightly, doc(include = "../README.md")  ) ]
+#![doc = ""] // empty doc line to handle missing doc warning when the feature is missing.
 
 #![ doc    ( html_root_url = "https://docs.rs/ws_stream_wasm"            ) ]
-#![ deny   ( missing_docs                                                ) ]
-// #![ forbid ( unsafe_code                                                 ) ]
+#![ forbid ( unsafe_code                                                 ) ]
 #![ allow  ( clippy::suspicious_else_formatting, clippy::needless_return ) ]
 
 
 #![ warn
 (
 	missing_debug_implementations ,
+	missing_docs                  ,
 	nonstandard_style             ,
 	rust_2018_idioms              ,
 	trivial_casts                 ,
@@ -27,21 +26,23 @@
 
 
 
-pub mod error       ;
-    mod ws_event    ;
-    mod ws_message  ;
-    mod ws_io       ;
-    mod ws_state    ;
-    mod ws_stream   ;
+mod error        ;
+mod ws_event     ;
+mod ws_message   ;
+mod ws_meta      ;
+mod ws_state     ;
+mod ws_stream    ;
+mod ws_stream_io ;
 
 pub use
 {
-	error             :: { Error as WsErr, ErrorKind as WsErrKind } ,
-	ws_event          :: { WsEvent, CloseEvent                    } ,
-	ws_message        :: { WsMessage                              } ,
-	ws_io             :: { WsIo                                   } ,
-	ws_stream         :: { WsStream                               } ,
-	ws_state          :: { WsState                                } ,
+	error        :: { WsErr               } ,
+	ws_event     :: { WsEvent, CloseEvent } ,
+	ws_message   :: { WsMessage           } ,
+	ws_meta      :: { WsMeta              } ,
+	ws_state     :: { WsState             } ,
+	ws_stream    :: { WsStream            } ,
+	ws_stream_io :: { WsStreamIo          } ,
 };
 
 
@@ -50,18 +51,19 @@ mod import
 {
 	pub(crate) use
 	{
-		futures              :: { prelude::{ Stream, Sink, AsyncWrite, AsyncRead }, ready                } ,
+		futures              :: { prelude::{ Stream, Sink }, ready                                       } ,
 		futures              :: { StreamExt, SinkExt                                                     } ,
-		std                  :: { io, cmp, collections::VecDeque, fmt, task::{ Context, Waker, Poll }    } ,
+		std                  :: { io, collections::VecDeque, fmt, task::{ Context, Waker, Poll }         } ,
 		std                  :: { rc::Rc, cell::{ RefCell }, pin::Pin, convert::{ TryFrom, TryInto }     } ,
-		std                  :: { error::Error as ErrorTrait                                             } ,
-		log                  :: { *                                                                      } ,
 		js_sys               :: { ArrayBuffer, Uint8Array                                                } ,
 		wasm_bindgen         :: { closure::Closure, JsCast, JsValue, UnwrapThrowExt                      } ,
 		web_sys              :: { *, BinaryType, Blob, WebSocket, CloseEvent as JsCloseEvt, DomException } ,
 		js_sys               :: { Array                                                                  } ,
 		pharos               :: { Pharos, Observable, Filter, ObserveConfig, Events                      } ,
 		wasm_bindgen_futures :: { spawn_local                                                            } ,
+		async_io_stream      :: { IoStream                                                               } ,
+		thiserror            :: { Error                                                                  } ,
+		send_wrapper         :: { SendWrapper                                                            } ,
 	};
 }
 
@@ -70,7 +72,7 @@ use import::*;
 
 /// Helper function to reduce code bloat
 //
-pub(crate) fn notify( pharos: Rc<RefCell<Pharos<WsEvent>>>, evt: WsEvent )
+pub(crate) fn notify( pharos: SendWrapper< Rc<RefCell<Pharos<WsEvent>>> >, evt: WsEvent )
 {
 	let notify = async move
 	{

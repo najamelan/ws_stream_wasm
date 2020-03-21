@@ -1,4 +1,4 @@
-use crate :: { import::*, WsErr, WsErrKind };
+use crate :: { import::*, WsErr };
 
 
 /// Indicates the state of a Websocket connection. The only state in which it's valid to send and receive messages
@@ -31,12 +31,12 @@ impl TryFrom<u16> for WsState
 	{
 		match state
 		{
-			WebSocket::CONNECTING => Ok ( WsState::Connecting                                 ) ,
-			WebSocket::OPEN       => Ok ( WsState::Open                                       ) ,
-			WebSocket::CLOSING    => Ok ( WsState::Closing                                    ) ,
-			WebSocket::CLOSED     => Ok ( WsState::Closed                                     ) ,
+			WebSocket::CONNECTING => Ok ( WsState::Connecting                      ) ,
+			WebSocket::OPEN       => Ok ( WsState::Open                            ) ,
+			WebSocket::CLOSING    => Ok ( WsState::Closing                         ) ,
+			WebSocket::CLOSED     => Ok ( WsState::Closed                          ) ,
 
-			_                     => Err( WsErrKind::InvalidWsState{ supplied: state }.into() ) ,
+			_                     => Err( WsErr::InvalidWsState{ supplied: state } ) ,
 		}
 	}
 }
