@@ -1,6 +1,28 @@
 # Changelog
 
 
+## 0.6.0 - 2020-03-21
+
+  - **BREAKING CHANGE**: rename the basic types. `WsStream` is now called `WsMeta` and `WsIo` is now called `WsStream`.
+  - **BREAKING CHANGE**: `WsStream` no longer implements `AsyncRead`/`AsyncWrite` directly, you have to call `into_io()`.
+  - **BREAKING CHANGE**: The error type is now renamed to `WsErr` and is an enum directly instead of having an error kind.
+  - **BREAKING CHANGE**: Fix: `From<MessageEvent> for WsMessage` has become `TryFrom`. This is because things actually could
+    go wrong here.
+
+  - Implement tokio `AsyncRead`/`AsyncWrite` for WsStream (Behind a feature flag).
+  - delegate implementation of `AsyncRead`/`AsyncWrite`/`AsyncBufRead` to _async_io_stream_. This allows
+    sharing the functionality with _ws_stream_tungstenite_, fleshing it out to always fill and use entire buffers,
+    polling the underlying stream several times if needed.
+  - only build for default target on docs.rs.
+  - exclude unneeded files from package build.
+  - remove trace and debug statements.
+  - `WsMessage` now implements `From<Vec<u8>>` and `From<String>`.
+  - `WsMeta` and `WsStream` are now `Send`. You should still only use them in a single thread though. This is fine because
+    WASM has no threads, and is sometimes necessary because all the underlying types of _web-sys_ are `!Send`.
+  - No longer set a close code if the user doesn't set one.
+  - Fix: Make sure `WsStream` continues to function correctly if you drop `WsMeta`.
+
+
 ## 0.5.2 - 2020-01-06
 
   - fix version of futures-codec because they didn't bump their major version number after making a breaking change.
