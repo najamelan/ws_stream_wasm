@@ -247,7 +247,7 @@ impl Stream for WsStream
 	// Currently requires an unfortunate copy from Js memory to WASM memory. Hopefully one
 	// day we will be able to receive the MessageEvt directly in WASM.
 	//
-	fn poll_next( mut self: Pin<&mut Self>, cx: &mut Context<'_> ) -> Poll<Option< Self::Item >>
+	fn poll_next( self: Pin<&mut Self>, cx: &mut Context<'_> ) -> Poll<Option< Self::Item >>
 	{
 		// Once the queue is empty, check the state of the connection.
 		// When it is closing or closed, no more messages will arrive, so
@@ -279,7 +279,7 @@ impl Sink<WsMessage> for WsStream
 
 	// Web API does not really seem to let us check for readiness, other than the connection state.
 	//
-	fn poll_ready( mut self: Pin<&mut Self>, cx: &mut Context<'_> ) -> Poll<Result<(), Self::Error>>
+	fn poll_ready( self: Pin<&mut Self>, cx: &mut Context<'_> ) -> Poll<Result<(), Self::Error>>
 	{
 		match self.ready_state()
 		{
