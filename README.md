@@ -8,14 +8,16 @@
 
 > A convenience library for using web sockets in WASM
 
+The _web-sys_ bindings for websockets aren't very convenient to use directly. This crates hopes to alleviate that. Browsers can't create direct TCP connections, and by putting `AsyncRead`/`AsyncWrite` on top of websockets, we can use interfaces that work over any async byte streams from within the browser. The crate has 2 main types. The `WsMeta` type exists to allow access to the web API while you pass `WsStream` to combinators that take ownership of the stream.
+
 **features:**
 - [`WsMeta`]: A wrapper around [`web_sys::WebSocket`].
 - [`WsMessage`]: A simple rusty representation of a WebSocket message.
 - [`WsStream`]: A _futures_ `Sink`/`Stream` of `WsMessage`.
-                It also has a method `into_io()` which let's you get a wrapper that implements `AsyncRead`/`AsyncWrite` (_tokio_ version behind the feature `tokio_io`).
+                It also has a method `into_io()` which let's you get a wrapper that implements `AsyncRead`/`AsyncWrite`/`AsyncBufRead` (_tokio_ version behind the feature `tokio_io`).
 - [`WsEvent`]: [`WsMeta`] is observable with [pharos](https://crates.io/crates/pharos) for events (mainly useful for connection close).
 
-**NOTE:** this crate only works on WASM. If you want a server side equivalent that implements AsyncRead/AsyncWrite over
+**NOTE:** this crate only works on WASM. If you want a server side equivalent that implements `AsyncRead`/`AsyncWrite` over
 WebSockets, check out [ws_stream_tungstenite](https://crates.io/crates/ws_stream_tungstenite).
 
 **missing features:**
@@ -47,7 +49,7 @@ dependencies:
   ws_stream_wasm: ^0.6
 ```
 
-With raw Cargo.toml
+In Cargo.toml:
 ```toml
 [dependencies]
 
