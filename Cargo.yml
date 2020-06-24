@@ -3,17 +3,26 @@ package:
   # When releasing to crates.io:
   #
   # - last check for all TODO, FIXME, expect, unwrap.
-  # - re-read and final polish of documentation
-  # - run cargo udeps
-  # - run cargo clippy
   # - recheck log statements (informative, none left that were just for development, ...)
+  # - `cargo +nightly doc` and re-read and final polish of documentation.
+  #
   # - Update CHANGELOG.md.
   # - Update version numbers in Cargo.yml, Cargo.toml, install section of readme.
-  # - verify CI result
-  # - run cargo test on dependent crates
+  #
+  # - `touch **.rs && cargo clippy --tests --examples --benches --all-features`
+  # - `cargo update`
+  # - `cargo udeps --all-targets --all-features`
+  # - `cargo audit`
+  # - `cargo crev crate verify --show-all --recursive` and review.
+  # - 'cargo test --all-targets --all-features'
+  #
+  # - push dev and verify CI result
+  # - `cargo test` on dependent crates
+  #
   # - cargo publish
-  # - merge dev branch into master
-  # - create git tag with version number
+  # - `git checkout master && git merge dev --no-ff`
+  # - `git tag x.x.x` with version number.
+  # - `git push && git push --tags`
   #
   version       : 0.6.0
   name          : ws_stream_wasm
