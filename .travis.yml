@@ -17,7 +17,14 @@ cache:
 before_cache:
   - rm -rf /home/travis/.cargo/git
   - rm -rf /home/travis/.cargo/registry
-  - rm -rf /home/travis/.cargo/bin/wasm-pack
+  - rm -rf /home/travis/.cargo/bin/cargo-tarpaulin
+  - rm -rf target/debug/incremental/{ws_stream_wasm,build_script_build}-*
+  - rm -rf target/debug/.fingerprint/ws_stream_wasm-*
+  - rm -rf target/debug/build/ws_stream_wasm-*
+  - rm -rf target/debug/deps/libws_stream_wasm-*
+  - rm -rf target/debug/deps/ws_stream_wasm-*
+  - rm -rf target/debug/{ws_stream_wasm,libws_stream_wasm}.d
+  - cargo clean -p ws_stream_wasm
 
 install:
   - curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
