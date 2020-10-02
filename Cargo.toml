@@ -32,8 +32,8 @@ version = "^0.3"
 [dev-dependencies]
 bytes = "^0.5"
 console_error_panic_hook = "^0.1"
-console_log = "^0.1"
-flexi_logger = "^0.15"
+console_log = "^0.2"
+flexi_logger = "^0.16"
 futures_codec = "^0.4"
 log = "^0.4"
 pretty_assertions = "^0.6"
@@ -71,7 +71,7 @@ license = "Unlicense"
 name = "ws_stream_wasm"
 readme = "README.md"
 repository = "https://github.com/najamelan/ws_stream_wasm"
-version = "0.6.0"
+version = "0.6.1"
 
 [package.metadata]
 [package.metadata.docs]
