@@ -24,7 +24,7 @@ package:
   # - `git tag x.x.x` with version number.
   # - `git push && git push --tags`
   #
-  version       : 0.6.0
+  version       : 0.6.1
   name          : ws_stream_wasm
   edition       : '2018'
   authors       : [ Naja Melan <najamelan@autistici.org> ]
@@ -93,8 +93,8 @@ dev-dependencies:
   # wasm-logger              : ^0.1
   bytes                    : ^0.5
   console_error_panic_hook : ^0.1
-  console_log              : ^0.1
-  flexi_logger             : ^0.15
+  console_log              : ^0.2
+  flexi_logger             : ^0.16
   futures_codec            : ^0.4
   log                      : ^0.4
   pretty_assertions        : ^0.6

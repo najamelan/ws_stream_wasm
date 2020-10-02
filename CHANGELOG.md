@@ -1,6 +1,11 @@
 # Changelog
 
 
+## 0.6.1 - 2020-10-02
+
+  - Remove unnecessary `mut` in recent compiler versions. Travis stable on osx is still on 1.44 and will fail until they upgrade.
+  - improve readme
+
 ## 0.6.0 - 2020-03-21
 
   - **BREAKING CHANGE**: rename the basic types. `WsStream` is now called `WsMeta` and `WsIo` is now called `WsStream`.
