@@ -61,6 +61,7 @@ jobs:
         - bash ci/server.bash
         - bash ci/tests.bash
         - bash ci/docs.bash
+        - bash ci/deny.bash
 
 
     - name: osx stable rust
