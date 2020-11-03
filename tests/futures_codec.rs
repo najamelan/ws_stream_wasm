@@ -90,7 +90,7 @@ async fn echo( name: &str, size: usize, data: futures_codec::Bytes )
 
 	let mut result: Vec<u8> = Vec::new();
 
-	while &result.len() < &size
+	while result.len() < size
 	{
 		let msg = framed.next().await.expect_throw( "Some" ).expect_throw( "Receive bytes" );
 		let buf: &[u8] = msg.as_ref();

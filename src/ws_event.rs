@@ -73,11 +73,7 @@ impl WsEvent
 	//
 	pub fn is_open( &self ) -> bool
 	{
-		match self
-		{
-			Self::Open => true,
-			_          => false,
-		}
+		matches!( self, Self::Open )
 	}
 
 	/// Predicate indicating whether this is a [WsEvent::Error] event. Can be used as a filter for the
@@ -85,11 +81,7 @@ impl WsEvent
 	//
 	pub fn is_err( &self ) -> bool
 	{
-		match self
-		{
-			Self::Error => true,
-			_           => false,
-		}
+		matches!( self, Self::Error )
 	}
 
 	/// Predicate indicating whether this is a [WsEvent::Closing] event. Can be used as a filter for the
@@ -97,11 +89,7 @@ impl WsEvent
 	//
 	pub fn is_closing( &self ) -> bool
 	{
-		match self
-		{
-			Self::Closing => true,
-			_             => false,
-		}
+		matches!( self, Self::Closing )
 	}
 
 	/// Predicate indicating whether this is a [WsEvent::Closed] event. Can be used as a filter for the
@@ -109,11 +97,7 @@ impl WsEvent
 	//
 	pub fn is_closed( &self ) -> bool
 	{
-		match self
-		{
-			Self::Closed(_) => true,
-			_               => false,
-		}
+		matches!( self, Self::Closed(_) )
 	}
 
 	/// Predicate indicating whether this is a [WsEvent::WsErr] event. Can be used as a filter for the
@@ -121,11 +105,7 @@ impl WsEvent
 	//
 	pub fn is_ws_err( &self ) -> bool
 	{
-		match self
-		{
-			Self::WsErr(_) => true,
-			_              => false,
-		}
+		matches!( self, Self::WsErr(_) )
 	}
 }
 
