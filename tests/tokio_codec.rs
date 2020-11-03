@@ -18,7 +18,7 @@ use
 	log                   :: { *                                    } ,
 	rand_xoshiro          :: { *                                    } ,
 	rand                  :: { RngCore, SeedableRng                 } ,
-	tokio_util            :: { codec::{ BytesCodec, Decoder }       } ,
+	tokio_util            :: { codec::{ BytesCodec, Framed }        } ,
 	bytes                 :: { Bytes                                } ,
 	futures               :: { stream::{ StreamExt }, sink::SinkExt } ,
 	serde                 :: { Serialize, Deserialize               } ,
@@ -91,7 +91,7 @@ async fn echo( name: &str, size: usize, data: Bytes )
 	info!( "   Enter echo: {}", name );
 
 	let (_ws, wsio)      = connect().await;
-	let (mut tx, mut rx) = BytesCodec::new().framed( wsio ).split();
+	let (mut tx, mut rx) = Framed::new( wsio, BytesCodec::new() ).split();
 
 	tx.send( data.clone() ).await.expect_throw( "Failed to write to websocket" );
 
@@ -168,7 +168,7 @@ async fn echo_cbor( data: Data )
 	let (_ws, wsio) = connect().await;
 
 	let codec: Codec<Data, Data> = Codec::new().packed( true );
-	let (mut tx, mut rx)         = codec.framed( wsio ).split();
+	let (mut tx, mut rx)         = Framed::new( wsio, codec ).split();
 
 	tx.send( data.clone() ).await.expect_throw( "Failed to write to websocket" );
 
