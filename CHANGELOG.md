@@ -1,6 +1,11 @@
 # Changelog
 
 
+## 0.7.0-beta.1 - 2020-11-03
+
+  - Update to tokio 0.3, will be out of beta when tokio hits 1.0.
+
+
 ## 0.6.1 - 2020-10-02
 
   - Remove unnecessary `mut` in recent compiler versions. Travis stable on osx is still on 1.44 and will fail until they upgrade.
