@@ -56,7 +56,6 @@ version = "1.0.87"
 version = "^0.3"
 
 [dev-dependencies.tokio-serde-cbor]
-path = "../RUST/tokio-serde-cbor"
 version = "^0.5"
 
 [dev-dependencies.tokio-util]
