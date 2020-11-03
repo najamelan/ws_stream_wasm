@@ -28,6 +28,7 @@ before_cache:
   - cargo clean -p ws_stream_wasm
 
 install:
+  - rm -rf /home/travis/.cargo/bin/wasm-pack
   - curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
 
 
