@@ -18,6 +18,7 @@ before_cache:
   - rm -rf /home/travis/.cargo/git
   - rm -rf /home/travis/.cargo/registry
   - rm -rf /home/travis/.cargo/bin/cargo-tarpaulin
+  - rm -rf /home/travis/.cargo/bin/wasm-pack
   - rm -rf target/debug/incremental/{ws_stream_wasm,build_script_build}-*
   - rm -rf target/debug/.fingerprint/ws_stream_wasm-*
   - rm -rf target/debug/build/ws_stream_wasm-*
