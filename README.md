@@ -129,7 +129,7 @@ use
 
 let program = async
 {
-   let (mut ws, _wsio) = WsMeta::connect( "127.0.0.1:3012", None ).await
+   let (mut ws, _wsio) = WsMeta::connect( "ws://127.0.0.1:3012", None ).await
 
       .expect_throw( "assume the connection succeeds" );
 
@@ -172,7 +172,7 @@ cd ws_stream_tungstenite
 cargo run --example echo --release
 
 # in a different terminal:
-cargo run --example echo_tt --release -- "127.0.0.1:3312"
+cargo run --example echo_tt --release -- "ws://127.0.0.1:3312"
 
 # the second server is pure async-tungstenite without ws_stream_tungstenite wrapping it in AsyncRead/Write. This
 # is needed for testing a WsMessage::Text because ws_stream_tungstenite only does binary.
