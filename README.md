@@ -94,7 +94,7 @@ use
 
 let program = async
 {
-   let (mut ws, _wsio) = WsMeta::connect( "127.0.0.1:3012", None ).await
+   let (mut ws, _wsio) = WsMeta::connect( "ws://127.0.0.1:3012", None ).await
 
       .expect_throw( "assume the connection succeeds" );
 
@@ -129,7 +129,7 @@ use
 
 let program = async
 {
-   let (mut ws, _wsio) = WsMeta::connect( "127.0.0.1:3012", None ).await
+   let (mut ws, _wsio) = WsMeta::connect( "ws://127.0.0.1:3012", None ).await
 
       .expect_throw( "assume the connection succeeds" );
 
