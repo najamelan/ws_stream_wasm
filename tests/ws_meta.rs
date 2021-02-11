@@ -81,13 +81,13 @@ async fn connect_forbidden_port()
 
 	info!( "starting test: connect_forbidden_port" );
 
-	let err = WsMeta::connect( "ws://127.0.0.1:6666/", None ).await;
+	let err = WsMeta::connect( "ws://127.0.0.1:6000/", None ).await;
 
 	assert!( err.is_err() );
 
 	let err = err.unwrap_err();
 
-	assert_eq!( WsErr::ForbiddenPort, err );
+	assert!(matches!( err, WsErr::ConnectionFailed{..} ));
 }
 
 

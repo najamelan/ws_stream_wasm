@@ -13,9 +13,6 @@ use crate::{ import::*, WsErr, WsState, WsStream, WsEvent, CloseEvent, notify };
 ///
 /// Most of the methods on this type directly map to the web API. For more documentation, check the
 /// [MDN WebSocket documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebSocket/WebSocket).
-///
-/// `WsMeta` exists so you can pass [WsStream] to combinators that consume the `Stream`, yet still allow you
-/// to access the API of the underlying WebSocket.
 //
 pub struct WsMeta
 {
@@ -81,9 +78,6 @@ impl WsMeta
 
 				match de.code()
 				{
-					DomException::SECURITY_ERR => return Err( WsErr::ForbiddenPort ),
-
-
 					DomException::SYNTAX_ERR =>
 
 						return Err( WsErr::InvalidUrl{ supplied: url.as_ref().to_string() } ),
