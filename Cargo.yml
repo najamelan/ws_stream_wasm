@@ -12,6 +12,7 @@ package:
   # - `touch **/*.rs && cargo clippy --tests --examples --benches --all-features`
   # - `cargo update`
   # - `cargo udeps --all-targets --all-features`
+  # - `cargo outdated --root-deps-only`
   # - `cargo audit`
   # - `cargo crev crate verify --show-all --recursive` and review.
   # - 'cargo test --all-targets --all-features'
@@ -95,17 +96,17 @@ dev-dependencies:
   bytes                    : ^1
   console_error_panic_hook : ^0.1
   console_log              : ^0.2
-  flexi_logger             : ^0.16
+  # flexi_logger             : ^0.16
   futures_codec            : { version: ^0.4 }
   log                      : ^0.4
-  pretty_assertions        : ^0.6
+  # pretty_assertions        : ^0.6
   rand                     : ^0.8
   rand_xoshiro             : ^0.6
   getrandom                : { version: ^0.2, features: [js] }
   serde                    : { version: ^1, features: [ derive ] }
   serde_cbor               : ^0.11
   tokio                    : { version: ^1 }
-  tokio-serde-cbor         : { version: ^0.6, path: ../RUST/tokio-serde-cbor }
+  tokio-serde-cbor         : { version: ^0.6 }
   tokio-util               : { version: ^0.6, default-features: false, features: [codec] }
   wasm-bindgen-test        : ^0.3
 

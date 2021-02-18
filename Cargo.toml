@@ -18,7 +18,6 @@ wasm-bindgen-futures = "^0.4"
 
 [dependencies.async_io_stream]
 features = ["map_pharos"]
-path = "../async_io_stream"
 version = "^0.3"
 
 [dependencies.futures]
@@ -36,9 +35,7 @@ version = "^0.3"
 bytes = "^1"
 console_error_panic_hook = "^0.1"
 console_log = "^0.2"
-flexi_logger = "^0.16"
 log = "^0.4"
-pretty_assertions = "^0.6"
 rand = "^0.8"
 rand_xoshiro = "^0.6"
 serde_cbor = "^0.11"
@@ -46,7 +43,6 @@ wasm-bindgen-test = "^0.3"
 
 [dev-dependencies.async_io_stream]
 features = ["tokio_io"]
-path = "../async_io_stream"
 version = "^0.3"
 
 [dev-dependencies.futures_codec]
@@ -64,7 +60,6 @@ version = "^1"
 version = "^1"
 
 [dev-dependencies.tokio-serde-cbor]
-path = "../RUST/tokio-serde-cbor"
 version = "^0.6"
 
 [dev-dependencies.tokio-util]
