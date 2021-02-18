@@ -9,7 +9,7 @@ package:
   # - Update CHANGELOG.md.
   # - Update version numbers in Cargo.yml, Cargo.toml, install section of readme.
   #
-  # - `touch **.rs && cargo clippy --tests --examples --benches --all-features`
+  # - `touch **/*.rs && cargo clippy --tests --examples --benches --all-features`
   # - `cargo update`
   # - `cargo udeps --all-targets --all-features`
   # - `cargo audit`
@@ -24,7 +24,7 @@ package:
   # - `git tag x.x.x` with version number.
   # - `git push && git push --tags`
   #
-  version       : 0.7.0-beta.1
+  version       : 0.7.0
   name          : ws_stream_wasm
   edition       : '2018'
   authors       : [ Naja Melan <najamelan@autistici.org> ]
@@ -59,9 +59,9 @@ dependencies:
 
   # public dependencies (bump major if changing version numbers here)
   #
-  pharos               : ^0.4
-  futures              : { version: ^0.3, default-features: false }
-  async_io_stream      : { version: ^0.2.0-beta, features: [ map_pharos ] }
+  pharos               : { version: ^0.5                           }
+  futures              : { version: ^0.3, default-features: false  }
+  async_io_stream      : { version: ^0.3, features: [ map_pharos ] }
 
   # We expose WebSocket and CloseEvent.
   #
@@ -91,21 +91,22 @@ dependencies:
 dev-dependencies:
 
   # wasm-logger              : ^0.1
-  async_io_stream      : { version: ^0.2.0-beta, features: [ tokio_io ] }
-  bytes                    : ^0.6
+  async_io_stream          : { version: ^0.3, features: [ tokio_io ] }
+  bytes                    : ^1
   console_error_panic_hook : ^0.1
   console_log              : ^0.2
   flexi_logger             : ^0.16
   futures_codec            : { version: ^0.4 }
   log                      : ^0.4
   pretty_assertions        : ^0.6
-  rand                     : ^0.7
-  rand_xoshiro             : ^0.4
-  serde                    : { version: 1.0.87, features: [ derive ] }
+  rand                     : ^0.8
+  rand_xoshiro             : ^0.6
+  getrandom                : { version: ^0.2, features: [js] }
+  serde                    : { version: ^1, features: [ derive ] }
   serde_cbor               : ^0.11
-  tokio                    : { version: ^0.3 }
-  tokio-serde-cbor         : { version: ^0.5 }
-  tokio-util               : { version: ^0.5, default-features: false, features: [codec] }
+  tokio                    : { version: ^1 }
+  tokio-serde-cbor         : { version: ^0.6, path: ../RUST/tokio-serde-cbor }
+  tokio-util               : { version: ^0.6, default-features: false, features: [codec] }
   wasm-bindgen-test        : ^0.3
 
 

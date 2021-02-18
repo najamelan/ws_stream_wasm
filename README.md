@@ -46,14 +46,14 @@ With [cargo yaml](https://gitlab.com/storedbox/cargo-yaml):
 ```yaml
 dependencies:
 
-  ws_stream_wasm: ^0.6
+  ws_stream_wasm: ^0.7
 ```
 
 In Cargo.toml:
 ```toml
 [dependencies]
 
-   ws_stream_wasm = "0.6"
+   ws_stream_wasm = "0.7"
 ```
 
 ### Upgrade

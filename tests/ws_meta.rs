@@ -39,7 +39,7 @@ const URL: &str = "ws://127.0.0.1:3212/";
 
 // WsMeta::connect: Verify error when connecting to a wrong port
 //
-#[ wasm_bindgen_test(async) ]
+#[ wasm_bindgen_test ]
 //
 async fn connect_wrong_port()
 {
@@ -73,7 +73,7 @@ async fn connect_wrong_port()
 
 // WsMeta::connect: Verify error when connecting to a forbidden port
 //
-#[ wasm_bindgen_test(async) ]
+#[ wasm_bindgen_test ]
 //
 async fn connect_forbidden_port()
 {
@@ -94,7 +94,7 @@ async fn connect_forbidden_port()
 
 // WsMeta::connect: Verify error when connecting to wss:// on ws:// server
 //
-#[ wasm_bindgen_test(async) ]
+#[ wasm_bindgen_test ]
 //
 async fn connect_wrong_wss()
 {
@@ -128,7 +128,7 @@ async fn connect_wrong_wss()
 
 // WsMeta::connect: Verify error when connecting to a wrong scheme
 //
-#[ wasm_bindgen_test(async) ]
+#[ wasm_bindgen_test ]
 //
 async fn connect_wrong_scheme()
 {
@@ -149,7 +149,7 @@ async fn connect_wrong_scheme()
 
 // Verify state method.
 //
-#[ wasm_bindgen_test(async) ]
+#[ wasm_bindgen_test ]
 //
 async fn state()
 {
@@ -176,7 +176,7 @@ async fn state()
 
 // Verify closing from WsStream.
 //
-#[ wasm_bindgen_test(async) ]
+#[ wasm_bindgen_test ]
 //
 async fn close_from_wsio()
 {
@@ -199,7 +199,7 @@ async fn close_from_wsio()
 
 // Verify url method.
 //
-#[ wasm_bindgen_test(async) ]
+#[ wasm_bindgen_test ]
 //
 async fn url()
 {
@@ -217,7 +217,7 @@ async fn url()
 
 // Verify protocols.
 //
-#[ wasm_bindgen_test(async) ]
+#[ wasm_bindgen_test ]
 //
 async fn no_protocols()
 {
@@ -237,7 +237,7 @@ async fn no_protocols()
 // Verify protocols.
 // This doesn't work with tungstenite for the moment.
 //
-#[ wasm_bindgen_test(async) ]
+#[ wasm_bindgen_test ]
 //
 async fn protocols_server_accept_none()
 {
@@ -255,7 +255,7 @@ async fn protocols_server_accept_none()
 
 // Verify close_code method.
 //
-#[ wasm_bindgen_test(async) ]
+#[ wasm_bindgen_test ]
 //
 async fn close_twice()
 {
@@ -276,7 +276,7 @@ async fn close_twice()
 
 
 
-#[ wasm_bindgen_test(async) ]
+#[ wasm_bindgen_test ]
 //
 async fn close_code_valid()
 {
@@ -294,7 +294,7 @@ async fn close_code_valid()
 
 // Verify close_code method.
 //
-#[ wasm_bindgen_test(async) ]
+#[ wasm_bindgen_test ]
 //
 async fn close_code_invalid()
 {
@@ -312,7 +312,7 @@ async fn close_code_invalid()
 
 // Verify close_code method.
 //
-#[ wasm_bindgen_test(async) ]
+#[ wasm_bindgen_test ]
 //
 async fn close_reason_valid()
 {
@@ -330,7 +330,7 @@ async fn close_reason_valid()
 
 // Verify close_code method.
 //
-#[ wasm_bindgen_test(async) ]
+#[ wasm_bindgen_test ]
 //
 async fn close_reason_invalid_code()
 {
@@ -348,7 +348,7 @@ async fn close_reason_invalid_code()
 
 // Verify close_code method.
 //
-#[ wasm_bindgen_test(async) ]
+#[ wasm_bindgen_test ]
 //
 async fn close_reason_invalid()
 {
@@ -367,7 +367,7 @@ async fn close_reason_invalid()
 
 // Verify Debug impl.
 //
-#[ wasm_bindgen_test(async) ]
+#[ wasm_bindgen_test ]
 //
 async fn debug()
 {
