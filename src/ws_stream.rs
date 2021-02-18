@@ -40,7 +40,7 @@ pub struct WsStream
 
 	// A pointer to the pharos of WsMeta for when we need to listen to events
 	//
-	pharos: SendWrapper< Rc<RefCell< Pharos<WsEvent> >> >,
+	pharos: SharedPharos<WsEvent>,
 
 	// The callback closures.
 	//
@@ -51,7 +51,7 @@ pub struct WsStream
 
 	// This allows us to store a future to poll when Sink::poll_close is called
 	//
-	closer: Option< Events<WsEvent> >,
+	closer: Option< Pin<Box< dyn Future< Output=() > >> >,
 }
 
 
@@ -61,8 +61,8 @@ impl WsStream
 	//
 	pub(crate) fn new
 	(
-		ws      : SendWrapper< Rc<WebSocket>                        > ,
-		pharos  : SendWrapper< Rc<RefCell< Pharos<WsEvent> >>       > ,
+		ws      : SendWrapper< Rc<WebSocket> > ,
+		pharos  : SharedPharos<WsEvent>        ,
 		on_open : SendWrapper< Closure< dyn FnMut()               > > ,
 		on_error: SendWrapper< Closure< dyn FnMut()               > > ,
 		on_close: SendWrapper< Closure< dyn FnMut( JsCloseEvt   ) > > ,
@@ -118,7 +118,7 @@ impl WsStream
 			// Scope to avoid borrowing across await point.
 			//
 			{
-				match ph.borrow_mut().observe( Filter::Pointer( WsEvent::is_closed ).into() )
+				match ph.observe_shared( Filter::Pointer( WsEvent::is_closed ).into() ).await
 				{
 					Ok(events) => rx = events               ,
 					Err(e)     => unreachable!( "{:?}", e ) , // only happens if we closed it.
@@ -364,22 +364,28 @@ impl Sink<WsMessage> for WsStream
 
 			_ =>
 			{
-				// Create a future that will resolve with the close event, so we can
-				// poll it.
+				// Create a future that will resolve with the close event, so we can poll it.
 				//
 				if self.closer.is_none()
 				{
-					let rx = match self.pharos.borrow_mut().observe( Filter::Pointer( WsEvent::is_closed ).into() )
+					let mut ph = self.pharos.clone();
+
+					let closer = async move
 					{
-						Ok(events) => events                    ,
-						Err(e)     => unreachable!( "{:?}", e ) , // only happens if we closed it.
+						let mut rx = match ph.observe( Filter::Pointer( WsEvent::is_closed ).into() ).await
+						{
+							Ok(events) => events                    ,
+							Err(e)     => unreachable!( "{:?}", e ) , // only happens if we closed it.
+						};
+
+						rx.next().await;
 					};
 
-					self.closer = Some( rx );
+					self.closer = Some( closer.boxed() );
 				}
 
 
-				let _ = ready!( Pin::new( &mut self.closer.as_mut().unwrap() ).poll_next(cx) );
+				let _ = ready!( Pin::new( &mut self.closer.as_mut().unwrap() ).poll(cx) );
 
 				Ok(()).into()
 			}

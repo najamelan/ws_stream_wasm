@@ -11,7 +11,6 @@ rustc_version = "^0.3"
 
 [dependencies]
 js-sys = "^0.3"
-pharos = "^0.4"
 send_wrapper = "^0.5"
 thiserror = "^1"
 wasm-bindgen = "^0.2"
@@ -19,49 +18,54 @@ wasm-bindgen-futures = "^0.4"
 
 [dependencies.async_io_stream]
 features = ["map_pharos"]
-version = "^0.2.0-beta"
+version = "^0.3"
 
 [dependencies.futures]
 default-features = false
 version = "^0.3"
+
+[dependencies.pharos]
+version = "^0.5"
 
 [dependencies.web-sys]
 features = ["BinaryType", "Blob", "console", "MessageEvent", "WebSocket", "CloseEvent", "DomException"]
 version = "^0.3"
 
 [dev-dependencies]
-bytes = "^0.6"
+bytes = "^1"
 console_error_panic_hook = "^0.1"
 console_log = "^0.2"
-flexi_logger = "^0.16"
 log = "^0.4"
-pretty_assertions = "^0.6"
-rand = "^0.7"
-rand_xoshiro = "^0.4"
+rand = "^0.8"
+rand_xoshiro = "^0.6"
 serde_cbor = "^0.11"
 wasm-bindgen-test = "^0.3"
 
 [dev-dependencies.async_io_stream]
 features = ["tokio_io"]
-version = "^0.2.0-beta"
+version = "^0.3"
 
 [dev-dependencies.futures_codec]
 version = "^0.4"
 
+[dev-dependencies.getrandom]
+features = ["js"]
+version = "^0.2"
+
 [dev-dependencies.serde]
 features = ["derive"]
-version = "1.0.87"
+version = "^1"
 
 [dev-dependencies.tokio]
-version = "^0.3"
+version = "^1"
 
 [dev-dependencies.tokio-serde-cbor]
-version = "^0.5"
+version = "^0.6"
 
 [dev-dependencies.tokio-util]
 default-features = false
 features = ["codec"]
-version = "^0.5"
+version = "^0.6"
 
 [features]
 tokio_io = ["async_io_stream/tokio_io"]
@@ -79,7 +83,7 @@ license = "Unlicense"
 name = "ws_stream_wasm"
 readme = "README.md"
 repository = "https://github.com/najamelan/ws_stream_wasm"
-version = "0.7.0-beta.1"
+version = "0.7.0"
 
 [package.metadata]
 [package.metadata.docs]

@@ -1,6 +1,13 @@
 # Changelog
 
 
+## 0.7.0 - 2021-02-17
+
+  - **BREAKING CHANGE**: Update to tokio v1, pharos to 0.5 and async_io_stream to 0.3.
+  - **BREAKING CHANGE**: Browsers stopped raising SECURITY_ERR when trying to connect to a [forbidden port](https://stackoverflow.com/questions/4313403/why-do-browsers-block-some-ports/4314070). It now just returns a connection failed, which is indistinguishable from any other network problems, or simply the server not listening on this port. This is an [intended change](https://bugzilla.mozilla.org/show_bug.cgi?id=1684620).
+  -
+
+
 ## 0.7.0-beta.1 - 2020-11-03
 
   - Update to tokio 0.3, will be out of beta when tokio hits 1.0.

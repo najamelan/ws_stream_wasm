@@ -46,14 +46,14 @@ With [cargo yaml](https://gitlab.com/storedbox/cargo-yaml):
 ```yaml
 dependencies:
 
-  ws_stream_wasm: ^0.6
+  ws_stream_wasm: ^0.7
 ```
 
 In Cargo.toml:
 ```toml
 [dependencies]
 
-   ws_stream_wasm = "0.6"
+   ws_stream_wasm = "0.7"
 ```
 
 ### Upgrade
@@ -94,7 +94,7 @@ use
 
 let program = async
 {
-   let (mut ws, _wsio) = WsMeta::connect( "127.0.0.1:3012", None ).await
+   let (mut ws, _wsio) = WsMeta::connect( "ws://127.0.0.1:3012", None ).await
 
       .expect_throw( "assume the connection succeeds" );
 
@@ -129,7 +129,7 @@ use
 
 let program = async
 {
-   let (mut ws, _wsio) = WsMeta::connect( "127.0.0.1:3012", None ).await
+   let (mut ws, _wsio) = WsMeta::connect( "ws://127.0.0.1:3012", None ).await
 
       .expect_throw( "assume the connection succeeds" );
 
@@ -188,7 +188,7 @@ otherwise only info and up level are reported.
 
 ### Code of conduct
 
-Any of the behaviors described in [point 4 "Unacceptable Behavior" of the Citizens Code of Conduct](http://citizencodeofconduct.org/#unacceptable-behavior) are not welcome here and might get you banned. If anyone, including maintainers and moderators of the project, fail to respect these/your limits, you are entitled to call them out.
+Any of the behaviors described in [point 4 "Unacceptable Behavior" of the Citizens Code of Conduct](https://github.com/stumpsyn/policies/blob/master/citizen_code_of_conduct.md#4-unacceptable-behavior) are not welcome here and might get you banned. If anyone, including maintainers and moderators of the project, fail to respect these/your limits, you are entitled to call them out.
 
 ## License
 

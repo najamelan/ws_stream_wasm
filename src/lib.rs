@@ -51,19 +51,18 @@ mod import
 {
 	pub(crate) use
 	{
-		futures              :: { prelude::{ Stream, Sink }, ready                                       } ,
-		futures              :: { StreamExt, SinkExt                                                     } ,
-		std                  :: { io, collections::VecDeque, fmt, task::{ Context, Waker, Poll }         } ,
-		std                  :: { rc::Rc, cell::{ RefCell }, pin::Pin, convert::{ TryFrom, TryInto }     } ,
-		js_sys               :: { ArrayBuffer, Uint8Array                                                } ,
-		wasm_bindgen         :: { closure::Closure, JsCast, JsValue, UnwrapThrowExt                      } ,
-		web_sys              :: { *, BinaryType, Blob, WebSocket, CloseEvent as JsCloseEvt, DomException } ,
-		js_sys               :: { Array                                                                  } ,
-		pharos               :: { Pharos, Observable, Filter, ObserveConfig, Events                      } ,
-		wasm_bindgen_futures :: { spawn_local                                                            } ,
-		async_io_stream      :: { IoStream                                                               } ,
-		thiserror            :: { Error                                                                  } ,
-		send_wrapper         :: { SendWrapper                                                            } ,
+		futures              :: { prelude::{ Stream, Sink }, ready, StreamExt, FutureExt                         } ,
+		std                  :: { io, collections::VecDeque, fmt, task::{ Context, Waker, Poll }, future::Future } ,
+		std                  :: { rc::Rc, cell::{ RefCell }, pin::Pin, convert::{ TryFrom, TryInto }             } ,
+		js_sys               :: { ArrayBuffer, Uint8Array                                                        } ,
+		wasm_bindgen         :: { closure::Closure, JsCast, JsValue, UnwrapThrowExt                              } ,
+		web_sys              :: { *, BinaryType, Blob, WebSocket, CloseEvent as JsCloseEvt, DomException         } ,
+		js_sys               :: { Array                                                                          } ,
+		pharos               :: { SharedPharos, PharErr, Observable, Observe, Filter, ObserveConfig,             } ,
+		wasm_bindgen_futures :: { spawn_local                                                                    } ,
+		async_io_stream      :: { IoStream                                                                       } ,
+		thiserror            :: { Error                                                                          } ,
+		send_wrapper         :: { SendWrapper                                                                    } ,
 	};
 }
 
@@ -72,13 +71,11 @@ use import::*;
 
 /// Helper function to reduce code bloat
 //
-pub(crate) fn notify( pharos: SendWrapper< Rc<RefCell<Pharos<WsEvent>>> >, evt: WsEvent )
+pub(crate) fn notify( pharos: SharedPharos<WsEvent>, evt: WsEvent )
 {
 	let notify = async move
 	{
-		let mut pharos = pharos.borrow_mut();
-
-		pharos.send( evt ).await
+		pharos.notify( evt ).await
 
 			.map_err( |e| unreachable!( "{:?}", e ) ).unwrap(); // only happens if we closed it.
 	};

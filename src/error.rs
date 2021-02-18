@@ -27,12 +27,6 @@ pub enum WsErr
 	//
 	ConnectionNotOpen,
 
-	/// Browsers will forbid making websocket connections to certain ports. See this [Stack Overflow question](https://stackoverflow.com/questions/4313403/why-do-browsers-block-some-ports/4314070).
-	//
-	#[ error( "The port to which the connection is being attempted is not allowed." ) ]
-	//
-	ForbiddenPort,
-
 	/// An invalid URL was given to [WsMeta::connect](crate::WsMeta::connect), please see:
 	/// [HTML Living Standard](https://html.spec.whatwg.org/multipage/web-sockets.html#dom-websocket).
 	//

@@ -36,7 +36,7 @@ const URL_TT: &str = "ws://127.0.0.1:3312/";
 
 // Verify that a round trip to an echo server generates identical textual data.
 //
-#[ wasm_bindgen_test(async) ]
+#[ wasm_bindgen_test ]
 //
 async fn round_trip_text()
 {
@@ -63,7 +63,7 @@ async fn round_trip_text()
 
 // Verify that a round trip to an echo server generates identical binary data.
 //
-#[ wasm_bindgen_test(async) ]
+#[ wasm_bindgen_test ]
 //
 async fn round_trip_binary()
 {
@@ -88,7 +88,7 @@ async fn round_trip_binary()
 
 
 
-#[ wasm_bindgen_test(async) ]
+#[ wasm_bindgen_test ]
 //
 async fn send_while_closing()
 {
@@ -105,7 +105,7 @@ async fn send_while_closing()
 
 
 
-#[ wasm_bindgen_test(async) ]
+#[ wasm_bindgen_test ]
 //
 async fn send_after_close()
 {
@@ -124,7 +124,7 @@ async fn send_after_close()
 
 // Verify closing that when closing from WsMeta, WsStream next() returns none.
 //
-#[ wasm_bindgen_test(async) ]
+#[ wasm_bindgen_test ]
 //
 async fn close_from_wsstream()
 {
@@ -143,7 +143,7 @@ async fn close_from_wsstream()
 
 // Verify that closing wakes up a task pending on poll_next()
 //
-#[ wasm_bindgen_test(async) ]
+#[ wasm_bindgen_test ]
 //
 async fn close_from_wsstream_while_pending()
 {
@@ -164,7 +164,7 @@ async fn close_from_wsstream_while_pending()
 
 // Verify that closing wakes up a task pending on poll_next()
 //
-#[ wasm_bindgen_test(async) ]
+#[ wasm_bindgen_test ]
 //
 async fn close_event_from_sink()
 {
@@ -174,7 +174,7 @@ async fn close_event_from_sink()
 
 	let (mut ws, mut wsio) = WsMeta::connect( URL, None ).await.expect_throw( "Could not create websocket" );
 
-	let mut evts = ws.observe( ObserveConfig::default() ).expect( "observe" );
+	let mut evts = ws.observe( ObserveConfig::default() ).await.expect( "observe" );
 
 	SinkExt::close( &mut wsio ).await.expect_throw( "close ws" );
 
@@ -186,7 +186,7 @@ async fn close_event_from_sink()
 
 // Verify that closing wakes up a task pending on poll_next()
 //
-#[ wasm_bindgen_test(async) ]
+#[ wasm_bindgen_test ]
 //
 async fn close_event_from_async_write()
 {
@@ -197,7 +197,7 @@ async fn close_event_from_async_write()
 	let (mut ws, stream) = WsMeta::connect( URL, None ).await.expect_throw( "Could not create websocket" );
 	let mut stream = stream.into_io();
 
-	let mut evts = ws.observe( ObserveConfig::default() ).expect( "observe" );
+	let mut evts = ws.observe( ObserveConfig::default() ).await.expect( "observe" );
 
 	AsyncWriteExt::close( &mut stream ).await.expect_throw( "close ws" );
 
@@ -209,7 +209,7 @@ async fn close_event_from_async_write()
 
 // Verify Debug impl.
 //
-#[ wasm_bindgen_test(async) ]
+#[ wasm_bindgen_test ]
 //
 async fn debug()
 {

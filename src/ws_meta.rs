@@ -13,14 +13,11 @@ use crate::{ import::*, WsErr, WsState, WsStream, WsEvent, CloseEvent, notify };
 ///
 /// Most of the methods on this type directly map to the web API. For more documentation, check the
 /// [MDN WebSocket documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebSocket/WebSocket).
-///
-/// `WsMeta` exists so you can pass [WsStream] to combinators that consume the `Stream`, yet still allow you
-/// to access the API of the underlying WebSocket.
 //
 pub struct WsMeta
 {
-	ws    : SendWrapper< Rc<WebSocket> >                  ,
-	pharos: SendWrapper< Rc<RefCell< Pharos<WsEvent> >> > ,
+	ws    : SendWrapper< Rc<WebSocket> > ,
+	pharos: SharedPharos<WsEvent>        ,
 }
 
 
@@ -81,9 +78,6 @@ impl WsMeta
 
 				match de.code()
 				{
-					DomException::SECURITY_ERR => return Err( WsErr::ForbiddenPort ),
-
-
 					DomException::SYNTAX_ERR =>
 
 						return Err( WsErr::InvalidUrl{ supplied: url.as_ref().to_string() } ),
@@ -97,11 +91,11 @@ impl WsMeta
 
 		// Create our pharos.
 		//
-		let pharos = SendWrapper::new( Rc::new( RefCell::new( Pharos::default() )) );
-		let ph1    = pharos.clone();
-		let ph2    = pharos.clone();
-		let ph3    = pharos.clone();
-		let ph4    = pharos.clone();
+		let mut pharos = SharedPharos::default();
+		let ph1        = pharos.clone();
+		let ph2        = pharos.clone();
+		let ph3        = pharos.clone();
+		let ph4        = pharos.clone();
 
 
 		// Setup our event listeners
@@ -157,7 +151,7 @@ impl WsMeta
 		// the error event. Either a close event happens, in which case we want to recover the CloseEvent to return it
 		// to the user, or an Open event happens in which case we are happy campers.
 		//
-		let mut evts = pharos.borrow_mut().observe( Self::OPEN_CLOSE.into() )
+		let mut evts = pharos.observe( Self::OPEN_CLOSE.into() ).await
 
 			.expect( "we didn't close pharos" )
 		;
@@ -222,7 +216,7 @@ impl WsMeta
 		}
 
 
-		let mut evts = match self.pharos.borrow_mut().observe( Filter::Pointer( WsEvent::is_closed ).into() )
+		let mut evts = match self.pharos.observe_shared( Filter::Pointer( WsEvent::is_closed ).into() ).await
 		{
 			Ok(events) => events                    ,
 			Err(e)     => unreachable!( "{:?}", e ) , // only happens if we closed it.
@@ -268,7 +262,7 @@ impl WsMeta
 		}
 
 
-		let mut evts = match self.pharos.borrow_mut().observe( Filter::Pointer( WsEvent::is_closed ).into() )
+		let mut evts = match self.pharos.observe_shared( Filter::Pointer( WsEvent::is_closed ).into() ).await
 		{
 			Ok(events) => events                    ,
 			Err(e)     => unreachable!( "{:?}", e ) , // only happens if we closed it.
@@ -315,7 +309,7 @@ impl WsMeta
 			}
 		}
 
-		let mut evts = match self.pharos.borrow_mut().observe( Filter::Pointer( WsEvent::is_closed ).into() )
+		let mut evts = match self.pharos.observe_shared( Filter::Pointer( WsEvent::is_closed ).into() ).await
 		{
 			Ok(events) => events                    ,
 			Err(e)     => unreachable!( "{:?}", e ) , // only happens if we closed it.
@@ -411,11 +405,11 @@ impl fmt::Debug for WsMeta
 
 impl Observable<WsEvent> for WsMeta
 {
-	type Error = pharos::Error;
+	type Error = PharErr;
 
-	fn observe( &mut self, options: ObserveConfig<WsEvent> ) -> Result< Events<WsEvent>, Self::Error >
+	fn observe( &mut self, options: ObserveConfig<WsEvent> ) -> Observe< '_, WsEvent, Self::Error >
 	{
-		self.pharos.borrow_mut().observe( options )
+		self.pharos.observe( options )
 	}
 }
 

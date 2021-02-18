@@ -24,7 +24,7 @@ const URL: &str = "ws://127.0.0.1:3212";
 
 // Verify close events are emitted.
 //
-#[ wasm_bindgen_test(async) ]
+#[ wasm_bindgen_test ]
 //
 async fn close_events()
 {
@@ -34,7 +34,7 @@ async fn close_events()
 
 	let (mut ws, _wsio) = WsMeta::connect( URL, None ).await.expect_throw( "Could not create websocket" );
 
-	let mut evts = ws.observe( ObserveConfig::default() ).expect( "observe" );
+	let mut evts = ws.observe( ObserveConfig::default() ).await.expect( "observe" );
 
 	ws.close().await.expect_throw( "close ws" );
 
