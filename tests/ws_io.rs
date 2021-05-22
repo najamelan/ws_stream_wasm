@@ -18,8 +18,6 @@ use
 {
 	wasm_bindgen_futures  :: spawn_local        ,
 	futures::prelude      :: * ,
-	futures::sink         :: * ,
-	futures::io           :: * ,
 	wasm_bindgen::prelude :: * ,
 	wasm_bindgen_test     :: * ,
 	ws_stream_wasm        :: * ,
@@ -176,7 +174,7 @@ async fn close_event_from_sink()
 
 	let mut evts = ws.observe( ObserveConfig::default() ).await.expect( "observe" );
 
-	SinkExt::close( &mut wsio ).await.expect_throw( "close ws" );
+	wsio.close().await.expect_throw( "close ws" );
 
 	assert!( evts.next().await.unwrap_throw().is_closing() );
 	assert!( evts.next().await.unwrap_throw().is_closed()  );
@@ -199,7 +197,7 @@ async fn close_event_from_async_write()
 
 	let mut evts = ws.observe( ObserveConfig::default() ).await.expect( "observe" );
 
-	AsyncWriteExt::close( &mut stream ).await.expect_throw( "close ws" );
+	stream.close().await.expect_throw( "close ws" );
 
 	assert!( evts.next().await.unwrap_throw().is_closing() );
 	assert!( evts.next().await.unwrap_throw().is_closed()  );
@@ -221,5 +219,5 @@ async fn debug()
 
 	assert_eq!( format!( "WsStream for connection: {}", URL ), format!( "{:?}", wsio ) );
 
-	SinkExt::close( &mut wsio ).await.expect_throw( "close" );
+	wsio.close().await.expect_throw( "close" );
 }
