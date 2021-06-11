@@ -7,7 +7,7 @@ status = "actively-developed"
 repository = "najamelan/ws_stream_wasm"
 
 [build-dependencies]
-rustc_version = "^0.3"
+rustc_version = "^0.4"
 
 [dependencies]
 js-sys = "^0.3"
@@ -45,8 +45,8 @@ wasm-bindgen-test = "^0.3"
 features = ["tokio_io"]
 version = "^0.3"
 
-[dev-dependencies.futures_codec]
-version = "^0.4"
+[dev-dependencies.asynchronous-codec]
+version = "^0.6"
 
 [dev-dependencies.getrandom]
 features = ["js"]
@@ -83,7 +83,7 @@ license = "Unlicense"
 name = "ws_stream_wasm"
 readme = "README.md"
 repository = "https://github.com/najamelan/ws_stream_wasm"
-version = "0.7.0"
+version = "0.7.1"
 
 [package.metadata]
 [package.metadata.docs]

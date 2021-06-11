@@ -1,5 +1,17 @@
-# Changelog
+# ws_stream_wasm Changelog
 
+## [Unreleased]
+
+  [Unreleased]: https://github.com/najamelan/ws_stream_wasm/compare/0.7.1...dev
+
+
+## [0.7.1] - 2021-06-11
+
+  [0.7.1]: https://github.com/najamelan/ws_stream_wasm/compare/0.7.0...0.7.1
+
+### Updated
+  - Switch to asynchronous-codec.
+  - Remove external_doc feature for nightly 1.54.
 
 ## 0.7.0 - 2021-02-17
 
