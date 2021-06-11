@@ -97,7 +97,7 @@ dev-dependencies:
   console_error_panic_hook : ^0.1
   console_log              : ^0.2
   # flexi_logger             : ^0.16
-  futures_codec            : { version: ^0.4 }
+  asynchronous-codec       : { version: ^0.6 }
   log                      : ^0.4
   # pretty_assertions        : ^0.6
   rand                     : ^0.8

@@ -15,9 +15,9 @@ use
 	log                   :: { *                                    } ,
 	rand_xoshiro          :: { *                                    } ,
 	rand                  :: { RngCore, SeedableRng                 } ,
-	// bytes                 :: { Bytes                                } ,
+	bytes                 :: { Bytes                                } ,
 	futures               :: { stream::StreamExt, sink::SinkExt,    } ,
-	futures_codec         :: { Framed, LinesCodec, BytesCodec       } ,
+	asynchronous_codec    :: { Framed, LinesCodec, BytesCodec       } ,
 	serde                 :: { Serialize, Deserialize               } ,
 	// web_sys               :: { console::log_1 as dbg               } ,
 	async_io_stream       :: { IoStream                             } ,
@@ -53,17 +53,17 @@ async fn data_integrity()
 
 	rng.fill_bytes( &mut random );
 
-	let dataset: Vec<(&str, usize, futures_codec::Bytes)> = vec!
+	let dataset: Vec<(&str, usize, Bytes)> = vec!
 	[
-		( "basic"       , 18, futures_codec::Bytes::from_static( b"Hello from browser" ) ),
+		( "basic"       , 18, Bytes::from_static( b"Hello from browser" ) ),
 
 		// 20 random bytes, not valid unicode
 		//
-		( "random bytes", 20, futures_codec::Bytes::from( vec![ 72, 31, 238, 236, 85, 240, 197, 235, 149, 238, 245, 206, 227, 201, 139, 63, 173, 214, 158, 134 ] ) ),
+		( "random bytes", 20, Bytes::from( vec![ 72, 31, 238, 236, 85, 240, 197, 235, 149, 238, 245, 206, 227, 201, 139, 63, 173, 214, 158, 134 ] ) ),
 
 		// Test with something big:
 		//
-		( "big random"  , big_size, futures_codec::Bytes::from( random ) ),
+		( "big random"  , big_size, Bytes::from( random ) ),
 	];
 
 	for data in dataset
@@ -78,7 +78,7 @@ async fn data_integrity()
 // We run 2 connections in parallel, the second one we verify that we can use a reference
 // to a WsMeta
 //
-async fn echo( name: &str, size: usize, data: futures_codec::Bytes )
+async fn echo( name: &str, size: usize, data: Bytes )
 {
 	info!( "   Enter echo: {}", name );
 
@@ -97,7 +97,7 @@ async fn echo( name: &str, size: usize, data: futures_codec::Bytes )
 		result.extend( buf );
 	}
 
-	assert_eq!( &data, &futures_codec::Bytes::from( result  ) );
+	assert_eq!( &data, &Bytes::from( result  ) );
 
 	framed.close().await.expect_throw( "close" );
 }

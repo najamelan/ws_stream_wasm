@@ -45,8 +45,8 @@ wasm-bindgen-test = "^0.3"
 features = ["tokio_io"]
 version = "^0.3"
 
-[dev-dependencies.futures_codec]
-version = "^0.4"
+[dev-dependencies.asynchronous-codec]
+version = "^0.6"
 
 [dev-dependencies.getrandom]
 features = ["js"]
