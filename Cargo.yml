@@ -113,4 +113,4 @@ dev-dependencies:
 
 build-dependencies:
 
-  rustc_version: ^0.3
+  rustc_version: ^0.4

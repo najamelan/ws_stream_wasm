@@ -7,7 +7,7 @@ status = "actively-developed"
 repository = "najamelan/ws_stream_wasm"
 
 [build-dependencies]
-rustc_version = "^0.3"
+rustc_version = "^0.4"
 
 [dependencies]
 js-sys = "^0.3"
