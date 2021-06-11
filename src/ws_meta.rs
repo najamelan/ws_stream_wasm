@@ -141,9 +141,9 @@ impl WsMeta
 		}) as Box< dyn FnMut( JsCloseEvt ) > );
 
 
-		ws.set_onopen ( Some( &on_open .as_ref().unchecked_ref() ));
-		ws.set_onclose( Some( &on_close.as_ref().unchecked_ref() ));
-		ws.set_onerror( Some( &on_error.as_ref().unchecked_ref() ));
+		ws.set_onopen ( Some( on_open .as_ref().unchecked_ref() ));
+		ws.set_onclose( Some( on_close.as_ref().unchecked_ref() ));
+		ws.set_onerror( Some( on_error.as_ref().unchecked_ref() ));
 
 
 
