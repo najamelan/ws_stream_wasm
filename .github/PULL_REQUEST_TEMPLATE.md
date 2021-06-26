@@ -1,5 +1,5 @@
 <!--- When contributing all contributions should branch off the -->
-<!--- dev branch as master is only used for releases. -->
+<!--- dev branch as release is only used for releases. -->
 
 <!--- Check CONTRIBUTING.md for more information-->
 

@@ -2,7 +2,12 @@
 
 ## [Unreleased]
 
-  [Unreleased]: https://github.com/najamelan/ws_stream_wasm/compare/0.7.1...dev
+  [Unreleased]: https://github.com/najamelan/ws_stream_wasm/compare/release...dev
+
+
+## [0.7.1] - 2021-06-11
+
+  [0.7.1]: https://github.com/najamelan/ws_stream_wasm/compare/0.7.1...0.7.2
 
 
 ## [0.7.1] - 2021-06-11

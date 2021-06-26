@@ -36,7 +36,7 @@ impl WsMeta
 	/// ## Errors
 	///
 	/// Browsers will forbid making websocket connections to certain ports. See this [Stack Overflow question](https://stackoverflow.com/questions/4313403/why-do-browsers-block-some-ports/4314070).
-	/// `connect` will return a [WsErr::ForbiddenPort].
+	/// `connect` will return a [WsErr::ConnectionFailed] as it is indistinguishable from other connection failures.
 	///
 	/// If the URL is invalid, a [WsErr::InvalidUrl] is returned. See the [HTML Living Standard](https://html.spec.whatwg.org/multipage/web-sockets.html#dom-websocket) for more information.
 	///
