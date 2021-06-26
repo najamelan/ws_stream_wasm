@@ -21,7 +21,7 @@ package:
   # - `cargo test` on dependent crates
   #
   # - cargo publish
-  # - `git checkout master && git merge dev --no-ff`
+  # - `git checkout release && git merge dev --no-ff`
   # - `git tag x.x.x` with version number.
   # - `git push && git push --tags`
   #

@@ -1,7 +1,7 @@
 # ws_stream_wasm
 
 [![standard-readme compliant](https://img.shields.io/badge/readme%20style-standard-brightgreen.svg?style=flat-square)](https://github.com/RichardLitt/standard-readme)
-[![Build Status](https://github.com/najamelan/ws_stream_wasm/workflows/ci/badge.svg)](https://github.com/najamelan/ws_stream_wasm/actions)
+[![Build Status](https://github.com/najamelan/ws_stream_wasm/workflows/ci/badge.svg?branch=release)](https://github.com/najamelan/ws_stream_wasm/actions)
 [![Docs](https://docs.rs/ws_stream_wasm/badge.svg)](https://docs.rs/ws_stream_wasm)
 [![crates.io](https://img.shields.io/crates/v/ws_stream_wasm.svg)](https://crates.io/crates/ws_stream_wasm)
 
@@ -58,7 +58,7 @@ In Cargo.toml:
 
 ### Upgrade
 
-Please check out the [changelog](https://github.com/najamelan/ws_stream_wasm/blob/master/CHANGELOG.md) when upgrading.
+Please check out the [changelog](https://github.com/najamelan/ws_stream_wasm/blob/release/CHANGELOG.md) when upgrading.
 
 ### Dependencies
 
@@ -70,7 +70,7 @@ tokio version of AsyncRead/AsyncWrite.
 
 ## Usage
 
-The [integration tests](https://github.com/najamelan/ws_stream_wasm/tree/master/tests) show most features in action. The
+The [integration tests](https://github.com/najamelan/ws_stream_wasm/tree/release/tests) show most features in action. The
 example directory doesn't currently hold any interesting examples.
 
 The types in this library are `Send` as far as the compiler is concerned. This is so that you can use them with general purpose
@@ -160,7 +160,7 @@ The reference documents for understanding web sockets and how the browser handle
 
 ## Contributing
 
-Please check out the [contribution guidelines](https://github.com/najamelan/ws_stream_wasm/blob/master/CONTRIBUTING.md).
+Please check out the [contribution guidelines](https://github.com/najamelan/ws_stream_wasm/blob/release/CONTRIBUTING.md).
 
 
 ### Testing

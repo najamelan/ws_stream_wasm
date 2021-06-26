@@ -18,7 +18,7 @@ use crate::{ import::*, * };
 /// observers will never receive a `Close` event. Drop will issue a `Closing` event and this
 /// will be the very last event observers receive. The the stream will end if `WsMeta` is also dropped.
 ///
-/// See the [integration tests](https://github.com/najamelan/ws_stream_wasm/blob/master/tests/futures_codec.rs)
+/// See the [integration tests](https://github.com/najamelan/ws_stream_wasm/blob/release/tests/futures_codec.rs)
 /// if you need an example.
 ///
 //
