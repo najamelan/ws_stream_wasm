@@ -16,19 +16,41 @@ wasm_bindgen_test_configure!(run_in_browser);
 //
 use
 {
-	wasm_bindgen_futures  :: spawn_local        ,
 	futures::prelude      :: * ,
-	wasm_bindgen::prelude :: * ,
-	wasm_bindgen_test     :: * ,
-	ws_stream_wasm        :: * ,
 	log                   :: * ,
 	pharos                :: * ,
+	std::marker           :: PhantomData ,
+	wasm_bindgen::prelude :: * ,
+	wasm_bindgen_futures  :: spawn_local ,
+	wasm_bindgen_test     :: * ,
+	ws_stream_wasm        :: * ,
 };
 
 
 
 const URL   : &str = "ws://127.0.0.1:3212/";
 const URL_TT: &str = "ws://127.0.0.1:3312/";
+
+
+
+
+
+
+// Verify that both WsStream and WsMeta are Send for now. The browser API's are not Send,
+// and this is not meant to be send accross threads. However some API's need to require
+// Send (eg async that can be spawned on a thread pool). However on wasm you can spawn them
+// on a single threaded executor and they shouldn't require Send. On the long term it would
+// be nice to have a better solution.
+//
+#[ wasm_bindgen_test ]
+//
+fn sendness()
+{
+	struct SendNess<T: Send>{ _phantom: PhantomData<T> }
+
+	let _x = SendNess::<WsStream>{ _phantom: PhantomData };
+	let _x = SendNess::<WsMeta  >{ _phantom: PhantomData };
+}
 
 
 
