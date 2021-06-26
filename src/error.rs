@@ -84,8 +84,8 @@ pub enum WsErr
 	/// When converting the JavaScript Message into a WsMessage, it's not possible to
 	/// convert Blob type messages, as Blob is a streaming type, that needs to be read
 	/// asynchronously. If you are using the type without setting up the connection with
-	/// [`WsMeta::connect`], you have to make sure to set the binary type of the connection
-	/// to `ArrayBuffer`.
+	/// [`WsMeta::connect`](crate::WsMeta::connect), you have to make sure to set the binary
+	/// type of the connection to `ArrayBuffer`.
 	///
 	/// Happens in `impl TryFrom< MessageEvent > for WsMessage`.
 	//
