@@ -51,7 +51,7 @@ pub struct WsStream
 
 	// This allows us to store a future to poll when Sink::poll_close is called
 	//
-	closer: Option< Pin<Box< dyn Future< Output=() > >> >,
+	closer: Option< Pin<Box< dyn Future< Output=() > + Send >> >,
 }
 
 
