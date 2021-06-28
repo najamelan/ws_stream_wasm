@@ -5,9 +5,22 @@
   [Unreleased]: https://github.com/najamelan/ws_stream_wasm/compare/release...dev
 
 
-## [0.7.1] - 2021-06-11
+## [0.7.3] - 2021-06-11
 
-  [0.7.1]: https://github.com/najamelan/ws_stream_wasm/compare/0.7.1...0.7.2
+  [0.7.3]: https://github.com/najamelan/ws_stream_wasm/compare/0.7.2...0.7.3
+
+### Added
+
+  - on user demand also make `WsStream` `Sync` again.
+
+
+## [0.7.2] - 2021-06-26
+
+  [0.7.2]: https://github.com/najamelan/ws_stream_wasm/compare/0.7.1...0.7.2
+
+### Added
+
+  - Make `WsStream` `Send` again.
 
 
 ## [0.7.1] - 2021-06-11

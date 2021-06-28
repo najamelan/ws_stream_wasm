@@ -51,7 +51,7 @@ pub struct WsStream
 
 	// This allows us to store a future to poll when Sink::poll_close is called
 	//
-	closer: Option< Pin<Box< dyn Future< Output=() > + Send >> >,
+	closer: Option<SendWrapper< Pin<Box< dyn Future< Output=() > + Send >> >>,
 }
 
 
@@ -381,11 +381,11 @@ impl Sink<WsMessage> for WsStream
 						rx.next().await;
 					};
 
-					self.closer = Some( closer.boxed() );
+					self.closer = Some(SendWrapper::new( closer.boxed() ));
 				}
 
 
-				let _ = ready!( Pin::new( &mut self.closer.as_mut().unwrap() ).poll(cx) );
+				let _ = ready!( self.closer.as_mut().unwrap().as_mut().poll(cx) );
 
 				Ok(()).into()
 			}

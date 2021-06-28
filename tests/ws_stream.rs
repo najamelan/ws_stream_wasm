@@ -46,7 +46,7 @@ const URL_TT: &str = "ws://127.0.0.1:3312/";
 //
 fn sendness()
 {
-	struct SendNess<T: Send>{ _phantom: PhantomData<T> }
+	struct SendNess<T: Send + Sync>{ _phantom: PhantomData<T> }
 
 	let _x = SendNess::<WsStream>{ _phantom: PhantomData };
 	let _x = SendNess::<WsMeta  >{ _phantom: PhantomData };

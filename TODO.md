@@ -1,5 +1,6 @@
 # TODO
 
+- remove this_error...
 - tests for new behavior of WsMessage tryfrom and error handling.
 - doc tests
 - look into proper changelogs, like the futures crate.

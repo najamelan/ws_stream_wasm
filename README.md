@@ -73,11 +73,13 @@ tokio version of AsyncRead/AsyncWrite.
 The [integration tests](https://github.com/najamelan/ws_stream_wasm/tree/release/tests) show most features in action. The
 example directory doesn't currently hold any interesting examples.
 
-The types in this library are `Send` as far as the compiler is concerned. This is so that you can use them with general purpose
-libraries that also work on WASM but that require a connection to be `Send`. Currently WASM has no threads though and most
+The types in this library are `Send` + `Sync` as far as the compiler is concerned. This is so that you can use them with general purpose
+libraries that also work on WASM but that require a connection to be `Send`/`Sync`. Currently WASM has no threads though and most
 underlying types we use aren't `Send`. The solution for the moment is to use [`send_wrapper::SendWrapper`]. This will panic
 if it's ever dereferenced on a different thread than where it's created. You have to consider that the types aren't `Send`, but
-on WASM it's safe to pass them to an API that requires `Send`, because there is no multi-threading.
+on WASM it's safe to pass them to an API that requires `Send`, because there is not much multi-threading support. Thus passing it to
+the bindgen executor will be fine. However with webworkers you can make extra threads nevertheless. The responsibility is on you
+to assure you don't try to use the Web Api's on different threads.
 
 The main entrypoint you'll want to use, eg to connect, is [`WsMeta::connect`].
 
