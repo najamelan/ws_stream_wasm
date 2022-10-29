@@ -60,12 +60,12 @@ version = "^1"
 version = "^1"
 
 [dev-dependencies.tokio-serde-cbor]
-version = "^0.6"
+version = "^0.7"
 
 [dev-dependencies.tokio-util]
 default-features = false
 features = ["codec"]
-version = "^0.6"
+version = "^0.7"
 
 [features]
 tokio_io = ["async_io_stream/tokio_io"]

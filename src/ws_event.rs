@@ -9,7 +9,7 @@ use crate::{ import::*, WsErr };
 ///   ws_stream_wasm       :: *                        ,
 ///   pharos               :: *                        ,
 ///   wasm_bindgen         :: UnwrapThrowExt           ,
-///   wasm_bindgen_futures :: futures_0_3::spawn_local ,
+///   wasm_bindgen_futures :: spawn_local              ,
 ///   futures              :: stream::StreamExt        ,
 ///};
 ///
@@ -21,7 +21,10 @@ use crate::{ import::*, WsErr };
 ///
 ///   // The Filter type comes from the pharos crate.
 ///   //
-///   let mut evts = ws.observe( Filter::Pointer( WsEvent::is_closed ).into() );
+///   let mut evts = ws.observe( Filter::Pointer( WsEvent::is_closed ).into() )
+///      .await
+///      .expect("observe ws_meta")
+///   ;
 ///
 ///   ws.close().await;
 ///

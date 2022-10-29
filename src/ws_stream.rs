@@ -385,7 +385,7 @@ impl Sink<WsMessage> for WsStream
 				}
 
 
-				let _ = ready!( self.closer.as_mut().unwrap().as_mut().poll(cx) );
+				ready!( self.closer.as_mut().unwrap().as_mut().poll(cx) );
 
 				Ok(()).into()
 			}

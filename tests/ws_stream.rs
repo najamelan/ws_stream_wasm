@@ -33,9 +33,6 @@ const URL_TT: &str = "ws://127.0.0.1:3312/";
 
 
 
-
-
-
 // Verify that both WsStream and WsMeta are Send for now. The browser API's are not Send,
 // and this is not meant to be send accross threads. However some API's need to require
 // Send (eg async that can be spawned on a thread pool). However on wasm you can spawn them
@@ -62,7 +59,7 @@ async fn round_trip_text()
 {
 	let _ = console_log::init_with_level( Level::Trace );
 
-	info!( "starting test: round_trip" );
+	info!( "starting test: round_trip_text" );
 
 	let (_ws, mut wsio) = WsMeta::connect( URL_TT, None ).await.expect_throw( "Could not create websocket" );
 	let message         = "Hello from browser".to_string();
@@ -89,7 +86,7 @@ async fn round_trip_binary()
 {
 	let _ = console_log::init_with_level( Level::Trace );
 
-	info!( "starting test: round_trip" );
+	info!( "starting test: round_trip_binary" );
 
 	let (_ws, mut wsio) = WsMeta::connect( URL, None ).await.expect_throw( "Could not create websocket" );
 	let message         = b"Hello from browser".to_vec();
