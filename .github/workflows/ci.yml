@@ -65,10 +65,6 @@ jobs:
         uses: actions/checkout@v2
 
 
-      - name: Check deny
-        run: bash ci/deny.bash
-
-
       - name: Run clippy
         run : bash ci/clippy.bash
 
@@ -83,6 +79,9 @@ jobs:
 
       - name: Run tests
         run : bash ci/test.bash
+
+      - name: Run cargo-deny
+        uses: EmbarkStudios/cargo-deny-action@v1
 
 
 
