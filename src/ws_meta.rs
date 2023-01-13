@@ -145,7 +145,27 @@ impl WsMeta
 		ws.set_onclose( Some( on_close.as_ref().unchecked_ref() ));
 		ws.set_onerror( Some( on_error.as_ref().unchecked_ref() ));
 
+		// In case of future task cancellation the current task may be interrupted at an await, therefore not reaching
+		// the `WsStream` construction, whose `Drop` glue would have been responsible for unregistering the callbacks.
+		// We therefore use a guard to be responsible for unregistering the callbacks until the `WsStream` is
+		// constructed.
+		//
+		let guard =
+		{
+			struct Guard<'lt> { ws: &'lt WebSocket }
 
+			impl Drop for Guard<'_>
+			{
+				fn drop(&mut self)
+				{
+					self.ws.set_onopen(None);
+					self.ws.set_onclose(None);
+					self.ws.set_onerror(None);
+				}
+			}
+
+			Guard { ws: &ws }
+		};
 
 		// Listen to the events to figure out whether the connection opens successfully. We don't want to deal with
 		// the error event. Either a close event happens, in which case we want to recover the CloseEvent to return it
@@ -163,6 +183,10 @@ impl WsMeta
 			return Err( WsErr::ConnectionFailed{ event: evt } )
 		}
 
+		// We have now passed all the `await` points in this function and so the `WsStream` construction is guaranteed
+		// so we let it take over the responsibility of unregistering the callbacks by disabling our guard.
+		//
+		std::mem::forget(guard);
 
 		// We don't handle Blob's
 		//
