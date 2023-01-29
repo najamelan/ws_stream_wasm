@@ -5,6 +5,21 @@
   [Unreleased]: https://github.com/najamelan/ws_stream_wasm/compare/release...dev
 
 
+## [0.7.4] - 2023-01-29
+
+  [0.7.4]: https://github.com/najamelan/ws_stream_wasm/compare/0.7.3...0.7.4
+
+### Fixed
+
+  - When the `WsMeta::connect` future is dropped, close websocket and unregister callbacks.
+    This avoids some ugly error messages in the console. Thanks to @hamchapman for discovering
+    and solving the issue and @danielhenrymantilla for reviewing the solution.
+
+### Updated 
+  - tokio-util to 0.7 (dev-dependency) 
+  - send_wrapper to 0.6
+
+
 ## [0.7.3] - 2021-06-11
 
   [0.7.3]: https://github.com/najamelan/ws_stream_wasm/compare/0.7.2...0.7.3
