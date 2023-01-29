@@ -87,6 +87,7 @@ dependencies:
   send_wrapper         : ^0.6
   wasm-bindgen         : ^0.2
   wasm-bindgen-futures : ^0.4
+  log                  : ^0.4
 
 
 dev-dependencies:
@@ -98,7 +99,6 @@ dev-dependencies:
   console_log              : ^0.2
   # flexi_logger             : ^0.16
   asynchronous-codec       : { version: ^0.6 }
-  log                      : ^0.4
   # pretty_assertions        : ^0.6
   rand                     : ^0.8
   rand_xoshiro             : ^0.6

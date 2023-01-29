@@ -161,6 +161,9 @@ impl WsMeta
 					self.ws.set_onopen(None);
 					self.ws.set_onclose(None);
 					self.ws.set_onerror(None);
+					self.ws.close().unwrap_throw(); // cannot throw without code and reason.
+
+					log::warn!( "WsMeta::connect future was dropped while connecting to: {}.", self.ws.url() );
 				}
 			}
 
