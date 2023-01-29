@@ -16,14 +16,14 @@ wasm_bindgen_test_configure!(run_in_browser);
 //
 use
 {
-	futures::prelude      :: * ,
-	log                   :: * ,
-	pharos                :: * ,
+	futures::prelude      :: *           ,
+	log                   :: *           ,
+	pharos                :: *           ,
 	std::marker           :: PhantomData ,
-	wasm_bindgen::prelude :: * ,
+	wasm_bindgen::prelude :: *           ,
 	wasm_bindgen_futures  :: spawn_local ,
-	wasm_bindgen_test     :: * ,
-	ws_stream_wasm        :: * ,
+	wasm_bindgen_test     :: *           ,
+	ws_stream_wasm        :: *           ,
 };
 
 
@@ -236,7 +236,7 @@ async fn debug()
 
 	let (_ws, mut wsio) = WsMeta::connect( URL, None ).await.expect_throw( "Could not create websocket" );
 
-	assert_eq!( format!( "WsStream for connection: {}", URL ), format!( "{:?}", wsio ) );
+	assert_eq!( format!( "WsStream for connection: {URL}" ), format!( "{wsio:?}" ) );
 
 	wsio.close().await.expect_throw( "close" );
 }
