@@ -377,7 +377,7 @@ async fn debug()
 
 	let (ws, _wsio) = WsMeta::connect( URL, None ).await.expect_throw( "Could not create websocket" );
 
-	assert_eq!( format!( "WsMeta for connection: {}", URL ), format!( "{:?}", ws ) );
+	assert_eq!( format!( "WsMeta for connection: {URL}" ), format!( "{ws:?}" ) );
 
 	ws.close().await.expect_throw( "close" );
 }

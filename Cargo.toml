@@ -11,7 +11,8 @@ rustc_version = "^0.4"
 
 [dependencies]
 js-sys = "^0.3"
-send_wrapper = "^0.5"
+log = "^0.4"
+send_wrapper = "^0.6"
 thiserror = "^1"
 wasm-bindgen = "^0.2"
 wasm-bindgen-futures = "^0.4"
@@ -35,7 +36,6 @@ version = "^0.3"
 bytes = "^1"
 console_error_panic_hook = "^0.1"
 console_log = "^0.2"
-log = "^0.4"
 rand = "^0.8"
 rand_xoshiro = "^0.6"
 serde_cbor = "^0.11"
@@ -60,12 +60,12 @@ version = "^1"
 version = "^1"
 
 [dev-dependencies.tokio-serde-cbor]
-version = "^0.6"
+version = "^0.7"
 
 [dev-dependencies.tokio-util]
 default-features = false
 features = ["codec"]
-version = "^0.6"
+version = "^0.7"
 
 [features]
 tokio_io = ["async_io_stream/tokio_io"]
@@ -83,7 +83,7 @@ license = "Unlicense"
 name = "ws_stream_wasm"
 readme = "README.md"
 repository = "https://github.com/najamelan/ws_stream_wasm"
-version = "0.7.3"
+version = "0.7.4"
 
 [package.metadata]
 [package.metadata.docs]
