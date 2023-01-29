@@ -92,10 +92,10 @@ impl WsMeta
 		// Create our pharos.
 		//
 		let mut pharos = SharedPharos::default();
-		let ph1        = pharos.clone();
-		let ph2        = pharos.clone();
-		let ph3        = pharos.clone();
-		let ph4        = pharos.clone();
+		let     ph1    = pharos.clone();
+		let     ph2    = pharos.clone();
+		let     ph3    = pharos.clone();
+		let     ph4    = pharos.clone();
 
 
 		// Setup our event listeners
