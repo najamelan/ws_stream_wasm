@@ -103,6 +103,11 @@ pub enum WsErr
 	#[ error( "Received a message that is neither ArrayBuffer, String or Blob." ) ]
 	//
 	UnknownDataType,
+
+    /// Fallback whenever explicit variant hadling hansn't yet been implemented.
+    #[error("`{0}`")]
+    //
+    Other(String),
 }
 
 
