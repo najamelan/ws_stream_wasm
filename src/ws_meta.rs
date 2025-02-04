@@ -83,7 +83,7 @@ impl WsMeta
 						return Err( WsErr::InvalidUrl{ supplied: url.as_ref().to_string() } ),
 
 
-					_ => return Err(WsErr::Other(de.message())),
+					_ => return Err(WsErr::Unknown(de.message())),
 				};
 			}
 		};

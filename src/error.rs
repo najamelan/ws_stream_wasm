@@ -104,10 +104,10 @@ pub enum WsErr
 	//
 	UnknownDataType,
 
-    /// Fallback whenever explicit variant hadling hansn't yet been implemented.
+    /// Fallback for unknown errors.
     #[error("`{0}`")]
     //
-    Other(String),
+    Unknown(String),
 }
 
 
