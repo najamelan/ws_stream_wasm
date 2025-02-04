@@ -176,6 +176,10 @@ cargo run --example echo --release
 # in a different terminal:
 cargo run --example echo_tt --release -- "127.0.0.1:3312"
 
+# in a different terminal:
+cd examples/ssl
+cargo run --release -- "127.0.0.1:8443"
+
 # the second server is pure async-tungstenite without ws_stream_tungstenite wrapping it in AsyncRead/Write. This
 # is needed for testing a WsMessage::Text because ws_stream_tungstenite only does binary.
 
