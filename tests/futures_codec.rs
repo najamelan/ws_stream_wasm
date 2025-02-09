@@ -1,3 +1,4 @@
+#![allow(dead_code)]
 wasm_bindgen_test_configure!(run_in_browser);
 
 // What's tested:
@@ -83,9 +84,7 @@ async fn echo( name: &str, size: usize, data: Bytes )
 	info!( "   Enter echo: {}", name );
 
 	let (_ws , wsio) = connect().await;
-
 	let mut framed = Framed::new( wsio, BytesCodec {} );
-
 	framed.send( data.clone() ).await.expect_throw( "Failed to write to websocket" );
 
 	let mut result: Vec<u8> = Vec::new();

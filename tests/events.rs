@@ -1,3 +1,4 @@
+#![allow(dead_code)]
 wasm_bindgen_test_configure!(run_in_browser);
 
 // What's tested:
