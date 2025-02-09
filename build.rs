@@ -21,4 +21,6 @@ fn main()
 		Channel::Nightly => println!( "cargo:rustc-cfg=nightly"   ),
 		Channel::Dev     => println!( "cargo:rustc-cfg=rustc_dev" ),
 	}
+
+	println!("cargo:rerun-if-changed=build.rs");
 }

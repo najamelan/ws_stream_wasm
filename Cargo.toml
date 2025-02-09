@@ -49,7 +49,7 @@ version = "^0.3"
 version = "^0.7"
 
 [dev-dependencies.getrandom]
-features = []
+features = ["wasm_js"]
 version = "^0.3"
 
 [dev-dependencies.serde]
@@ -69,6 +69,9 @@ version = "^0.7"
 
 [features]
 tokio_io = ["async_io_stream/tokio_io"]
+
+[lib]
+crate-type = ["cdylib", "rlib"]
 
 [package]
 authors = ["Naja Melan <najamelan@autistici.org>"]
