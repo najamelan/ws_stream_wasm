@@ -71,7 +71,7 @@ version = "^0.7"
 tokio_io = ["async_io_stream/tokio_io"]
 
 [lib]
-crate-type = ["cdylib", "rlib"]
+crate-type = ["rlib"]
 
 [package]
 authors = ["Naja Melan <najamelan@autistici.org>"]
