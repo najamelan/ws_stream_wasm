@@ -88,7 +88,7 @@ async fn data_integrity()
 //
 async fn echo( name: &str, size: usize, data: Bytes )
 {
-	info!( "   Enter echo: {}", name );
+	info!( "   Enter echo: {name}" );
 
 	let (_ws, wsio)      = connect().await;
 	let (mut tx, mut rx) = Framed::new( wsio, BytesCodec::new() ).split();
