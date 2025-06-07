@@ -12,12 +12,9 @@ export RUSTFLAGS="-D warnings"
 
 git clone --depth 1 https://github.com/najamelan/ws_stream_tungstenite
 cd ws_stream_tungstenite
+
 cargo build --example echo --release
 cargo build --example echo_tt --release
 
 cargo run --example echo --release &
 cargo run --example echo_tt --release -- "127.0.0.1:3312"  &
-
-cd examples/ssl
-cargo build --release
-cargo run --release -- "127.0.0.1:8443" &

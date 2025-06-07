@@ -127,7 +127,10 @@ async fn connect_wrong_wss()
 
 
 // WsMeta::connect: Verify we can connect to a TLS server.
+// Note getting the mkcert certificate authority accepted by firefox in github CI is
+// a royal pain, so disabling this test in CI.
 //
+#[ cfg(feature = "not_ci")]
 #[ wasm_bindgen_test ]
 //
 async fn connect_to_tls()

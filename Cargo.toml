@@ -68,6 +68,8 @@ features = ["codec"]
 version = "^0.7"
 
 [features]
+default = ["not_ci"]
+not_ci = []
 tokio_io = ["async_io_stream/tokio_io"]
 
 [lib]

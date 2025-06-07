@@ -8,7 +8,7 @@ set -e
 #
 set -x
 
-wasm-pack test  --firefox --headless -- --all-features
-wasm-pack test  --chrome  --headless -- --all-features
-wasm-pack test  --firefox --headless -- --all-features --release
-wasm-pack test  --chrome  --headless -- --all-features --release
+wasm-pack test  --firefox --headless -- --features "tokio_io" --no-default-features
+wasm-pack test  --chrome  --headless -- --features "tokio_io" --no-default-features
+wasm-pack test  --firefox --headless -- --features "tokio_io" --no-default-features --release
+wasm-pack test  --chrome  --headless -- --features "tokio_io" --no-default-features --release

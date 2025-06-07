@@ -90,7 +90,7 @@ use
    ws_stream_wasm       :: *                        ,
    pharos               :: *                        ,
    wasm_bindgen         :: UnwrapThrowExt           ,
-   wasm_bindgen_futures :: futures_0_3::spawn_local ,
+   wasm_bindgen_futures :: spawn_local ,
    futures              :: stream::StreamExt        ,
 };
 
@@ -100,7 +100,7 @@ let program = async
 
       .expect_throw( "assume the connection succeeds" );
 
-   let mut evts = ws.observe( ObserveConfig::default() ).expect_throw( "observe" );
+   let mut evts = ws.observe( ObserveConfig::default() ).await.expect_throw( "observe" );
 
    ws.close().await;
 
@@ -122,11 +122,11 @@ This shows how to filter events. The functionality comes from _pharos_ which we 
 ```rust
 use
 {
-   ws_stream_wasm       :: *                        ,
-   pharos               :: *                        ,
-   wasm_bindgen         :: UnwrapThrowExt           ,
-   wasm_bindgen_futures :: futures_0_3::spawn_local ,
-   futures              :: stream::StreamExt        ,
+   ws_stream_wasm       :: *                 ,
+   pharos               :: *                 ,
+   wasm_bindgen         :: UnwrapThrowExt    ,
+   wasm_bindgen_futures :: spawn_local       ,
+   futures              :: stream::StreamExt ,
 };
 
 let program = async
@@ -137,7 +137,7 @@ let program = async
 
    // The Filter type comes from the pharos crate.
    //
-   let mut evts = ws.observe( Filter::Pointer( WsEvent::is_closed ).into() ).expect_throw( "observe" );
+   let mut evts = ws.observe( Filter::Pointer( WsEvent::is_closed ).into() ).await.expect_throw( "observe" );
 
    ws.close().await;
 

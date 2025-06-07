@@ -53,7 +53,9 @@ badges:
 
 features:
 
+  default: [not_ci]
   tokio_io: [ async_io_stream/tokio_io ]
+  not_ci: []
 
 
 lib:
