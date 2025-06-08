@@ -1,5 +1,5 @@
+#![allow(dead_code)]
 wasm_bindgen_test_configure!(run_in_browser);
-
 
 // What's tested:
 //
@@ -126,23 +126,74 @@ async fn connect_wrong_wss()
 
 
 
-// WsMeta::connect: Verify error when connecting to a wrong scheme
+// WsMeta::connect: Verify we can connect to a TLS server.
+// Note getting the mkcert certificate authority accepted by firefox in github CI is
+// a royal pain, so disabling this test in CI.
 //
+#[ cfg(feature = "not_ci")]
 #[ wasm_bindgen_test ]
 //
-async fn connect_wrong_scheme()
+async fn connect_to_tls()
 {
 	let _ = console_log::init_with_level( Level::Trace );
 
-	info!( "starting test: connect_wrong_scheme" );
+	info!( "starting test: connect_to_tls" );
 
-	let err = WsMeta::connect( "http://127.0.0.1:3212/", None ).await;
+	let err = WsMeta::connect( "wss://127.0.0.1:8443/", None ).await;
+
+	assert!( err.is_ok(), "{err:?}" );
+}
+
+
+
+// WsMeta::connect: Verify error when connecting to wss:// on ws:// server
+//
+#[ wasm_bindgen_test ]
+//
+async fn connect_to_tls_wrong_protocol()
+{
+	let _ = console_log::init_with_level( Level::Trace );
+
+	info!( "starting test: connect_to_tls_wrong_protocol" );
+
+	let err = WsMeta::connect( "ws://127.0.0.1:8443/", None ).await;
 
 	assert!( err.is_err() );
 
 	let err = err.unwrap_err();
 
-	assert_eq!( WsErr::InvalidUrl{ supplied: "http://127.0.0.1:3212/".to_string() }, err );
+	assert_eq!
+	(
+		WsErr::ConnectionFailed
+		{
+			event: CloseEvent
+			{
+				was_clean: false,
+				code     : 1006 ,
+				reason   : "".to_string(),
+			}
+		},
+
+		err
+	);
+}
+
+
+
+// WsMeta::connect: Verify we can connect using http protocol.
+// This used to be an error.
+//
+#[ wasm_bindgen_test ]
+//
+async fn connect_with_http_protocol()
+{
+	let _ = console_log::init_with_level( Level::Trace );
+
+	info!( "starting test: connect_wrong_scheme" );
+
+	let conn = WsMeta::connect( "http://127.0.0.1:3212/", None ).await;
+
+	assert!( conn.is_ok() );
 }
 
 

@@ -25,14 +25,11 @@ jobs:
           # Optional version of wasm-pack to install(eg. 'v0.9.1', 'latest')
           version: 'latest'
 
-
       - name: Checkout crate
         uses: actions/checkout@v3
 
-
       - name: Checkout server
         run: bash ci/server.bash
-
 
       - name: Run tests
         run: bash ci/test.bash
@@ -81,7 +78,7 @@ jobs:
         run : bash ci/test.bash
 
       - name: Run cargo-deny
-        uses: EmbarkStudios/cargo-deny-action@v1
+        uses: EmbarkStudios/cargo-deny-action@v2
 
 
 

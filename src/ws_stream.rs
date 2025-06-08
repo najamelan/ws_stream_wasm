@@ -311,8 +311,13 @@ impl Sink<WsMessage> for WsStream
 				//
 				match item
 				{
-					WsMessage::Binary( d ) => self.ws.send_with_u8_array( &d ).map_err( |_| WsErr::ConnectionNotOpen )? ,
-					WsMessage::Text  ( s ) => self.ws.send_with_str     ( &s ).map_err( |_| WsErr::ConnectionNotOpen )? ,
+					#[cfg(not(target_feature = "atomics"))]
+					WsMessage::Binary( d ) => self.ws.send_with_u8_array   ( &d )                               .map_err( |_| WsErr::ConnectionNotOpen )? ,
+					// The `atomics` feature enables shared memory, which cannot be passed to WebSocket::send_with_u8_array directly 
+					// as it could theoretically be mutated while the socket is reading it. We must make a js copy and send that.
+					#[cfg(target_feature = "atomics")]
+					WsMessage::Binary( d ) => self.ws.send_with_js_u8_array( &Uint8Array::from( d.as_slice() ) ).map_err( |_| WsErr::ConnectionNotOpen )? ,
+					WsMessage::Text  ( s ) => self.ws.send_with_str        ( &s )                               .map_err( |_| WsErr::ConnectionNotOpen )? ,
 				}
 
 				Ok(())

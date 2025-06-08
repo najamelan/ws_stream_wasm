@@ -13,7 +13,7 @@ rustc_version = "^0.4"
 js-sys = "^0.3"
 log = "^0.4"
 send_wrapper = "^0.6"
-thiserror = "^1"
+thiserror = "^2"
 wasm-bindgen = "^0.2"
 wasm-bindgen-futures = "^0.4"
 
@@ -35,9 +35,9 @@ version = "^0.3"
 [dev-dependencies]
 bytes = "^1"
 console_error_panic_hook = "^0.1"
-console_log = "^0.2"
-rand = "^0.8"
-rand_xoshiro = "^0.6"
+console_log = "^1"
+rand = "^0.9"
+rand_xoshiro = "^0.7"
 serde_cbor = "^0.11"
 wasm-bindgen-test = "^0.3"
 
@@ -46,11 +46,11 @@ features = ["tokio_io"]
 version = "^0.3"
 
 [dev-dependencies.asynchronous-codec]
-version = "^0.6"
+version = "^0.7"
 
 [dev-dependencies.getrandom]
-features = ["js"]
-version = "^0.2"
+features = ["wasm_js"]
+version = "^0.3"
 
 [dev-dependencies.serde]
 features = ["derive"]
@@ -68,14 +68,19 @@ features = ["codec"]
 version = "^0.7"
 
 [features]
+default = ["not_ci"]
+not_ci = []
 tokio_io = ["async_io_stream/tokio_io"]
+
+[lib]
+crate-type = ["cdylib", "rlib"]
 
 [package]
 authors = ["Naja Melan <najamelan@autistici.org>"]
 categories = ["asynchronous", "network-programming", "api-bindings", "wasm", "web-programming::websocket"]
 description = "A convenience library for using websockets in WASM"
 documentation = "https://docs.rs/ws_stream_wasm"
-edition = "2018"
+edition = "2024"
 exclude = ["tests", "examples"]
 homepage = "https://github.com/najamelan/ws_stream_wasm"
 keywords = ["wasm", "websocket", "tokio", "stream", "async"]
@@ -83,7 +88,7 @@ license = "Unlicense"
 name = "ws_stream_wasm"
 readme = "README.md"
 repository = "https://github.com/najamelan/ws_stream_wasm"
-version = "0.7.4"
+version = "0.7.5"
 
 [package.metadata]
 [package.metadata.docs]

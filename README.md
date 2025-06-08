@@ -10,6 +10,8 @@
 
 The _web-sys_ bindings for websockets aren't very convenient to use directly. This crates hopes to alleviate that. Browsers can't create direct TCP connections, and by putting `AsyncRead`/`AsyncWrite` on top of websockets, we can use interfaces that work over any async byte streams from within the browser. The crate has 2 main types. The `WsMeta` type exists to allow access to the web API while you pass `WsStream` to combinators that take ownership of the stream.
 
+Note: a [proposal](https://github.com/WICG/direct-sockets/blob/main/docs/explainer.md) exists and is already available in Chrome based browsers to allow direct TCP connections from [isolated web apps](https://github.com/WICG/isolated-web-apps/blob/main/README.md). 
+
 **features:**
 - [`WsMeta`]: A wrapper around [`web_sys::WebSocket`].
 - [`WsMessage`]: A simple rusty representation of a WebSocket message.
@@ -90,7 +92,7 @@ use
    ws_stream_wasm       :: *                        ,
    pharos               :: *                        ,
    wasm_bindgen         :: UnwrapThrowExt           ,
-   wasm_bindgen_futures :: futures_0_3::spawn_local ,
+   wasm_bindgen_futures :: spawn_local ,
    futures              :: stream::StreamExt        ,
 };
 
@@ -100,7 +102,7 @@ let program = async
 
       .expect_throw( "assume the connection succeeds" );
 
-   let mut evts = ws.observe( ObserveConfig::default() ).expect_throw( "observe" );
+   let mut evts = ws.observe( ObserveConfig::default() ).await.expect_throw( "observe" );
 
    ws.close().await;
 
@@ -122,11 +124,11 @@ This shows how to filter events. The functionality comes from _pharos_ which we 
 ```rust
 use
 {
-   ws_stream_wasm       :: *                        ,
-   pharos               :: *                        ,
-   wasm_bindgen         :: UnwrapThrowExt           ,
-   wasm_bindgen_futures :: futures_0_3::spawn_local ,
-   futures              :: stream::StreamExt        ,
+   ws_stream_wasm       :: *                 ,
+   pharos               :: *                 ,
+   wasm_bindgen         :: UnwrapThrowExt    ,
+   wasm_bindgen_futures :: spawn_local       ,
+   futures              :: stream::StreamExt ,
 };
 
 let program = async
@@ -137,7 +139,7 @@ let program = async
 
    // The Filter type comes from the pharos crate.
    //
-   let mut evts = ws.observe( Filter::Pointer( WsEvent::is_closed ).into() ).expect_throw( "observe" );
+   let mut evts = ws.observe( Filter::Pointer( WsEvent::is_closed ).into() ).await.expect_throw( "observe" );
 
    ws.close().await;
 
@@ -175,6 +177,10 @@ cargo run --example echo --release
 
 # in a different terminal:
 cargo run --example echo_tt --release -- "127.0.0.1:3312"
+
+# in a different terminal:
+cd examples/ssl
+cargo run --release -- "127.0.0.1:8443"
 
 # the second server is pure async-tungstenite without ws_stream_tungstenite wrapping it in AsyncRead/Write. This
 # is needed for testing a WsMessage::Text because ws_stream_tungstenite only does binary.

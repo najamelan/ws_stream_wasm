@@ -5,6 +5,20 @@
   [Unreleased]: https://github.com/najamelan/ws_stream_wasm/compare/release...dev
 
 
+## [0.7.5] - 2023-01-29
+
+  [0.7.5]: https://github.com/najamelan/ws_stream_wasm/compare/0.7.3...0.7.4
+  
+### Fixed
+  - Don't panick when receiving an unknown error from the browser (thanks @gibbz00)
+  - Test connecting to WSS, unfortunately does not work in CI because we'd 
+    need to add the mkcert CA to the firefox and chrome profiles that wasm-pack 
+    creates.
+  - update dependencies
+  - allow compilation with `target_feature = atomics` by copying the data into 
+    the websocket (thanks @robtfm)
+
+
 ## [0.7.4] - 2023-01-29
 
   [0.7.4]: https://github.com/najamelan/ws_stream_wasm/compare/0.7.3...0.7.4

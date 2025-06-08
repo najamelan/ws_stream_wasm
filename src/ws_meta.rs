@@ -83,7 +83,7 @@ impl WsMeta
 						return Err( WsErr::InvalidUrl{ supplied: url.as_ref().to_string() } ),
 
 
-					_ => unreachable!(),
+					_ => return Err(WsErr::Unknown(de.message())),
 				};
 			}
 		};
@@ -255,7 +255,7 @@ impl WsMeta
 		let ce = evts.next().await.expect_throw( "receive a close event" );
 
 		if let WsEvent::Closed(e) = ce { Ok( e )        }
-		else                          { unreachable!() }
+		else                           { unreachable!() }
 	}
 
 
@@ -298,7 +298,7 @@ impl WsMeta
 		let ce = evts.next().await.expect_throw( "receive a close event" );
 
 		if let WsEvent::Closed(e) = ce { Ok(e)          }
-		else                          { unreachable!() }
+		else                           { unreachable!() }
 	}
 
 
