@@ -9,10 +9,10 @@ package:
   # - Update CHANGELOG.md.
   # - Update version numbers in Cargo.yml, Cargo.toml, install section of readme.
   #
-  # - `touch **/*.rs && cargo clippy --tests --examples --benches --all-features`
-  # - `cargo update`
-  # - `cargo udeps --all-targets --all-features`
+  # - `cargo update --aggressive --verbose`
   # - `cargo outdated --root-deps-only`
+  # - `cargo +nightly udeps --all-targets --all-features`
+  # - `cargo clippy --tests --examples --benches --all-features`
   # - `cargo audit`
   # - `cargo crev crate verify --show-all --recursive` and review.
   # - 'cargo test --all-targets --all-features'
@@ -25,7 +25,7 @@ package:
   # - `git tag x.x.x` with version number.
   # - `git push && git push --tags`
   #
-  version       : 0.7.4
+  version       : 0.7.5
   name          : ws_stream_wasm
   edition       : '2018'
   authors       : [ Naja Melan <najamelan@autistici.org> ]
