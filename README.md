@@ -10,6 +10,8 @@
 
 The _web-sys_ bindings for websockets aren't very convenient to use directly. This crates hopes to alleviate that. Browsers can't create direct TCP connections, and by putting `AsyncRead`/`AsyncWrite` on top of websockets, we can use interfaces that work over any async byte streams from within the browser. The crate has 2 main types. The `WsMeta` type exists to allow access to the web API while you pass `WsStream` to combinators that take ownership of the stream.
 
+Note: a [proposal](https://github.com/WICG/direct-sockets/blob/main/docs/explainer.md) exists and is already available in Chrome based browsers to allow direct TCP connections from [isolated web apps](https://github.com/WICG/isolated-web-apps/blob/main/README.md). 
+
 **features:**
 - [`WsMeta`]: A wrapper around [`web_sys::WebSocket`].
 - [`WsMessage`]: A simple rusty representation of a WebSocket message.
