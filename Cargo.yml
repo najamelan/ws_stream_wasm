@@ -27,7 +27,7 @@ package:
   #
   version       : 0.7.5
   name          : ws_stream_wasm
-  edition       : '2018'
+  edition       : '2024'
   authors       : [ Naja Melan <najamelan@autistici.org> ]
   description   : A convenience library for using websockets in WASM
   license       : Unlicense

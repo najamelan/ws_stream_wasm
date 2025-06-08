@@ -141,7 +141,7 @@ async fn connect_to_tls()
 
 	let err = WsMeta::connect( "wss://127.0.0.1:8443/", None ).await;
 
-	assert!( err.is_ok(), "{:?}", err );
+	assert!( err.is_ok(), "{err:?}" );
 }
 
 
